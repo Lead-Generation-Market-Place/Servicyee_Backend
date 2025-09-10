@@ -1,3 +1,3 @@
-export const GetUsers = (req,res)=>{
-    res.json({message: "No User Found... Please recheck!"})
+export const getUsers = (req, res) => {
+    res.json( "No User Found... Please recheck!" )
 }

@@ -1,31 +1,16 @@
 import express from 'express'
 import mongoose from 'mongoose'
-import dotenv from 'dotenv'
-dotenv.config()
-
-const URL = process.env.Mongoose_URL
-const ConnectDB=async()=>{
-    try{
-        await mongoose.connect(URL, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        })
-        console.log("Connected to MongoDB Successfully")
-
-    } catch(error){
-        console.log("Error while connecting to MongoDB", error)
-            process.exit(1); // Exit app if DB connection fails
-
-    }
-}
-ConnectDB();
-
-import { GetUsers } from './Controllers/userController.js'
-
+import {ConnectDB} from './config/db.js'
+import router from './routes/userRoute.js'
 const app = express()
 const Port = process.env.PORT || 4000
+ConnectDB();
 app.use(express.json())
-app.get('/users', GetUsers)
+// users router 
+app.use('/api/users', router);
+
+
+
 
 app.listen(Port, ()=>{
     console.log("The server is running...")

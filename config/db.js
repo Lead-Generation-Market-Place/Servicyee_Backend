@@ -1,18 +1,18 @@
 
 import mongoose from 'mongoose';
-const uri = "mongodb+srv://liaqatpaindah266_db_user:<db_password>@servicyee.3kjcruv.mongodb.net/?retryWrites=true&w=majority&appName=Servicyee";
+import dotenv from 'dotenv';
+dotenv.config();  
 
-const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
 
-async function run() {
-  try {
-    // Create a Mongoose client with a MongoClientOptions object to set the Stable API version
-    await mongoose.connect(uri, clientOptions);
-    await mongoose.connection.db.admin().command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await mongoose.disconnect();
+export const ConnectDB = async()=>{
+  try{
+    await mongoose.connect(process.env.Mongoose_URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    console.log("Connected to MongoDB Successfully");
+  } catch(err){
+    console.log("Error while connecting to MongoDB", err)
+    process.exit(1); // Exit app if DB connection fails
   }
 }
-run().catch(console.dir);
