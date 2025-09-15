@@ -6,8 +6,8 @@ const app = express()
 const Port = process.env.PORT || 4000
 ConnectDB();
 app.use(express.json())
-// users router 
-app.use('/api/users', router);
+// pro router 
+app.use('/api/pro', router);
 
 
 
