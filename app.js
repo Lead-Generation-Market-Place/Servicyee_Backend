@@ -2,20 +2,21 @@ import dotenv from "dotenv";
 import express, { json } from "express";
 import {run} from "./config/db.js";
 import { get, setEx } from "./services/redis.js";
-import getPro from './routes/userRoutes.js'
+import professionalRoutes from './routes/ProfessionalRoutes.js';
 dotenv.config()
 
-const app = express();
 
-// Middleware
-app.use(json());
 
 // Connect DB
 run();
 
-// Routes
-app.use("/users",getPro);
+const app = express();
 
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/api/professionals', professionalRoutes);
 // Test Redis cache route
 app.get("/ping", async (req, res) => {
   const cached = await get("ping");
@@ -26,6 +27,5 @@ app.get("/ping", async (req, res) => {
   res.json({ source: "api", value });
 });
 
-// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

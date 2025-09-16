@@ -1,41 +1,40 @@
-import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import mongoose from 'mongoose';
+const { Schema, model, Types, models } = mongoose;
+const ObjectId = Types.ObjectId;
 
-// Enums
-const UserStatus = ['active', 'inactive', 'suspended'];
-const AccountType = ['free', 'premium', 'enterprise'];
+const BusinessType = ['company', 'individual', 'sub-contractor'];
+const MediaType = ['photo', 'video'];
+const OpenClose = ['open', 'close'];
 
-const UserSchema = new mongoose.Schema({
-  username: { type: String, required: true, index: true },
-  email: { type: String, required: true, unique: true, index: true },
-  phone: { type: String },
-  status: { type: String, enum: UserStatus, default: 'active' },
-  isEmailVerified: { type: Boolean, default: false },
-  account_type: { type: String, enum: AccountType, default: 'free' },
-  verification_status: { type: Boolean, default: false },
-  password: { type: String, required: true },
-  two_factor_authentication: { type: Boolean, default: false },
-  last_login: { type: Date },
-  login_ip_address: { type: String },
-  profile_image_url: { type: String },
-  login_attempts: { type: Number, default: 0 },
-  timezone: { type: String },
-  roles: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Role', index: true }]
-}, { timestamps: true, versionKey: false, collection: 'users' });
+const ProfessionalSchema = new Schema({
+  user_id: { type: ObjectId, ref: 'User', required: true, index: true },
+  business_name: String,
+  introduction: String,
+  business_type: { type: String, enum: BusinessType },
+  total_hire: { type: Number, default: 0 },
+  total_review: { type: Number, default: 0 },
+  rating_avg: { type: Number, default: 0 },
+  portfolio: [{
+    service_id: { type: ObjectId, ref: 'Service' },
+    media_type: { type: String, enum: MediaType },
+    media_url: String
+  }],
+  business_hours: [{
+    service_id: { type: ObjectId, ref: 'Service' },
+    status: { type: String, enum: OpenClose },
+    start_time: Date,
+    end_time: Date,
+    day: { type: Number, min: 0, max: 6 }
+  }],
+  specializations: [{
+    service_id: { type: ObjectId, ref: 'Service', required: true },
+    specialization_tag: { type: String, required: true }
+  }]
+}, { timestamps: true, versionKey: false, collection: 'professionals' });
 
-// Compound index for username + email
-UserSchema.index({ username: 1, email: 1 });
+ProfessionalSchema.index({ user_id: 1 });
+ProfessionalSchema.index({ 'specializations.service_id': 1, 'specializations.specialization_tag': 1 });
 
-// Password hashing before save
-UserSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
-});
+const Professional = models.Professional || model('Professional', ProfessionalSchema);
 
-// Method to compare password
-UserSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
-
-export const User = mongoose.model('User', UserSchema);
+export default Professional;
