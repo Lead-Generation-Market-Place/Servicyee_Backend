@@ -7,13 +7,9 @@ dotenv.config()
 
 
 
-// Middleware
-app.use(json());
-
 // Connect DB
 run();
 
-config();
 const app = express();
 
 app.use(cors());
