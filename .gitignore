@@ -1,0 +1,23 @@
+# Node.js dependencies
+node_modules/
+
+# Logs
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Environment variables
+.env
+
+# Docker
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+
+# Mac / Linux / Windows
+.DS_Store
+Thumbs.db
+
+# Optional: build artifacts
+dist/
+build/
