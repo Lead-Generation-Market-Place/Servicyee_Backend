@@ -12,7 +12,7 @@ const router = express.Router();
 // Get all professionals
 router.get('/professionals', getAllProfessionalsHandler);
 router.get('/professionals/:id', getProfessionalByIdHandler);
-router.post('/professionals', createProfessionalHandler);
+router.post('/', createProfessionalHandler);
 router.put('/professionals/:id', updateProfessionalHandler);
 router.delete('/professionals/:id', deleteProfessionalHandler);
 
