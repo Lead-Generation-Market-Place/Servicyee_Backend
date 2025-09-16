@@ -3,31 +3,8 @@ import bcrypt from 'bcrypt';
 
 const { ObjectId } = Types;
 
-export const UserStatus = ['suspend', 'active'] as const;
-export const AccountType = ['free', 'pro'] as const;
 
-export interface IUser {
-  _id: Types.ObjectId;
-  username: string;
-  email: string;
-  phone: string;
-  status: typeof UserStatus[number];
-  isEmailVerified: boolean;
-  account_type: typeof AccountType[number];
-  verification_status: boolean;
-  password: string;
-  two_factor_authentication: boolean;
-  last_login?: Date;
-  login_ip_address?: string;
-  profile_image_url?: string;
-  login_attempts: number;
-  timezone?: string;
-  roles: Types.ObjectId[];
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-const UserSchema = new Schema<IUser>({
+const UserSchema = new Schema({
   username: { type: String, required: true, index: true },
   email: { type: String, required: true, unique: true, index: true },
   phone: { type: String },
@@ -53,4 +30,4 @@ UserSchema.pre('save', async function(next) {
   next();
 });
 
-export const User = model<IUser>('User', UserSchema);
+export const User = model('User', UserSchema);
