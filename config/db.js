@@ -1,18 +1,24 @@
-
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-dotenv.config();  
 
+dotenv.config(); 
 
-export const ConnectDB = async()=>{
-  try{
-    await mongoose.connect(process.env.Mongoose_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log("Connected to MongoDB Successfully");
-  } catch(err){
-    console.log("Error while connecting to MongoDB", err)
-    process.exit(1); // Exit app if DB connection fails
+const uri = process.env.MONGO_URI;
+
+const clientOptions = {
+  serverApi: { version: '1', strict: true, deprecationErrors: true },
+};
+
+export async function run() {
+  try {
+    await mongoose.connect(uri, clientOptions);
+    console.log("✅ Connected to MongoDB successfully!");
+    
+    console.log("MongoDB connection ready state:", mongoose.connection.readyState);
+    
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err.message);
+    process.exit(1); 
   }
 }
+
