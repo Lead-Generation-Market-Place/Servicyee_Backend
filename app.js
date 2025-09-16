@@ -1,17 +1,19 @@
-import express from 'express'
-import mongoose from 'mongoose'
-import {ConnectDB} from './config/db.js'
-import router from './routes/userRoute.js'
-const app = express()
-const Port = process.env.PORT || 4000
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { ConnectDB } from './config/db.js';
+
+dotenv.config();
 ConnectDB();
-app.use(express.json())
-// pro router 
-app.use('/api/pro', router);
+
+const app = express();
+app.use(cors());
+app.use(express.json());
 
 
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
 
-
-app.listen(Port, ()=>{
-    console.log("The server is running...")
-})
+export default app;
