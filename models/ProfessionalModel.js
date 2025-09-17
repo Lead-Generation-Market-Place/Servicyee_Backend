@@ -7,7 +7,7 @@ const MediaType = ['photo', 'video'];
 const OpenClose = ['open', 'close'];
 
 const ProfessionalSchema = new Schema({
-  user_id: { type: ObjectId, ref: 'User', required: false, index: true },
+  user_id: { type: ObjectId, ref: 'User', required: false },
   business_name: String,
   introduction: String,
   business_type: { type: String, enum: BusinessType },

@@ -66,4 +66,29 @@ export async function deleteProfessionalHandler(req, res) {
   }
 }
 
-// ...existing code...
+
+// Handle file upload
+export async function uploadFile(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    // You can save file info to DB or just return the file path
+    res.status(200).json({
+      success: true,
+      message: 'File uploaded successfully',
+      file: {
+        filename: req.file.filename,
+        path: req.file.path,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading file',
+      error: error?.message || 'An unexpected error occurred'
+    });
+  }
+}
