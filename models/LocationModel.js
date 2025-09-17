@@ -8,4 +8,4 @@ const locationSchema = new Schema({
   zipcode: { type: Number, required:true }
 });
 
-export default model("Location", productSchema);
+export default model("Location", locationSchema);

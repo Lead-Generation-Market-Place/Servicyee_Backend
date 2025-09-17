@@ -1,8 +1,10 @@
 import dotenv from "dotenv";
 import express, { json } from "express";
+import cors from "cors";
 import {run} from "./config/db.js";
-import { get, setEx } from "./services/redis.js";
+// import { get, setEx } from "./services/redis.js";
 import professionalRoutes from './routes/ProfessionalRoutes.js';
+import locationRoutes from './routes/LocationRoutes.js';
 dotenv.config()
 
 
@@ -17,15 +19,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/professionals', professionalRoutes);
+app.use('/api/location', locationRoutes)
 // Test Redis cache route
-app.get("/ping", async (req, res) => {
-  const cached = await get("ping");
-  if (cached) return res.json({ source: "cache", value: cached });
+// app.get("/ping", async (req, res) => {
+//   const cached = await get("ping");
+//   if (cached) return res.json({ source: "cache", value: cached });
 
-  const value = "pong " + new Date().toISOString();
-  await setEx("ping", 30, value);
-  res.json({ source: "api", value });
-});
+//   const value = "pong " + new Date().toISOString();
+//   await setEx("ping", 30, value);
+//   res.json({ source: "api", value });
+// });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
