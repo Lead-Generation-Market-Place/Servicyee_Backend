@@ -1,10 +1,19 @@
 import express from "express";
-import { createLocationHandler,getLocationHandler } from "../controllers/LocationController.js";
+import { 
+    createLocationHandler,
+    deleteLocationByIdHandler,
+    getLocationByIdHandler,
+    getLocationHandler,
+    updateLocationHandler 
+} from "../controllers/locationController.js";
 
 
 const router = express.Router();
 
-router.get('/all', getLocationHandler)
+router.get('/all', getLocationHandler);
+router.get('/:id', getLocationByIdHandler);
 router.post('/create',createLocationHandler);
+router.put('/:id/update', updateLocationHandler);
+router.delete('/:id/delete', deleteLocationByIdHandler);
 
 export default router;
