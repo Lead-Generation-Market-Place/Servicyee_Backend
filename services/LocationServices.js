@@ -7,5 +7,18 @@ export function createLocation(data) {
 }
 
 export function getAllLocations() {
-  return Location.find().exec(); // no limit, returns all
+  return Location.find().exec(); 
+}
+
+export function updateLcoation(id,data) {
+    return Location.findByIdAndUpdate(id, data, {new: true}).exec();
+}
+
+export function getLocationById(id) {
+    return Location.findById(id).select()
+    .exec();
+}
+
+export function deleteLocationById(id) {
+    return Location.findByIdAndDelete(id).exec();
 }
