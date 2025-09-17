@@ -22,10 +22,12 @@ It uses **MongoDB (Cloud / Docker)** for data storage, **Redis** for caching, an
 ````bash
 git clone https://github.com/your-username/Servicyee_Backend.git
 cd Servicyee_Backend
+````
 
 ### 2. Install dependencies
-```bash
+````bash
 npm install
+````
 
 ### 3. Configure the .env file
 ### 4. Run the project locally
