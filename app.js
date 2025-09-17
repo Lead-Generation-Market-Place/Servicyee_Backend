@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import express, { json } from "express";
 import {run} from "./config/db.js";
 import { get, setEx } from "./services/redis.js";
-import getPro from './routes/userRoutes.js'
+import registerRoutes from "./registerRoutes.js";
 dotenv.config()
 
 const app = express();
@@ -14,13 +14,12 @@ app.use(json());
 run();
 
 // Routes
-app.use("/users",getPro);
+registerRoutes(app);
 
 // Test Redis cache route
 app.get("/ping", async (req, res) => {
   const cached = await get("ping");
   if (cached) return res.json({ source: "cache", value: cached });
-
   const value = "pong " + new Date().toISOString();
   await setEx("ping", 30, value);
   res.json({ source: "api", value });

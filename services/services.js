@@ -1,5 +1,5 @@
-import ServiceModel from '../models/servicesModel.js';
-
+import ServiceModel from "../models/servicesModel.js";
+import subCategoryModel from "../models/subCategoryModel.js";
 class ServicesService {
   async getAllServices() {
     try {
@@ -13,6 +13,14 @@ class ServicesService {
     try {
       const newService = new ServiceModel(serviceData);
       return await newService.save();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getServiceById(serviceId) {
+    try {
+      return await ServiceModel.findById(serviceId);
     } catch (error) {
       throw error;
     }
@@ -39,6 +47,34 @@ class ServicesService {
       throw error;
     }
   }
+
+  async addServiceForSubCategory(serviceData) {
+    try {
+      const serviceExists = await subCategoryModel.findById(
+        serviceData.subCategory
+      );
+
+      if (!serviceExists) {
+        throw new Error("SubCategory not found");
+      }
+
+      const newService = new ServiceModel(serviceData);
+      return await newService.save();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+async getServicesOfProfessional(professionalId) {
+  try {
+    return await ServiceModel.find({ professional: professionalId });
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+
 }
 
 export default new ServicesService();
