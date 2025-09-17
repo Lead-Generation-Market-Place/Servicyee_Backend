@@ -6,19 +6,20 @@ export function createProfessional(data) {
 }
 
 export function getProfessionalById(id) {
-  return findById(id)
-    .populate('specializations.service_id', 'name')
+  return Professional.findById(id)
+    .select()
     .exec();
 }
 
+
 export function getAllProfessionals(limit = 10) {
-  return find().limit(limit).exec();
+  return Professional.find().limit(limit).exec();
 }
 
 export function updateProfessional(id, data) {
-  return findByIdAndUpdate(id, data, { new: true }).exec();
+  return Professional.findByIdAndUpdate(id, data, { new: true }).exec();
 }
 
 export function deleteProfessional(id) {
-  return findByIdAndDelete(id).exec();
+  return Professional.findByIdAndDelete(id).exec();
 }

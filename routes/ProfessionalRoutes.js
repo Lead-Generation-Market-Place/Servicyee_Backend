@@ -10,10 +10,10 @@ import {
 const router = express.Router();
 
 // Get all professionals
-router.get('/professionals', getAllProfessionalsHandler);
-router.get('/professionals/:id', getProfessionalByIdHandler);
+router.get('/', getAllProfessionalsHandler);
+router.get('/:id', getProfessionalByIdHandler);
 router.post('/', createProfessionalHandler);
-router.put('/professionals/:id', updateProfessionalHandler);
-router.delete('/professionals/:id', deleteProfessionalHandler);
+router.put('/:id', updateProfessionalHandler);
+router.delete('/:id', deleteProfessionalHandler);
 
 export default router;
