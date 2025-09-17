@@ -4,16 +4,22 @@ import {
 	getProfessionalByIdHandler,
 	createProfessionalHandler,
 	updateProfessionalHandler,
-	deleteProfessionalHandler
+	deleteProfessionalHandler,
 } from '../controllers/ProfessionalController.js';
+import upload from '../config/multer.js';
 
 const router = express.Router();
 
 // Get all professionals
-router.get('/professionals', getAllProfessionalsHandler);
-router.get('/professionals/:id', getProfessionalByIdHandler);
+router.get('/', getAllProfessionalsHandler);
+router.get('/:id', getProfessionalByIdHandler);
 router.post('/', createProfessionalHandler);
-router.put('/professionals/:id', updateProfessionalHandler);
-router.delete('/professionals/:id', deleteProfessionalHandler);
+router.put('/:id', updateProfessionalHandler);
+router.delete('/:id', deleteProfessionalHandler);
+
+// File upload route (example: profile image, certificate, etc.)
+// Controller method 'uploadFile' should be implemented in ProfessionalController.js
+import { uploadFile } from '../controllers/ProfessionalController.js';
+router.post('/upload', upload.single('file'), uploadFile);
 
 export default router;
