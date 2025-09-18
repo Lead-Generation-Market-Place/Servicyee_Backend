@@ -8,8 +8,12 @@ import {run} from "./config/db.js";
 
 import professionalRoutes from './routes/ProfessionalRoutes.js';
 import locationRoutes from './routes/LocationRoutes.js';
+
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+
+
+import registerRoutes from "./registerRoutes.js";
 
 dotenv.config()
 // Connect DB
@@ -20,6 +24,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 
 // Recommended: Rate Limiting for API endpoints
 const apiLimiter = rateLimit({
@@ -36,6 +41,19 @@ app.use('/api/', apiLimiter);
 app.use('/api/v1/professionals', professionalRoutes);
 app.use('/api/v1/location', locationRoutes);
 app.use('/uploads', express.static('uploads'));
+
+// Routes
+registerRoutes(app);
+
+// Test Redis cache route
+app.get("/ping", async (req, res) => {
+  const cached = await get("ping");
+  if (cached) return res.json({ source: "cache", value: cached });
+  const value = "pong " + new Date().toISOString();
+  await setEx("ping", 30, value);
+  res.json({ source: "api", value });
+});
+
 
 app.use(errors());
 app.use((err, req, res, next) => {
