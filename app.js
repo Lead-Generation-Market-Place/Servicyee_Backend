@@ -16,7 +16,6 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import registerRoutes from "./registerRoutes.js";
 
 dotenv.config()
-// Connect DB
 run();
 
 const app = express();
