@@ -1,11 +1,11 @@
-import getPro from './routes/userRoutes.js';
+
 import serviceRoute from './routes/serviceRoute.js';
 import categoryRoute from './routes/categoryRoute.js';
 import subCategoriesRoute from './routes/subCategoryRoute.js';
 import questionRoute from './routes/questionRoute.js'
 import answerRoute from './routes/answerRoute.js'
 export default function registerRoutes(app) {
-  app.use('/users', getPro);
+
   app.use('/services', serviceRoute);
   app.use('/categories',categoryRoute)
   app.use('/subcategories',subCategoriesRoute)
