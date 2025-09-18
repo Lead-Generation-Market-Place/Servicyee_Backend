@@ -12,7 +12,6 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 
 dotenv.config()
-// Connect DB
 run();
 
 const app = express();
