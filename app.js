@@ -62,7 +62,7 @@ const swaggerOptions = {
       description: 'API documentation for Servicyee microservices',
     },
     servers: [
-      { url: 'http://localhost:5000/api/v1' }
+      { url: 'http://localhost:4000/api/v1' }
     ],
   },
   apis: ['./routes/*.js'], // Path to the API docs
