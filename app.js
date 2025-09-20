@@ -12,6 +12,7 @@ import { run } from "./config/db.js";
 
 import professionalRoutes from "./routes/ProfessionalRoutes.js";
 import locationRoutes from "./routes/LocationRoutes.js";
+import userRoute from "./routes/userRoute.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
@@ -56,6 +57,7 @@ app.use("/api/", apiLimiter);
 app.use("/api/v1/professionals", professionalRoutes);
 app.use("/api/v1/location", locationRoutes);
 app.use("/uploads", express.static("uploads"));
+app.use("/api/v1/user", userRoute);
 
 // Routes
 
