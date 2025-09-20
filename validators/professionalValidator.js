@@ -9,6 +9,10 @@ export const professionalSchema = Joi.object({
   business_name: Joi.string().required(),
   introduction: Joi.string().optional(),
   business_type: Joi.string().valid(...businessTypes).required(),
+  website: Joi.string().optional(),                     // added
+  founded_year: Joi.number().min(1900).max(new Date().getFullYear()).optional(), // added
+  employees: Joi.number().min(1).optional(),          // added
+  profile_image: Joi.string().uri().optional(),       // added
   total_hire: Joi.number().optional(),
   total_review: Joi.number().optional(),
   rating_avg: Joi.number().optional(),

@@ -11,9 +11,13 @@ const ProfessionalSchema = new Schema({
   business_name: String,
   introduction: String,
   business_type: { type: String, enum: BusinessType },
+  website: { type: String, required: false },
+  founded_year: { type: Number, min: 1900, max: new Date().getFullYear(), required: false },
+  employees: { type: Number, min: 1, required: false },
   total_hire: { type: Number, default: 0 },
   total_review: { type: Number, default: 0 },
   rating_avg: { type: Number, default: 0 },
+  profile_image: { type: String, required: false },
   portfolio: [{
     service_id: { type: ObjectId, ref: 'Service' },
     media_type: { type: String, enum: MediaType },

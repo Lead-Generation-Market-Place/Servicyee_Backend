@@ -1,4 +1,10 @@
-import { createProfessional, getProfessionalById, getAllProfessionals, updateProfessional, deleteProfessional } from '../services/ProfessionalServices.js';
+import {
+  createProfessional,
+  getProfessionalByUserId,
+  getAllProfessionals,
+  updateProfessional,
+  deleteProfessional,
+} from "../services/ProfessionalServices.js";
 
 export async function createProfessionalHandler(req, res) {
   try {
@@ -7,22 +13,25 @@ export async function createProfessionalHandler(req, res) {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error creating professional',
-      error: error?.message || 'An unexpected error occurred'
+      message: "Error creating professional",
+      error: error?.message || "An unexpected error occurred",
     });
   }
 }
 
-export async function getProfessionalByIdHandler(req, res) {
+export async function getProfessionalByUserIdHandler(req, res) {
   try {
-    const professional = await getProfessionalById(req.params.id);
-    if (!professional) return res.status(404).json({ message: 'Professional not found' });
+    const user_id = req.user.id; // Get authenticated user id from JWT middleware
+
+    const professional = await getProfessionalByUserId(user_id);
+    if (!professional)
+      return res.status(404).json({ message: "Professional not found" });
     res.json(professional);
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error fetching professional',
-      error: error?.message || 'An unexpected error occurred'
+      message: "Error fetching professional",
+      error: error?.message || "An unexpected error occurred",
     });
   }
 }
@@ -32,11 +41,11 @@ export async function getAllProfessionalsHandler(req, res) {
     const professionals = await getAllProfessionals();
     res.json(professionals);
   } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Error fetching professionals',
-        error: error?.message || 'An unexpected error occurred'
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching professionals",
+      error: error?.message || "An unexpected error occurred",
+    });
   }
 }
 
@@ -45,10 +54,10 @@ export async function updateProfessionalHandler(req, res) {
     const professional = await updateProfessional(req.params.id, req.body);
     res.json(professional);
   } catch (error) {
-     res.status(500).json({
+    res.status(500).json({
       success: false,
-      message: 'Error updating professional',
-      error: error?.message || 'An unexpected error occurred'
+      message: "Error updating professional",
+      error: error?.message || "An unexpected error occurred",
     });
   }
 }
@@ -60,35 +69,36 @@ export async function deleteProfessionalHandler(req, res) {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error deleting professional',
-      error: error?.message || 'An unexpected error occurred'
+      message: "Error deleting professional",
+      error: error?.message || "An unexpected error occurred",
     });
   }
 }
-
 
 // Handle file upload
 export async function uploadFile(req, res) {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file uploaded' });
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
     }
     // You can save file info to DB or just return the file path
     res.status(200).json({
       success: true,
-      message: 'File uploaded successfully',
+      message: "File uploaded successfully",
       file: {
         filename: req.file.filename,
         path: req.file.path,
         mimetype: req.file.mimetype,
-        size: req.file.size
-      }
+        size: req.file.size,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error uploading file',
-      error: error?.message || 'An unexpected error occurred'
+      message: "Error uploading file",
+      error: error?.message || "An unexpected error occurred",
     });
   }
 }
