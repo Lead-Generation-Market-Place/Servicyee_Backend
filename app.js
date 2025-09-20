@@ -4,9 +4,11 @@ import { errors } from "celebrate";
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 import helmet from "helmet";
+import registerRoutes from "./registerRoutes.js";
 
 import cors from "cors";
 import { run } from "./config/db.js";
+
 
 import professionalRoutes from "./routes/ProfessionalRoutes.js";
 import locationRoutes from "./routes/LocationRoutes.js";
@@ -14,6 +16,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
 dotenv.config();
+
 
 const app = express();
 const allowedOrigins = [
@@ -36,6 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 app.use(morgan("combined"));
 
+
 // Recommended: Rate Limiting for API endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -47,6 +51,7 @@ const apiLimiter = rateLimit({
     error: "Too many requests, please try again later.",
   },
 });
+registerRoutes(app);
 app.use("/api/", apiLimiter);
 app.use("/api/v1/professionals", professionalRoutes);
 app.use("/api/v1/location", locationRoutes);
