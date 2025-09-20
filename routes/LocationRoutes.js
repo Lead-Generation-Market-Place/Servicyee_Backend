@@ -5,7 +5,7 @@ import {
     getLocationByIdHandler,
     getLocationHandler,
     updateLocationHandler 
-} from "../controllers/locationController.js";
+} from "../controllers/LocationController.js";
 
 
 const router = express.Router();

@@ -11,40 +11,27 @@ export const getServices = async (req, res, next) => {
 
 export const addServices = async (req, res, next) => {
   try {
-    const serviceData = req.body;
-    const createdService = await servicesService.addService(serviceData);
+    const createdService = await servicesService.addService(req.body);
     res.status(201).json({ data: createdService });
   } catch (error) {
     next(error);
   }
 };
+
 export const getServiceById = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const service = await servicesService.getServiceById(id);
-
-    if (!service) {
-      return res.status(404).json({ message: 'Service not found' });
-    }
-
+    const service = await servicesService.getServiceById(req.params.id);
+    if (!service) return res.status(404).json({ message: 'Service not found' });
     res.status(200).json({ data: service });
   } catch (error) {
     next(error);
   }
 };
 
-
 export const updateService = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const updateData = req.body;
-
-    const updatedService = await servicesService.updateService(id, updateData);
-
-    if (!updatedService) {
-      return res.status(404).json({ message: 'Service not found' });
-    }
-
+    const updatedService = await servicesService.updateService(req.params.id, req.body);
+    if (!updatedService) return res.status(404).json({ message: 'Service not found' });
     res.status(200).json({ data: updatedService });
   } catch (error) {
     next(error);
@@ -53,14 +40,8 @@ export const updateService = async (req, res, next) => {
 
 export const deleteService = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    const deletedService = await servicesService.deleteService(id);
-
-    if (!deletedService) {
-      return res.status(404).json({ message: 'Service not found' });
-    }
-
+    const deletedService = await servicesService.deleteService(req.params.id);
+    if (!deletedService) return res.status(404).json({ message: 'Service not found' });
     res.status(200).json({ message: 'Service deleted successfully' });
   } catch (error) {
     next(error);
@@ -69,32 +50,56 @@ export const deleteService = async (req, res, next) => {
 
 export const addServiceForSubCategory = async (req, res, next) => {
   try {
-    
-    const serviceData = req.body;
-    const createdServiceData = await servicesService.addServiceForSubCategory(serviceData);
+    const createdServiceData = await servicesService.addServiceForSubCategory(req.body);
     res.status(201).json({ data: createdServiceData });
   } catch (error) {
-    console.error("🔥 Error in Controller:", error);
     next(error);
   }
 };
 
 export const getServicesOFAuthenticatedUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    if (!id) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-
-    const services = await servicesService.getServiceOFAuthenticatedUser(id);
-
-    if (!services || services.length === 0) {
-      return res.status(404).json({ message: 'Services not found for this user.' });
-    }
-
+    const services = await servicesService.getServicesOfProfessional(req.params.id);
+    if (!services || services.length === 0)
+      return res.status(404).json({ message: 'No services found for this user.' });
     res.status(200).json({ data: services });
   } catch (error) {
     next(error);
   }
 };
+
+
+// export const searchServiceByLocation =  async (req, res, next) => {
+//   try {
+//     const { service_id, zip_code } = req.body;
+//         console.log(service_id,zip_code)
+//     if (!service_id && !zip_code) {
+//       return res.status(400).json({ message: "At least one of service_id or zip_code is required" });
+//     }
+
+//     const services = await servicesService.searchServiceByLocation(service_id, zip_code);
+
+//     if (!services || services.length === 0) {
+//       return res.status(404).json({ message: 'No services found matching criteria' });
+//     }
+
+//     res.status(200).json({ data: services });
+//   } catch (error) {
+//     next(error);
+//   }
+
+// };
+
+
+
+export const serviceLocations =async (req,res,next)=>{
+  try {
+    const serviceLocations = await servicesService.serviceLocations();
+    if(!serviceLocations){
+      return res.status(404).json({message:'No service locations found.'})
+    }
+    res.status(200).json({message:serviceLocations});
+  } catch (error) {
+    next(error);
+  }
+}
