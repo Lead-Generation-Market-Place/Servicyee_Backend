@@ -55,6 +55,7 @@ app.use("/api/", apiLimiter);
 app.use("/api/v1/professionals", professionalRoutes);
 app.use("/api/v1/location", locationRoutes);
 app.use("/uploads", express.static("uploads"));
+
 app.use('/api/v1/wishlists',wishlistsRoutes);
 // Routes
 
@@ -66,6 +67,7 @@ app.get("/ping", async (req, res) => {
   await setEx("ping", 30, value);
   res.json({ source: "api", value });
 });
+
 
 app.use(errors());
 app.use((err, req, res, next) => {
@@ -95,6 +97,7 @@ const swaggerOptions = {
   },
   apis: ["./routes/*.js"], // Path to the API docs
 };
+
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 run()
