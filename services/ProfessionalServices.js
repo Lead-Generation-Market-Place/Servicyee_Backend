@@ -5,11 +5,11 @@ export function createProfessional(data) {
   return professional.save();
 }
 
-export function getProfessionalById(id) {
-  return Professional.findById(id)
-    .select()
-    .exec();
+
+export function getProfessionalByUserId(user_id) {
+  return Professional.findOne({ user_id }).exec();
 }
+
 
 
 export function getAllProfessionals(limit = 10) {
