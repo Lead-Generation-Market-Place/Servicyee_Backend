@@ -9,9 +9,10 @@ import helmet from "helmet";
 import cors from "cors";
 import { run } from "./config/db.js";
 
-
 import professionalRoutes from "./routes/ProfessionalRoutes.js";
 import locationRoutes from "./routes/LocationRoutes.js";
+import wishlistsRoutes from "./routes/wishlistsRoute.js";
+
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
@@ -23,27 +24,26 @@ import answerRoute from './routes/answerRoute.js'
 import searchRoute from './routes/searchRoute.js'
 dotenv.config();
 
-run();
-
 const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "https://frontend-servicyee.vercel.app",
 ];
-app.use(cors({
-    origin: function(origin, callback){
-    if(!origin) return callback(null, true);
-    if(allowedOrigins.includes(origin)){
-      return callback(null, true);
-    }
-    callback(new Error("Not allowed by CORS"));
-  }
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 app.use(morgan("combined"));
-
 
 // Recommended: Rate Limiting for API endpoints
 const apiLimiter = rateLimit({
@@ -67,6 +67,8 @@ app.use('/api/v1/subcategories',subCategoriesRoute)
 app.use('/api/v1/questions',questionRoute)
 app.use('/api/v1/answers',answerRoute)
 app.use('/api/v1/search',searchRoute)
+
+app.use('/api/v1/wishlists',wishlistsRoutes);
 // Routes
 
 // Test Redis cache route
@@ -107,8 +109,14 @@ const swaggerOptions = {
   },
   apis: ["./routes/*.js"], // Path to the API docs
 };
+
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+run()
+  .then(() => {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.error("Failed to connect to the database:", err);
+  });
