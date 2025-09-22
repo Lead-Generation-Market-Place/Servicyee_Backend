@@ -4,13 +4,13 @@ const WishListsSchema = new mongoose.Schema(
   {
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+      ref: "User",
       required: true,
       required: true,
     },
     service_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "services",
+      ref: "Service",
       required: true,
       required: true,
     },
@@ -18,7 +18,7 @@ const WishListsSchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-    collation: "wishlists",
+    collection: "wishlists",
   }
 );
 
