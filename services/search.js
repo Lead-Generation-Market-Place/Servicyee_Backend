@@ -75,6 +75,62 @@ class Search {
 
     return professionals;
   }
+async getAllPopularSearchByUserLocation(zipCode) {
+  if (!zipCode) {
+    throw new Error('zipCode is required');
+  }
+
+  const numericZip = Number(zipCode);
+  const existing = await searchModel.find({ zip_code: numericZip });
+
+  console.log(`Found ${existing.length} searches for zip code ${numericZip}`);
+  console.log("Sample search docs:", existing.slice(0, 2)); // just to check structure
+
+  const popularServices = await searchModel.aggregate([
+    {
+      $match: {
+        zip_code: numericZip
+      }
+    },
+    {
+      $group: {
+        _id: '$service_id',
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $sort: { count: -1 }
+    },
+    {
+      $limit: 10
+    },
+    {
+      $lookup: {
+        from: 'services', // <-- must match collection name
+        localField: '_id',
+        foreignField: '_id',
+        as: 'serviceDetails'
+      }
+    },
+    {
+      $unwind: '$serviceDetails'
+    },
+    {
+      $project: {
+        _id: 0,
+        service_id: '$_id',
+        count: 1,
+        service_name: '$serviceDetails.service_name'
+      }
+    }
+  ]);
+
+  console.log("Popular search result:", popularServices);
+
+  return popularServices;
+}
+
+
 }
 
 export default new Search();

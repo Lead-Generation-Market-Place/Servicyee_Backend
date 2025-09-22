@@ -2,15 +2,68 @@ import servicesModel from "../models/servicesModel.js";
 import ServiceModel from "../models/servicesModel.js";
 import subCategoryModel from "../models/subCategoryModel.js";
 import LocationModel  from "../models/LocationModel.js";
+
+import ProfessionalServicesModel from '../models/professionalServicesModel.js';
+
 class ServicesService {
   async getAllServices() {
     return await ServiceModel.find({});
   }
 
   async addService(serviceData) {
-    const newService = new ServiceModel(serviceData);
-    return await newService.save();
+  const { service_name, subcategory_id } = serviceData;
+
+  const existingService = await ServiceModel.findOne({
+    service_name: service_name.trim(),
+    subcategory_id
+  });
+
+  if (existingService) {
+    throw new Error('Service already exists under this subcategory');
   }
+
+  const newService = new ServiceModel(serviceData);
+  return await newService.save();
+}
+
+
+
+ async assignServiceToProfessional(professionalServiceData) {
+  const {
+    professional_id,
+    service_id,
+    location_id,
+    maximum_price,
+    minimum_price,
+    service_availability,
+    pricing_type
+  } = professionalServiceData;
+
+  const existingAssignment = await ProfessionalServicesModel.findOne({
+    professional_id,
+    service_id,
+    location_id,
+    maximum_price,
+    minimum_price,
+    service_availability,
+    pricing_type
+  });
+
+  if (existingAssignment) {
+    throw new Error('Service already assigned to this professional at this location');
+  }
+const newAssignment =  new ProfessionalServicesModel(professionalServiceData);
+return await newAssignment.save();
+
+}
+
+  // Optional: list assigned services for a professional
+  async getAssignedServicesForProfessional(professional_id) {
+    return await ProfessionalServicesModel.find({ professional_id })
+      .populate('service_id')
+      .populate('location_id');
+  }
+
 
   async getServiceById(serviceId) {
     return await ServiceModel.findById(serviceId);
@@ -63,57 +116,66 @@ class ServicesService {
 //   return services;
 // }
 
-
-async serviceLocations() {
+async getAllServiceLocationWithProCount() {
   try {
     const result = await Service.aggregate([
       {
-        // Only include services with valid location_id (ObjectId)
+        // Filter services with valid ObjectId location_id and optional active status
         $match: {
-          location_id: { $type: 'objectId' }
+          location_id: { $type: 'objectId' },
+          service_status: true // Optional: Only include active services
         }
       },
       {
+        // Group by location_id, collecting unique professional_ids
         $group: {
           _id: '$location_id',
-          professionalsSet: { $addToSet: '$professional_id' }
+          uniqueProfessionals: { $addToSet: '$professional_id' }
         }
       },
       {
+        // Project count of unique professionals
         $project: {
-          professionalsCount: { $size: '$professionalsSet' }
+          location_id: '$_id',
+          _id: 0,
+          professionalsCount: { $size: '$uniqueProfessionals' }
         }
       },
       {
+        // Lookup location details
         $lookup: {
           from: 'locations',
-          localField: '_id',
+          localField: 'location_id',
           foreignField: '_id',
           as: 'locationDetails'
         }
       },
       {
+        // Flatten the location details array
         $unwind: {
           path: '$locationDetails',
-          preserveNullAndEmptyArrays: true
+          preserveNullAndEmptyArrays: true // Keeps result even if location is not found
         }
       },
       {
+        // Final projected result
         $project: {
-          _id: 0,
-          location_id: '$_id',
+          location_id: 1,
           professionalsCount: 1,
-          city: '$locationDetails.city'
+          city: '$locationDetails.city',
+          state: '$locationDetails.state', // Add more fields if needed
+          country: '$locationDetails.country'
         }
       }
     ]);
 
     return result;
   } catch (error) {
-    console.error('Error fetching service locations:', error);
+    console.error('Error in getAllServiceLocationWithProCount:', error);
     throw error;
   }
 }
+
 }
 
 export default new ServicesService();

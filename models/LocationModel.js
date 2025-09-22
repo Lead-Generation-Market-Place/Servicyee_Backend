@@ -2,10 +2,12 @@
 import { Schema, model } from "mongoose";
 
 const locationSchema = new Schema({
-  country: { type: String, required: true },
-  state: { type: String, required: true },
+  country: { type: String, },
+  state: { type: String, },
   city: String,
-  zipcode: { type: Number, required:true }
+  zipcode: { type: Number, },
+  longtitude:{type:String},
+  latitude:{type:String}
 });
 
 export default model("Location", locationSchema);

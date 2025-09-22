@@ -4,7 +4,7 @@ import { errors } from "celebrate";
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 import helmet from "helmet";
-import registerRoutes from "./registerRoutes.js";
+
 
 import cors from "cors";
 import { run } from "./config/db.js";
@@ -15,6 +15,12 @@ import locationRoutes from "./routes/LocationRoutes.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
+import serviceRoute from './routes/serviceRoute.js';
+import categoryRoute from './routes/categoryRoute.js';
+import subCategoriesRoute from './routes/subCategoryRoute.js';
+import questionRoute from './routes/questionRoute.js'
+import answerRoute from './routes/answerRoute.js'
+import searchRoute from './routes/searchRoute.js'
 dotenv.config();
 
 run();
@@ -50,12 +56,17 @@ const apiLimiter = rateLimit({
     error: "Too many requests, please try again later.",
   },
 });
-registerRoutes(app);
+
 app.use("/api/", apiLimiter);
 app.use("/api/v1/professionals", professionalRoutes);
 app.use("/api/v1/location", locationRoutes);
 app.use("/uploads", express.static("uploads"));
-
+app.use('/api/v1/services', serviceRoute);
+app.use('/api/v1/categories',categoryRoute)
+app.use('/api/v1/subcategories',subCategoriesRoute)
+app.use('/api/v1/questions',questionRoute)
+app.use('/api/v1/answers',answerRoute)
+app.use('/api/v1/search',searchRoute)
 // Routes
 
 // Test Redis cache route

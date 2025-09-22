@@ -3,8 +3,8 @@ import Joi from 'joi';
 const pricingTypes = ['fixed', 'hourly'];
 
 export const createServiceSchema = Joi.object({
-  professional_id: Joi.string().required(),
-  category_id: Joi.string().required(),
+  professional_id: Joi.string().optional(),
+  service_name:Joi.string().optional(),
   subcategory_id: Joi.string().required(),
   location_id: Joi.string().optional(),
   maximum_price: Joi.number().optional(),

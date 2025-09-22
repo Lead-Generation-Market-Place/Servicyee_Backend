@@ -6,7 +6,7 @@ import {
   deleteService,
   getServiceById,
   addServiceForSubCategory,
-  getServicesOFAuthenticatedUser,serviceLocations
+  getServicesOFAuthenticatedUser,serviceLocations,assignServiceToProfessional
 } from '../controllers/serviceController.js';
 import { validateBody } from '../middlewares/validate.middleware.js';
 import { createServiceSchema, updateServiceSchema } from '../validators/service.validators.js';
@@ -20,6 +20,7 @@ router.post('/', validateBody(createServiceSchema), addServices);
 router.post('/subcategory', validateBody(createServiceSchema), addServiceForSubCategory);
 router.put('/:id', validateBody(updateServiceSchema), updateService);
 router.delete('/:id', deleteService);
+router.post('/asp',assignServiceToProfessional)
 
 router.get('/locations',serviceLocations);
 export default router;

@@ -9,14 +9,41 @@ export const getServices = async (req, res, next) => {
   }
 };
 
+
+// Add a new service (like "Home Cleaning")
 export const addServices = async (req, res, next) => {
   try {
     const createdService = await servicesService.addService(req.body);
     res.status(201).json({ data: createdService });
   } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+export const assignServiceToProfessional = async (req, res, next) => {
+  try {
+
+    const assignedService = await servicesService.assignServiceToProfessional(req.body);
+    res.status(201).json({ data: assignedService });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+// Optional: get all assigned services of a professional
+export const getAssignedServicesForProfessional = async (req, res, next) => {
+  try {
+    const professional_id = req.params.professionalId;
+    const assignedServices = await servicesService.getAssignedServicesForProfessional(professional_id);
+    res.status(200).json({ data: assignedServices });
+  } catch (error) {
     next(error);
   }
 };
+
+
+
+
 
 export const getServiceById = async (req, res, next) => {
   try {
@@ -94,7 +121,7 @@ export const getServicesOFAuthenticatedUser = async (req, res, next) => {
 
 export const serviceLocations =async (req,res,next)=>{
   try {
-    const serviceLocations = await servicesService.serviceLocations();
+    const serviceLocations = await servicesService.getAllServiceLocationWithProCount();
     if(!serviceLocations){
       return res.status(404).json({message:'No service locations found.'})
     }
@@ -103,3 +130,4 @@ export const serviceLocations =async (req,res,next)=>{
     next(error);
   }
 }
+
