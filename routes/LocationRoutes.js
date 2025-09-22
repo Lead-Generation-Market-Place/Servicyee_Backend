@@ -10,8 +10,8 @@ import {
 import { authenticateJWT } from "../middleware/auth.js";
 
 
-const router = express.Router();
 
+const router = express.Router();
 router.get('/all', getLocationHandler);
 router.get('/pro',authenticateJWT, getLocationByUserIdHandler); // Get location by authenticated user
 router.post('/create',createLocationHandler);

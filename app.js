@@ -4,12 +4,15 @@ import { errors } from "celebrate";
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 import helmet from "helmet";
+import registerRoutes from "./registerRoutes.js";
 
 import cors from "cors";
 import { run } from "./config/db.js";
 
 import professionalRoutes from "./routes/ProfessionalRoutes.js";
 import locationRoutes from "./routes/LocationRoutes.js";
+import wishlistsRoutes from "./routes/wishlistsRoute.js";
+
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
@@ -47,10 +50,25 @@ const apiLimiter = rateLimit({
     error: "Too many requests, please try again later.",
   },
 });
+registerRoutes(app);
 app.use("/api/", apiLimiter);
 app.use("/api/v1/professionals", professionalRoutes);
 app.use("/api/v1/location", locationRoutes);
 app.use("/uploads", express.static("uploads"));
+
+app.use('/api/v1/wishlists',wishlistsRoutes);
+// Routes
+
+// Test Redis cache route
+app.get("/ping", async (req, res) => {
+  const cached = await get("ping");
+  if (cached) return res.json({ source: "cache", value: cached });
+  const value = "pong " + new Date().toISOString();
+  await setEx("ping", 30, value);
+  res.json({ source: "api", value });
+});
+
+
 app.use(errors());
 app.use((err, req, res, next) => {
   const status = err.status || 500;
@@ -82,9 +100,11 @@ const swaggerOptions = {
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-run().then(() => {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}).catch((err) => {
-  console.error("Failed to connect to the database:", err);
-});
+run()
+  .then(() => {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.error("Failed to connect to the database:", err);
+  });
