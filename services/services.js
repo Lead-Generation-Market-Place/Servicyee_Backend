@@ -4,6 +4,8 @@ import subCategoryModel from "../models/subCategoryModel.js";
 import LocationModel  from "../models/LocationModel.js";
 
 import ProfessionalServicesModel from '../models/professionalServicesModel.js';
+import { professionalSchema } from "../validators/professionalValidator.js";
+import professionalServicesModel from "../models/professionalServicesModel.js";
 
 class ServicesService {
   async getAllServices() {
@@ -53,7 +55,7 @@ class ServicesService {
     throw new Error('Service already assigned to this professional at this location');
   }
 const newAssignment =  new ProfessionalServicesModel(professionalServiceData);
-return await newAssignment.save();
+return await newAssignment.save() ;
 
 }
 
@@ -116,60 +118,10 @@ return await newAssignment.save();
 //   return services;
 // }
 
-async getAllServiceLocationWithProCount() {
+async getAllPopularServiceLocationWithProCount() {
   try {
-    const result = await Service.aggregate([
-      {
-        // Filter services with valid ObjectId location_id and optional active status
-        $match: {
-          location_id: { $type: 'objectId' },
-          service_status: true // Optional: Only include active services
-        }
-      },
-      {
-        // Group by location_id, collecting unique professional_ids
-        $group: {
-          _id: '$location_id',
-          uniqueProfessionals: { $addToSet: '$professional_id' }
-        }
-      },
-      {
-        // Project count of unique professionals
-        $project: {
-          location_id: '$_id',
-          _id: 0,
-          professionalsCount: { $size: '$uniqueProfessionals' }
-        }
-      },
-      {
-        // Lookup location details
-        $lookup: {
-          from: 'locations',
-          localField: 'location_id',
-          foreignField: '_id',
-          as: 'locationDetails'
-        }
-      },
-      {
-        // Flatten the location details array
-        $unwind: {
-          path: '$locationDetails',
-          preserveNullAndEmptyArrays: true // Keeps result even if location is not found
-        }
-      },
-      {
-        // Final projected result
-        $project: {
-          location_id: 1,
-          professionalsCount: 1,
-          city: '$locationDetails.city',
-          state: '$locationDetails.state', // Add more fields if needed
-          country: '$locationDetails.country'
-        }
-      }
-    ]);
-
-    return result;
+    // const result = await professionalServicesModel.find();
+    return  'ssdfsadf';
   } catch (error) {
     console.error('Error in getAllServiceLocationWithProCount:', error);
     throw error;

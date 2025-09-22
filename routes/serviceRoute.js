@@ -6,21 +6,29 @@ import {
   deleteService,
   getServiceById,
   addServiceForSubCategory,
-  getServicesOFAuthenticatedUser,serviceLocations,assignServiceToProfessional
+  getServicesOFAuthenticatedUser,
+  assignServiceToProfessional,
+  getProfessionalCount
 } from '../controllers/serviceController.js';
+
 import { validateBody } from '../middlewares/validate.middleware.js';
 import { createServiceSchema, updateServiceSchema } from '../validators/service.validators.js';
 
 const router = express.Router();
 
-router.get('/', getServices);
+// ✅ Static/specific routes first
+router.get('/location', getProfessionalCount); // Needs to come before /:id
 router.get('/auth/:id', getServicesOFAuthenticatedUser);
-router.get('/:id', getServiceById);
-router.post('/', validateBody(createServiceSchema), addServices);
 router.post('/subcategory', validateBody(createServiceSchema), addServiceForSubCategory);
+router.post('/asp', assignServiceToProfessional);
+
+// ✅ General routes
+router.get('/', getServices);
+router.post('/', validateBody(createServiceSchema), addServices);
+
+// ✅ Dynamic route must be LAST
+router.get('/:id', getServiceById);
 router.put('/:id', validateBody(updateServiceSchema), updateService);
 router.delete('/:id', deleteService);
-router.post('/asp',assignServiceToProfessional)
 
-router.get('/locations',serviceLocations);
 export default router;

@@ -119,15 +119,14 @@ export const getServicesOFAuthenticatedUser = async (req, res, next) => {
 
 
 
-export const serviceLocations =async (req,res,next)=>{
+export const getProfessionalCount=async(req,res)=>{
   try {
-    const serviceLocations = await servicesService.getAllServiceLocationWithProCount();
-    if(!serviceLocations){
-      return res.status(404).json({message:'No service locations found.'})
-    }
-    res.status(200).json({message:serviceLocations});
+    // const serviceLocations = await servicesService.getAllPopularServiceLocationWithProCount();
+    // if(!serviceLocations){
+    //   return res.status(404).json({message:'No service locations found.'})
+    // }
+    res.status(200).json('Controller working');
   } catch (error) {
-    next(error);
   }
 }
 

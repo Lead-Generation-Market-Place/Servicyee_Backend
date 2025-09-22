@@ -21,7 +21,7 @@ export const searchServiceByLocation = async (req, res, next) => {
 export const getAllPopularSearchByUserLocation = async (req, res, next) => {
   try {
     const { zip_code } = req.body;
-      console.log(zip_code);
+    
     if (!zip_code) {
       return res.status(400).json({ message: "zip_code is required" });
     }
