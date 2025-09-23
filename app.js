@@ -23,9 +23,11 @@ import swaggerJsdoc from "swagger-jsdoc";
 import serviceRoute from './routes/serviceRoute.js';
 import categoryRoute from './routes/categoryRoute.js';
 import subCategoriesRoute from './routes/subCategoryRoute.js';
-import questionRoute from './routes/questionRoute.js'
-import answerRoute from './routes/answerRoute.js'
-import searchRoute from './routes/searchRoute.js'
+import questionRoute from './routes/questionRoute.js';
+import answerRoute from './routes/answerRoute.js';
+import searchRoute from './routes/searchRoute.js';
+import subcategoryServicesRoute from './routes/subcategoryServicesRoute.js';
+
 dotenv.config();
 
 const app = express();
@@ -61,10 +63,13 @@ const apiLimiter = rateLimit({
   },
 });
 
+// liaqat
 app.use("/api/", apiLimiter);
 app.use("/api/v1/professionals", professionalRoutes);
 app.use("/api/v1/location", locationRoutes);
 app.use("/uploads", express.static("uploads"));
+
+// Bashery
 app.use('/api/v1/services', serviceRoute);
 app.use('/api/v1/categories',categoryRoute)
 app.use('/api/v1/subcategories',subCategoriesRoute)
@@ -72,8 +77,11 @@ app.use('/api/v1/questions',questionRoute)
 app.use('/api/v1/answers',answerRoute)
 app.use('/api/v1/search',searchRoute)
 
-
+// Esmatullah
 app.use("/api/v1/user", userRoute);
+app.use("/api/v1/subcategories", subcategoryServicesRoute);
+
+// Durrani
 app.use('/api/v1/wishlists',wishlistsRoutes);
 // Routes
 
