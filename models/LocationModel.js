@@ -1,11 +1,40 @@
-// models/Product.js
 import { Schema, model } from "mongoose";
 
+const Locationtype = ["user", "service", "lead", "project"];
+
 const locationSchema = new Schema({
-  country: { type: String, required: true },
-  state: { type: String, required: true },
-  city: String,
-  zipcode: { type: Number, required:true }
+  type: {
+    type: String,
+    enum: ["user", "service", "lead", "project"],
+    required: true
+  },
+  user_id: { type: Schema.Types.ObjectId, ref: "User" },
+  professional_id: { type: Schema.Types.ObjectId, ref: "Professional" },
+  service_id: { type: Schema.Types.ObjectId, ref: "Service" },
+  lead_id: { type: Schema.Types.ObjectId, ref: "Lead" },
+  project_id: { type: Schema.Types.ObjectId, ref: "FeaturedProject" },
+
+  country: { type: String, required: true, default: "USA" },
+  state: { type: String },
+  city: { type: String, index: true },
+  zipcode: { type: String, index: true },
+  address_line: { type: String },
+  coordinates: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point"
+    },
+    coordinates: {
+      type: [Number],
+      index: "2dsphere"
+    }
+  }
+}, {
+  timestamps: true,
+  versionKey: false,
+  collection: "locations"
 });
+
 
 export default model("Location", locationSchema);

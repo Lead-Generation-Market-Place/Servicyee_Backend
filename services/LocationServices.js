@@ -22,3 +22,9 @@ export function getLocationById(id) {
 export function deleteLocationById(id) {
     return Location.findByIdAndDelete(id).exec();
 }
+
+// Get Location by userId
+export function GetLocationByUserId(user_id) {
+    const location = Location.findOne({ user_id }).exec();
+    return location;
+}
