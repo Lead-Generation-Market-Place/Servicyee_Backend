@@ -47,6 +47,47 @@ class CategoryService {
       throw error;
     }
   }
+
+
+async getAllCategoriesWithServiceCount() {
+  const categories = await CategoryModel.aggregate([
+    {
+      // Step 1: Lookup SubCategories for each Category
+      $lookup: {
+        from: 'subcategories',
+        localField: '_id',
+        foreignField: 'category_id', // ✅ Corrected field
+        as: 'subcategories'
+      }
+    },
+    {
+      $unwind: {
+        path: '$subcategories',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      // Step 2: Lookup Services for each SubCategory
+      $lookup: {
+        from: 'services',
+        localField: 'subcategories._id',
+        foreignField: 'subcategory_id',
+        as: 'services'
+      }
+    },
+    {
+      $group: {
+        _id: '$_id',
+        name: { $first: '$name' },
+        status: { $first: '$status' },
+        serviceCount: { $sum: { $size: '$services' } }
+      }
+    }
+  ]);
+
+  return categories;
+}
+
 }
 
 export default new CategoryService();

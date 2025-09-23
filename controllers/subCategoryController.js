@@ -76,3 +76,13 @@ export const deleteSubCategory = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const getAllSubCategoriesWithServicesCount = async (req, res, next) => {
+  try {
+    const subCategories = await subCategoryService.getAllSubCategoriesWithServicesCount();
+    res.status(200).json({ data: subCategories });
+  } catch (error) {
+    next(error);
+  }
+}

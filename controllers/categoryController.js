@@ -65,3 +65,13 @@ export const deleteCategory = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const getAllWithServiceCount = async (req, res, next) => {
+  try {
+    const categoriesWithServiceCount = await categoryService.getAllCategoriesWithServiceCount();
+    res.status(200).json({ data: categoriesWithServiceCount });
+  } catch (error) {
+    next(error);
+  }
+}

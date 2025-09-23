@@ -2,14 +2,14 @@ import mongoose from "mongoose";
 
 const subCategoryTypes = ['active', 'deactive'];
 
-const categorySchema = new mongoose.Schema({
+const subCategorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   status: { type: String, enum: subCategoryTypes, default: 'active' },
-    category: { 
+    category_id: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Category',      // Reference to Category model
+    ref: 'Category',     
     required: true
   }
 });
 
-export default mongoose.model('SubCategories', categorySchema);
+export default mongoose.model('SubCategories', subCategorySchema);
