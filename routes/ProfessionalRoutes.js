@@ -20,6 +20,6 @@ router.put('/:id', celebrate({ [Segments.BODY]: professionalSchema }), updatePro
 router.delete('/:id', deleteProfessionalHandler);
 
 import { uploadFile } from '../controllers/ProfessionalController.js';
-router.post('/upload', upload.single('file'), uploadFile);
+// router.post('/upload', upload.single('file'), uploadFile);
 
 export default router;
