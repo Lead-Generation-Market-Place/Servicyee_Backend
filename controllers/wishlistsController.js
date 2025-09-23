@@ -40,16 +40,30 @@ export const getWishListsWithSubCategory = async (req, res, next) => {
   }
 };
 
-export const getUserWishLists=async(req,res,next)=>{
+export const getUserWishLists = async (req, res, next) => {
   try {
-    const userId=req.params.id;
-    const result=await wishlistsService.getAllUserWishLists(userId);
+    const userId = req.params.id;
+    const result = await wishlistsService.getAllUserWishLists(userId);
     res.status(200).json({
       message: `Retreived WishList of ${userId} `,
-      count:result.count,
-      data:result
+      count: result.count,
+      data: result,
     });
   } catch (error) {
     next(error);
   }
-}
+};
+
+export const removeWishLists = async (req, res, next) => {
+  try {
+    
+    const result = await wishlistsService.removeWishList(req.body);
+    res.status(200).json({
+      message: `Wish List Removed`,
+      count: result.count,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

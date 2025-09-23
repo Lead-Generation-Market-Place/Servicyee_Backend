@@ -29,7 +29,6 @@ class WishListsService {
           {
             path: "subcategory_id",
             select: "name status",
-           
           },
         ],
       });
@@ -49,6 +48,17 @@ class WishListsService {
             select: "name status",
           },
         ],
+      });
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+  async removeWishList(wishListId) {
+    try {
+      const result = await wishlistsModel.deleteOne({
+        id: wishListId,
+        
       });
       return result;
     } catch (error) {
