@@ -8,8 +8,6 @@ export const getServices = async (req, res, next) => {
     next(error);
   }
 };
-
-
 // Add a new service (like "Home Cleaning")
 export const addServices = async (req, res, next) => {
   try {
@@ -28,8 +26,6 @@ export const assignServiceToProfessional = async (req, res, next) => {
     res.status(400).json({ message: error.message });
   }
 };
-
-
 // Optional: get all assigned services of a professional
 export const getAssignedServicesForProfessional = async (req, res, next) => {
   try {
@@ -40,10 +36,6 @@ export const getAssignedServicesForProfessional = async (req, res, next) => {
     next(error);
   }
 };
-
-
-
-
 
 export const getServiceById = async (req, res, next) => {
   try {
@@ -75,15 +67,6 @@ export const deleteService = async (req, res, next) => {
   }
 };
 
-export const addServiceForSubCategory = async (req, res, next) => {
-  try {
-    const createdServiceData = await servicesService.addServiceForSubCategory(req.body);
-    res.status(201).json({ data: createdServiceData });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const getServicesOFAuthenticatedUser = async (req, res, next) => {
   try {
     const services = await servicesService.getServicesOfProfessional(req.params.id);
@@ -95,38 +78,15 @@ export const getServicesOFAuthenticatedUser = async (req, res, next) => {
   }
 };
 
-
-// export const searchServiceByLocation =  async (req, res, next) => {
-//   try {
-//     const { service_id, zip_code } = req.body;
-//         console.log(service_id,zip_code)
-//     if (!service_id && !zip_code) {
-//       return res.status(400).json({ message: "At least one of service_id or zip_code is required" });
-//     }
-
-//     const services = await servicesService.searchServiceByLocation(service_id, zip_code);
-
-//     if (!services || services.length === 0) {
-//       return res.status(404).json({ message: 'No services found matching criteria' });
-//     }
-
-//     res.status(200).json({ data: services });
-//   } catch (error) {
-//     next(error);
-//   }
-
-// };
-
-
-
-export const getProfessionalCount=async(req,res)=>{
+export const getProfessionalCount =async (req,res,next)=>{
   try {
-    // const serviceLocations = await servicesService.getAllPopularServiceLocationWithProCount();
-    // if(!serviceLocations){
-    //   return res.status(404).json({message:'No service locations found.'})
-    // }
-    res.status(200).json('Controller working');
+    const serviceLocations = await servicesService.getAllPopularServiceLocationWithProCount();
+    if(!serviceLocations){
+      return res.status(404).json({message:'No service locations found.'})
+    }
+    res.status(200).json({message:serviceLocations});
   } catch (error) {
+    next(error);
   }
 }
 

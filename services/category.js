@@ -49,14 +49,14 @@ class CategoryService {
   }
 
 
- async getAllCategoriesWithServiceCount() {
+async getAllCategoriesWithServiceCount() {
   const categories = await CategoryModel.aggregate([
     {
       // Step 1: Lookup SubCategories for each Category
       $lookup: {
-        from: 'subcategories', // collection name
+        from: 'subcategories',
         localField: '_id',
-        foreignField: 'category',
+        foreignField: 'category_id', // ✅ Corrected field
         as: 'subcategories'
       }
     },
@@ -87,6 +87,7 @@ class CategoryService {
 
   return categories;
 }
+
 }
 
 export default new CategoryService();

@@ -5,7 +5,7 @@ const subCategoryTypes = ['active', 'deactive'];
 const subCategorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   status: { type: String, enum: subCategoryTypes, default: 'active' },
-    category: { 
+    category_id: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Category',     
     required: true

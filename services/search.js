@@ -1,55 +1,79 @@
 import searchModel from "../models/searchModel.js";
 import LocationModel from "../models/LocationModel.js";
 import ServiceModel from "../models/servicesModel.js";
-
+import mongoose from "mongoose";
 import ProfessionalServices from "../models/professionalServicesModel.js"; // import the ProfessionalServices model
 
 class Search {
-
 async searchServiceByLocation(service_id, zip_code, searchText) {
-  // Save the search if both service_id and zip_code are provided
+  // Log the search
   if (service_id && zip_code) {
     await searchModel.create({ service_id, zip_code });
   }
 
-  let query = {};
+  const matchStage = {
+    service_id: new mongoose.Types.ObjectId(service_id)
+  };
 
-  // Always use both service_id and zip_code if provided
-  if (service_id) {
-    query.service_id = service_id;
-  }
+  const pipeline = [
+    {
+      $match: matchStage
+    },
+    {
+      $lookup: {
+        from: 'locations',
+        localField: 'location_id',
+        foreignField: '_id',
+        as: 'location'
+      }
+    },
+    {
+      $unwind: '$location'
+    },
+    {
+      $match: {
+        'location.zipcode': zip_code
+      }
+    },
+    {
+      $lookup: {
+        from: 'professionals',
+        localField: 'professional_id',
+        foreignField: '_id',
+        as: 'professional'
+      }
+    },
+    {
+      $unwind: '$professional'
+    },
+    {
+      $lookup: {
+        from: 'services',
+        localField: 'service_id',
+        foreignField: '_id',
+        as: 'service'
+      }
+    },
+    {
+      $unwind: '$service'
+    }
+  ];
 
-  if (zip_code) {
-    query.zip_code = zip_code;
-  }
-
-  // If user is typing (searchText present), show suggestions reactively
+  // If searchText is provided, filter by description
   if (searchText && searchText.length >= 2) {
-    // Find professional services matching the search text and zip code
-    const professionalServices = await ProfessionalServices.find({
-      service_id: service_id,
-      zip_code: zip_code,
-      description: { $regex: searchText, $options: 'i' }
-    }).populate('professional_id service_id');
-
-    return professionalServices.map(ps => ps.professional_id);
+    pipeline.push({
+      $match: {
+        description: { $regex: searchText, $options: 'i' }
+      }
+    });
   }
 
-  // Otherwise, try to find professional services matching service and location
-  let professionalServices = await ProfessionalServices.find(query)
-    .populate('professional_id service_id');
+  const result = await ProfessionalServices.aggregate(pipeline);
 
-  // If no matches found, get suggestions based on searchText
-  if (!professionalServices.length && searchText) {
-    professionalServices = await ProfessionalServices.find({
-      description: { $regex: searchText, $options: 'i' },
-      zip_code: zip_code
-    }).populate('professional_id service_id');
-  }
-
-  // Return professionals related to the found professional services
-  return professionalServices.map(ps => ps.professional_id);
+  // Return just the professionals
+  return result.map(r => r.professional);
 }
+
 
  async getServiceSuggestions(searchText, zip_code) {
   const query = {};
@@ -92,6 +116,7 @@ async searchServiceByLocation(service_id, zip_code, searchText) {
 
     return professionals;
   }
+  
 async getAllPopularSearchByUserLocation(zipCode) {
   if (!zipCode) {
     throw new Error('zipCode is required');

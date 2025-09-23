@@ -28,8 +28,6 @@ class ServicesService {
   return await newService.save();
 }
 
-
-
  async assignServiceToProfessional(professionalServiceData) {
   const {
     professional_id,
@@ -58,7 +56,6 @@ const newAssignment =  new ProfessionalServicesModel(professionalServiceData);
 return await newAssignment.save() ;
 
 }
-
   // Optional: list assigned services for a professional
   async getAssignedServicesForProfessional(professional_id) {
     return await ProfessionalServicesModel.find({ professional_id })
@@ -66,16 +63,12 @@ return await newAssignment.save() ;
       .populate('location_id');
   }
 
-
   async getServiceById(serviceId) {
     return await ServiceModel.findById(serviceId);
   }
 
   async updateService(serviceId, updateData) {
-    return await ServiceModel.findByIdAndUpdate(serviceId, updateData, {
-      new: true,
-      runValidators: true
-    });
+    return await ServiceModel.findByIdAndUpdate(serviceId, updateData);
   }
 
   async deleteService(serviceId) {
@@ -85,17 +78,6 @@ return await newAssignment.save() ;
   async getServicesOfProfessional(professionalId) {
     return await ServiceModel.find({ professional_id: professionalId });
   }
-
-  async addServiceForSubCategory(serviceData) {
-    const subcategoryExists = await subCategoryModel.findById(serviceData.subcategory_id);
-    if (!subcategoryExists) {
-      throw new Error("SubCategory not found");
-    }
-
-    const newService = new ServiceModel(serviceData);
-    return await newService.save();
-  }
-
 
 // async searchServiceByLocation(service_id, zip_code) {
 //   const query = {};
@@ -118,15 +100,81 @@ return await newAssignment.save() ;
 //   return services;
 // }
 
-async getAllPopularServiceLocationWithProCount() {
+  getAllPopularServiceLocationWithProCount = async () => {
   try {
-    // const result = await professionalServicesModel.find();
-    return  'ssdfsadf';
+
+    console.log("Starting aggregation for popular service locations with professional counts...");
+    const result = await professionalServicesModel.aggregate([
+      {
+        // Match only active services (optional, based on your logic)
+        $match: {
+          service_status: true,
+          service_availability: true
+        }
+      },
+      {
+        // Group by location_id and count distinct professional_id
+        $group: {
+          _id: '$location_id',
+          professionalCount: { $addToSet: '$professional_id' }
+        }
+      },
+      {
+        // Convert the set to count
+        $project: {
+          location_id: '$_id',
+          professionalCount: { $size: '$professionalCount' }
+        }
+      },
+      {
+        // Join with locations collection to get state info
+        $lookup: {
+          from: 'locations',
+          localField: 'location_id',
+          foreignField: '_id',
+          as: 'location'
+        }
+      },
+      {
+        $unwind: '$location'
+      },
+      {
+        // Group by state
+        $group: {
+          _id: '$location.state',
+          totalProfessionals: { $sum: '$professionalCount' }
+        }
+      },
+      {
+        // Format output
+        $project: {
+          state: '$_id',
+          totalProfessionals: 1,
+          _id: 0
+        }
+      },
+      {
+        // Sort by count descending
+        $sort: { totalProfessionals: -1 }
+      }
+    ]);
+
+        if(result.length === 0){
+     
+      return 'No popular service locations found.';
+    }
+
+      else{
+
+        return result;
+      }
+
   } catch (error) {
-    console.error('Error in getAllServiceLocationWithProCount:', error);
+    console.error('Error in getAllPopularServiceLocationWithProCount:', error);
     throw error;
   }
-}
+};
+
 
 }
 

@@ -5,10 +5,11 @@ import {
   updateService,
   deleteService,
   getServiceById,
-  addServiceForSubCategory,
+
   getServicesOFAuthenticatedUser,
   assignServiceToProfessional,
   getProfessionalCount
+  
 } from '../controllers/serviceController.js';
 
 import { validateBody } from '../middlewares/validate.middleware.js';
@@ -19,7 +20,6 @@ const router = express.Router();
 // ✅ Static/specific routes first
 router.get('/location', getProfessionalCount); // Needs to come before /:id
 router.get('/auth/:id', getServicesOFAuthenticatedUser);
-router.post('/subcategory', validateBody(createServiceSchema), addServiceForSubCategory);
 router.post('/asp', assignServiceToProfessional);
 
 // ✅ General routes
