@@ -7,6 +7,7 @@ import {
 	updateProfessionalHandler,
 	deleteProfessionalHandler,
 	getProfessionalByUserIdHandler,
+	updateProfessionalIntroductionById,
 } from '../controllers/ProfessionalController.js';
 import upload from '../config/multer.js';
 import { authenticateJWT } from '../middleware/auth.js';
@@ -16,10 +17,11 @@ const router = express.Router();
 router.get('/', getAllProfessionalsHandler);
 router.get('/pro', authenticateJWT, getProfessionalByUserIdHandler);
 router.post('/', celebrate({ [Segments.BODY]: professionalSchema }), createProfessionalHandler);
-router.put('/:id', celebrate({ [Segments.BODY]: professionalSchema }), updateProfessionalHandler);
+router.put('/:id', celebrate({ [Segments.BODY]: updateIntroductionSchema }),  updateProfessionalIntroductionById);
 router.delete('/:id', deleteProfessionalHandler);
 
 import { uploadFile } from '../controllers/ProfessionalController.js';
+import { updateIntroductionSchema } from '../validators/updatePorfessionaIntro.js';
 router.post('/upload', upload.single('file'), uploadFile);
 
 export default router;

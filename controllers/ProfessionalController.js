@@ -102,3 +102,30 @@ export async function uploadFile(req, res) {
     });
   }
 }
+
+export async function updateProfessionalIntroductionById(req, res) {
+  const { id } = req.params;
+  const { introduction } = req.body;
+  try {
+    const professional = await updateProfessional(id, { introduction });
+    if (!professional) {
+      return res.status(404).json({
+        success: false,
+        message: "Professional not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Professional introduction updated successfully",
+      professional,
+    });
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating introduction",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
