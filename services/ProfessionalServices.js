@@ -23,3 +23,11 @@ export function updateProfessional(id, data) {
 export function deleteProfessional(id) {
   return Professional.findByIdAndDelete(id).exec();
 }
+
+export function updateProfessionalIntroductionById(id, data) {
+  return Professional.findByIdAndUpdate(
+    id,                              
+    { introduction: data.introduction }, 
+    { new: true, runValidators: true }   
+  );
+}
