@@ -21,7 +21,7 @@ const ProfessionalSchema = new Schema({
   portfolio: [{
     service_id: { type: ObjectId, ref: 'Service' },
     media_type: { type: String, enum: MediaType },
-    media_url: String
+    media_url:String
   }],
   business_hours: [{
     service_id: { type: ObjectId, ref: 'Service' },

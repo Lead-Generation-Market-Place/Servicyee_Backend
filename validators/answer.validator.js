@@ -9,11 +9,11 @@ const objectId = Joi.string().custom((value, helpers) => {
 }, 'ObjectId validation');
 
 export const createAnswerSchema = Joi.object({
-  question_id: objectId.required(),
+  question_id: objectId.optional(),
   lead_id: objectId.optional(),
   professional_id: objectId.optional(),
   user_id: objectId.optional(),
-  answers: Joi.any().required()
+  answers: Joi.any().optional()
 });
 
 export const updateAnswerSchema = Joi.object({

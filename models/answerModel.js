@@ -6,7 +6,7 @@ const AnswerSchema = new Schema({
   lead_id: { type: Schema.Types.ObjectId, ref: 'Lead' },
   professional_id: { type: Schema.Types.ObjectId, ref: 'Professional' },
   user_id: { type: Schema.Types.ObjectId, ref: 'User' },
-  answers: { type: Schema.Types.Mixed, required: true }
+  answers: { type: Schema.Types.Mixed }
 }, { timestamps: true, versionKey: false, collection: 'answers' });
 
 export default model('Answer', AnswerSchema);
