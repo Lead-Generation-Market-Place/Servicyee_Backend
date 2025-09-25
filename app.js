@@ -12,7 +12,6 @@ import { run } from "./config/db.js";
 import professionalRoutes from "./routes/ProfessionalRoutes.js";
 import locationRoutes from "./routes/LocationRoutes.js";
 
-import userRoute from "./routes/userRoute.js";
 
 import wishlistsRoutes from "./routes/wishlistsRoute.js";
 import findServiceProsRoute from "./routes/findServiceProsRoute.js";
@@ -27,6 +26,7 @@ import questionRoute from './routes/questionRoute.js';
 import answerRoute from './routes/answerRoute.js';
 import searchRoute from './routes/searchRoute.js';
 import subcategoryServicesRoute from './routes/subcategoryServicesRoute.js';
+import authRoute from "./routes/authRoute.js";
 
 dotenv.config();
 
@@ -78,7 +78,8 @@ app.use('/api/v1/answers',answerRoute)
 app.use('/api/v1/search',searchRoute)
 
 // Esmatullah
-app.use("/api/v1/user", userRoute);
+
+app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/subcategories", subcategoryServicesRoute);
 
 // Durrani
