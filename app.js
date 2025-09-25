@@ -15,7 +15,7 @@ import locationRoutes from "./routes/LocationRoutes.js";
 import userRoute from "./routes/userRoute.js";
 
 import wishlistsRoutes from "./routes/wishlistsRoute.js";
-
+import findServiceProsRoute from "./routes/findServiceProsRoute.js";
 
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
@@ -83,6 +83,7 @@ app.use("/api/v1/subcategories", subcategoryServicesRoute);
 
 // Durrani
 app.use('/api/v1/wishlists',wishlistsRoutes);
+app.use('/api/v1/findpros',findServiceProsRoute);
 // Routes
 
 app.use(errors());
