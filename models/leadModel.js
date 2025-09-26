@@ -1,0 +1,23 @@
+import mongoose, { Schema, Types } from "mongoose";
+
+const AnswerSchema = new Schema({
+  question_id: { type: Types.ObjectId, ref: "Question", required: true },
+  answer: Schema.Types.Mixed // can be string, boolean, number, array
+}, { _id: false });
+
+const FileSchema = new Schema({
+  url: { type: String, required: true },
+  type: { type: String, enum: ["image", "file", "video"], default: "image" }
+}, { _id: false });
+
+const LeadSchema = new Schema({
+  service_id: { type: Types.ObjectId, ref: "Service", required: true },
+  customer_id: { type: Types.ObjectId, ref: "Customer", required: true },
+  title: { type: String, required: true }, // store service name
+  answers: [AnswerSchema],
+  note: { type: String },
+  files: [FileSchema],
+  created_at: { type: Date, default: Date.now }
+}, { timestamps: true, versionKey: false, collection: "leads" });
+
+export default mongoose.model("Lead", LeadSchema);

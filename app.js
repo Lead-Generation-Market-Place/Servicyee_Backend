@@ -27,6 +27,7 @@ import answerRoute from './routes/answerRoute.js';
 import searchRoute from './routes/searchRoute.js';
 import subcategoryServicesRoute from './routes/subcategoryServicesRoute.js';
 import authRoute from "./routes/authRoute.js";
+import serviceQuestionsRoute from "./routes/serviceQuestionsRoute.js";
 
 dotenv.config();
 
@@ -78,7 +79,7 @@ app.use('/api/v1/answers',answerRoute)
 app.use('/api/v1/search',searchRoute)
 
 // Esmatullah
-
+app.use("/api/v1/service", serviceQuestionsRoute);
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/subcategories", subcategoryServicesRoute);
 
