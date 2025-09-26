@@ -76,7 +76,7 @@ export const getProfessionalsByService = async (req, res, next) => {
   }
 };
 
-export const getProfessionalsDetailsByService = async (req, res, next) => {  
+export const getProfessionalsDetailsByService = async (req, res, next) => {
   try {
     const pro_id = req.params.professionalId;
     console.log(pro_id);
@@ -106,10 +106,11 @@ export const getProfessionalsDetailsByService = async (req, res, next) => {
   }
 };
 
-
-
-
-export const getProfessionalsByServiceWithHighestRating = async (req, res, next) => {
+export const getProfessionalsByServiceWithHighestRating = async (
+  req,
+  res,
+  next
+) => {
   try {
     const { serviceId } = req.params;
 
@@ -131,7 +132,49 @@ export const getProfessionalsByServiceWithHighestRating = async (req, res, next)
       });
     }
 
-   
+    res.status(200).json({
+      success: true,
+      message: "Professionals found successfully",
+      count: professionalServices.length,
+      data: professionalServices,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProsAndCompaniesByServiceHighestRating = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const { serviceId, businessType } = req.params;
+
+    if (!serviceId) {
+      return res.status(400).json({
+        success: false,
+        message: "Service ID is required",
+      });
+    }
+
+    const professionalServices =
+      await findServicePros.getProsAndCompaniesByServiceHighestRating(
+        serviceId,
+        {
+          businessType: businessType,
+          limit: 5,
+        }
+      );
+
+    if (!professionalServices || professionalServices.length === 0) {
+      return res.status(404).json({
+        success: true,
+        message: `No professionals found for service ID: ${serviceId}`,
+        data: [],
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: "Professionals found successfully",
