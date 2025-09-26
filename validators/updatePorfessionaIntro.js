@@ -1,5 +1,62 @@
-import { Joi } from 'celebrate';
+import Joi from "joi";
 
-export const updateIntroductionSchema = Joi.object({
-  introduction: Joi.string().required()
+const businessTypes = ["company", "individual", "sub-contractor"];
+const mediaTypes = ["photo", "video"];
+const openClose = ["open", "close"];
+
+export const UpdateprofessionalSchema = Joi.object({
+  user_id: Joi.string().optional(),
+  business_name: Joi.string().optional(),
+  introduction: Joi.string().optional(),
+  business_type: Joi.string()
+    .valid(...businessTypes)
+    .optional(),
+  website: Joi.string().optional(),
+  founded_year: Joi.number().optional(),
+  employees: Joi.number().min(1).optional(),
+  profile_image: Joi.string().uri().optional(),
+  total_hire: Joi.number().optional(),
+  total_review: Joi.number().optional(),
+  rating_avg: Joi.number().optional(),
+  address_line: Joi.string().optional(), // allow this
+  zipcode: Joi.string().optional(), // allow this
+  profile_image: Joi.string()
+    .pattern(/\.(jpg|jpeg|png)$/i)
+    .message("Profile image must be a .jpg or .png file")
+    .optional(),
+  payment_methods: Joi.alternatives()
+    .try(Joi.string(), Joi.array().items(Joi.string()))
+    .optional(),
+  portfolio: Joi.array()
+    .items(
+      Joi.object({
+        service_id: Joi.string().optional(),
+        media_type: Joi.string()
+          .valid(...mediaTypes)
+          .optional(),
+        media_url: Joi.string().uri().optional(),
+      })
+    )
+    .optional(),
+  business_hours: Joi.array()
+    .items(
+      Joi.object({
+        service_id: Joi.string().optional(),
+        status: Joi.string()
+          .valid(...openClose)
+          .optional(),
+        start_time: Joi.date().optional(),
+        end_time: Joi.date().optional(),
+        day: Joi.number().min(0).max(6).optional(),
+      })
+    )
+    .optional(),
+  specializations: Joi.array()
+    .items(
+      Joi.object({
+        service_id: Joi.string().optional(),
+        specialization_tag: Joi.string().optional(),
+      })
+    )
+    .optional(),
 });
