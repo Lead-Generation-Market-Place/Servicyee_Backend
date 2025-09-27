@@ -1,504 +1,231 @@
 import mongoose from "mongoose";
 import Professional from "../models/ProfessionalModel.js";
 import professionalServices from "../models/professionalServicesModel.js";
+import services from "../models/servicesModel.js";
 
-class findServicePros {
+class FindServicePros {
+ 
   async getProfessionalsByService(serviceId) {
     try {
-      // Validate serviceId
-      if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-        throw new Error("Invalid service ID");
-      }
-
-      const objectIdServiceId = new mongoose.Types.ObjectId(serviceId);
-
-      const pros = await professionalServices.aggregate([
-        // Step 1: Match documents by service_id
-        {
-          $match: {
-            service_id: objectIdServiceId,
-            service_status: true // Add any additional filters you need
-          }
-        },
-
-        // Step 2: Limit results
-        { $limit: 5 },
-
-        // Step 3: Lookup professional details with nested user population
-        {
-          $lookup: {
-            from: "professionals", // MongoDB collection name
-            let: { proId: "$professional_id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: { $eq: ["$_id", "$$proId"] }
-                }
-              },
-              {
-                $project: {
-                  business_name: 1,
-                  introduction: 1,
-                  business_type: 1,
-                  profile_image: 1,
-                  user_id: 1
-                }
-              },
-              // Nested lookup for user details
-              {
-                $lookup: {
-                  from: "users", // MongoDB collection name
-                  let: { userId: "$user_id" },
-                  pipeline: [
-                    {
-                      $match: {
-                        $expr: { $eq: ["$_id", "$$userId"] }
-                      }
-                    },
-                    {
-                      $project: {
-                        username: 1,
-                        email: 1
-                      }
-                    }
-                  ],
-                  as: "user_id"
-                }
-              },
-              { $unwind: { path: "$user_id", preserveNullAndEmptyArrays: true } }
-            ],
-            as: "professional_id"
-          }
-        },
-
-        // Step 4: Lookup service details
-        {
-          $lookup: {
-            from: "services", // MongoDB collection name
-            let: { servId: "$service_id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: { $eq: ["$_id", "$$servId"] }
-                }
-              },
-              {
-                $project: {
-                  service_name: 1,
-                  service_status: 1
-                }
-              }
-            ],
-            as: "service_id"
-          }
-        },
-
-        // Step 5: Lookup location details
-        {
-          $lookup: {
-            from: "locations", // MongoDB collection name
-            let: { locId: "$location_id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: { $eq: ["$_id", "$$locId"] }
-                }
-              },
-              {
-                $project: {
-                  country: 1,
-                  state: 1
-                }
-              }
-            ],
-            as: "location_id"
-          }
-        },
-
-        // Step 6: Unwind arrays to objects (like populate does)
-        { $unwind: { path: "$professional_id", preserveNullAndEmptyArrays: true } },
-        { $unwind: { path: "$service_id", preserveNullAndEmptyArrays: true } },
-        { $unwind: { path: "$location_id", preserveNullAndEmptyArrays: true } },
-
-        // Step 7: Filter out documents where professional_id is null (optional)
-        {
-          $match: {
-            "professional_id": { $ne: null }
-          }
-        },
-
-        // Step 8: Sort if needed (add your sorting criteria)
-        { $sort: { createdAt: -1 } }
-      ]);
-
+      const pros = await professionalServices
+        .find({
+          service_id: serviceId,
+        })
+        .populate({
+          path: "professional_id",
+          select: "business_name introduction business_type profile_image",
+          populate: {
+            path: "user_id",
+            select: "username email",
+          },
+        })
+        .populate({
+          path: "service_id",
+          select: "service_name service_status",
+          model: services,
+        })
+        .populate({
+          path: "location_id",
+          select: "country state",
+        })
+        .limit(5)
+        .exec();
       return pros;
     } catch (error) {
       throw error;
     }
   }
 
-  
+ 
   async getProfessionalsDetailsByService(professionalId) {
     try {
-      // Validate professionalId
-      if (!mongoose.Types.ObjectId.isValid(professionalId)) {
-        throw new Error("Invalid professional ID");
-      }
-
-      const objectIdProfessionalId = new mongoose.Types.ObjectId(professionalId);
-
-      const pro = await Professional.aggregate([
-        // Step 1: Match professional by ID
+      const pro = await Professional.findById(professionalId).populate(
         {
-          $match: {
-            _id: objectIdProfessionalId
-          }
-        },
-
-        // Step 2: Lookup user details
-        {
-          $lookup: {
-            from: "users", // MongoDB collection name
-            let: { userId: "$user_id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: { $eq: ["$_id", "$$userId"] }
-                }
-              },
-              {
-                $project: {
-                  username: 1,
-                  email: 1,
-                  phone: 1, // Add other fields you might need
-                  profile_picture: 1
-                }
-              }
-            ],
-            as: "user_id"
-          }
-        },
-
-        // Step 3: Lookup service listings for this professional
-        {
-          $lookup: {
-            from: "professionalservices", // MongoDB collection name
-            let: { proId: "$_id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: { $eq: ["$professional_id", "$$proId"] },
-                  service_status: true
-                }
-              },
-              // Lookup service details for each service listing
-              {
-                $lookup: {
-                  from: "services",
-                  let: { serviceId: "$service_id" },
-                  pipeline: [
-                    {
-                      $match: {
-                        $expr: { $eq: ["$_id", "$$serviceId"] }
-                      }
-                    },
-                    {
-                      $project: {
-                        service_name: 1,
-                        service_description: 1
-                      }
-                    }
-                  ],
-                  as: "service_details"
-                }
-              },
-              { $unwind: { path: "$service_details", preserveNullAndEmptyArrays: true } },
-              
-              // Lookup location details for each service listing
-              {
-                $lookup: {
-                  from: "locations",
-                  let: { locationId: "$location_id" },
-                  pipeline: [
-                    {
-                      $match: {
-                        $expr: { $eq: ["$_id", "$$locationId"] }
-                      }
-                    },
-                    {
-                      $project: {
-                        country: 1,
-                        state: 1,
-                        city: 1,
-                        address_line: 1
-                      }
-                    }
-                  ],
-                  as: "location_details"
-                }
-              },
-              { $unwind: { path: "$location_details", preserveNullAndEmptyArrays: true } }
-            ],
-            as: "service_listings"
-          }
-        },
-
-        // Step 4: Unwind user array to object
-        { $unwind: { path: "$user_id", preserveNullAndEmptyArrays: true } },
-
-        // Step 5: Project final structure
-        {
-          $project: {
-            business_name: 1,
-            introduction: 1,
-            business_type: 1,
-            profile_image: 1,
-            rating: 1,
-            years_of_experience: 1,
-            certifications: 1,
-            user_id: 1,
-            service_listings: 1,
-            createdAt: 1,
-            updatedAt: 1
-          }
+          path: "user_id",
+          select: "username email",
         }
-      ]);
-
-      // Return first result or null if not found
-      return pro.length > 0 ? pro[0] : null;
+      ).exec();
+      return pro;
     } catch (error) {
       throw error;
     }
   }
 
-  /**
- * Get all professionals for a service sorted by highest rating first
- * Uses rating_avg field from professionals collection
- * also this api returns the complete info because of multiple api response may slow down the server and maybe updated the api upon request
- */
-async getProfessionalsByServiceHighestRating(serviceId, limit = 5) {
+ 
+  async getProfessionalsByServiceHighestRating(serviceId, limit = 5) {
+    try {
+      // First, get professional IDs for this service, sorted by rating
+      const serviceListings = await professionalServices
+        .find({
+          service_id: serviceId,
+          service_status: true
+        })
+        .populate({
+          path: "professional_id",
+          select: "rating_avg", // Only get rating for sorting
+        })
+        .sort({ "professional_id.rating_avg": -1 }) // Sort by rating descending
+        .limit(limit)
+        .lean()
+        .exec();
+
+      // If no results found, return empty array
+      if (!serviceListings || serviceListings.length === 0) {
+        return [];
+      }
+
+      // Extract professional IDs in the sorted order
+      const professionalIds = serviceListings
+        .filter(sl => sl.professional_id) // Filter out null professionals
+        .map(sl => sl.professional_id._id);
+
+      // Now get the full details for these professionals in the sorted order
+      const professionals = await professionalServices
+        .find({
+          service_id: serviceId,
+          professional_id: { $in: professionalIds },
+          service_status: true
+        })
+        .populate({
+          path: "professional_id",
+          select: "business_name introduction business_type profile_image website founded_year employees total_hire total_review rating_avg portfolio business_hours specializations user_id",
+          populate: {
+            path: "user_id",
+            select: "username email phone profile_picture",
+          },
+        })
+        .populate({
+          path: "service_id",
+          select: "service_name service_status service_description",
+          model: services,
+        })
+        .populate({
+          path: "location_id",
+          select: "country state city address_line zipcode coordinates",
+        })
+        .exec();
+
+      // Manual sorting to maintain the rating order
+      const sortedProfessionals = professionals.sort((a, b) => {
+        const ratingA = a.professional_id?.rating_avg || 0;
+        const ratingB = b.professional_id?.rating_avg || 0;
+        return ratingB - ratingA; // Descending order
+      });
+
+      return sortedProfessionals;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+   async getProsAndCompaniesByServiceHighestRating(serviceId, filters = {}) {
   try {
-    // Validate serviceId
-    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-      throw new Error("Invalid service ID");
+    const {
+      businessType, // 'professional' or 'company'
+      minRating = 0,
+      minHires = 0,
+      minReviews = 0,
+      limit = 10
+    } = filters;
+
+    // Build the base query
+    let query = professionalServices.find({
+      service_id: serviceId,
+      service_status: true
+    });
+
+    // Professional population with all fields from your data
+    const professionalPopulate = {
+      path: "professional_id",
+      select: "business_name introduction business_type website founded_year employees total_hire total_review rating_avg profile_image portfolio business_hours specializations payment_methods user_id",
+      populate: {
+        path: "user_id",
+        select: "username email phone profile_picture"
+      }
+    };
+
+    // Add business type filter if provided
+    if (businessType) {
+      professionalPopulate.match = { 
+        business_type: businessType,
+        ...professionalPopulate.match 
+      };
     }
 
-    const objectIdServiceId = new mongoose.Types.ObjectId(serviceId);
+    // Add rating filter
+    if (minRating > 0) {
+      professionalPopulate.match = {
+        ...professionalPopulate.match,
+        rating_avg: { $gte: minRating }
+      };
+    }
 
-    const professionals = await professionalServices.aggregate([
-      // Step 1: Match service listings by service_id
-      {
-        $match: {
-          service_id: objectIdServiceId,
-          service_status: true // Only active service listings
-        }
-      },
+    // Add minimum hires filter
+    if (minHires > 0) {
+      professionalPopulate.match = {
+        ...professionalPopulate.match,
+        total_hire: { $gte: minHires }
+      };
+    }
 
-      // Step 2: Lookup professional details with rating
-      {
-        $lookup: {
-          from: "professionals", // professionals collection
-          let: { proId: "$professional_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $eq: ["$_id", "$$proId"] }
-              }
-            },
-            {
-              $project: {
-                business_name: 1,
-                introduction: 1,
-                business_type: 1,
-                website: 1,
-                founded_year: 1,
-                employees: 1,
-                total_hire: 1,
-                total_review: 1,
-                rating_avg: 1,
-                profile_image: 1,
-                portfolio: 1,
-                business_hours: 1,
-                specializations: 1,
-                user_id: 1,
-                createdAt: 1,
-                updatedAt: 1
-              }
-            }
-          ],
-          as: "professional"
-        }
-      },
+    // Add minimum reviews filter
+    if (minReviews > 0) {
+      professionalPopulate.match = {
+        ...professionalPopulate.match,
+        total_review: { $gte: minReviews }
+      };
+    }
 
-      // Step 3: Lookup user details
-      {
-        $lookup: {
-          from: "users", // users collection
-          let: { userId: "$professional.user_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $eq: ["$_id", "$$userId"] }
-              }
-            },
-            {
-              $project: {
-                username: 1,
-                email: 1,
-                phone: 1,
-                profile_picture: 1
-              }
-            }
-          ],
-          as: "user"
-        }
-      },
+    query = query.populate(professionalPopulate);
 
-      // Step 4: Lookup service details
-      {
-        $lookup: {
-          from: "services", // services collection
-          let: { servId: "$service_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $eq: ["$_id", "$$servId"] }
-              }
-            },
-            {
-              $project: {
-                service_name: 1,
-                service_status: 1,
-                service_description: 1
-              }
-            }
-          ],
-          as: "service"
-        }
-      },
+    // Add other populations
+    query = query.populate({
+      path: "service_id",
+      select: "service_name service_status service_description",
+      model: services,
+    });
 
-      // Step 5: Lookup location details
-      {
-        $lookup: {
-          from: "locations", // locations collection
-          let: { locId: "$location_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $eq: ["$_id", "$$locId"] }
-              }
-            },
-            {
-              $project: {
-                country: 1,
-                state: 1,
-                city: 1,
-                address_line: 1,
-                zipcode: 1,
-                coordinates: 1
-              }
-            }
-          ],
-          as: "location"
-        }
-      },
+    query = query.populate({
+      path: "location_id",
+      select: "country state city address_line zipcode coordinates"
+    });
 
-      // Step 6: Unwind arrays to objects
-      { $unwind: { path: "$professional", preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: "$service", preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: "$location", preserveNullAndEmptyArrays: true } },
+    // Get results
+    const results = await query.exec();
 
-      // Step 7: Filter out documents without professionals
-      {
-        $match: {
-          "professional": { $ne: null }
-        }
-      },
+    // Filter out documents where professional_id is null (due to population filters)
+    const filteredResults = results.filter(item => item.professional_id !== null);
 
-      // Step 8: Sort by rating_avg (highest first)
-      {
-        $sort: {
-          "professional.rating_avg": -1, // -1 for descending (highest first)
-          "professional.total_review": -1, // Secondary sort by number of reviews
-          "professional.total_hire": -1 // Tertiary sort by total hires
-        }
-      },
-
-      // Step 9: Limit results
-      { $limit: parseInt(limit) },
-
-      // Step 10: Project final structure
-      {
-        $project: {
-          // Service Listing Info
-          _id: 1,
-          description: 1,
-          service_availability: 1,
-          service_status: 1,
-          pricing: 1,
-          estimated_duration: 1,
-          
-          // Professional Info (with rating)
-          professional: {
-            _id: "$professional._id",
-            business_name: "$professional.business_name",
-            introduction: "$professional.introduction",
-            business_type: "$professional.business_type",
-            website: "$professional.website",
-            founded_year: "$professional.founded_year",
-            employees: "$professional.employees",
-            total_hire: "$professional.total_hire",
-            total_review: "$professional.total_review",
-            rating_avg: "$professional.rating_avg", // The rating field
-            profile_image: "$professional.profile_image",
-            portfolio: "$professional.portfolio",
-            business_hours: "$professional.business_hours",
-            specializations: "$professional.specializations",
-            createdAt: "$professional.createdAt",
-            updatedAt: "$professional.updatedAt"
-          },
-
-          // User Info
-          user: {
-            _id: "$user._id",
-            username: "$user.username",
-            email: "$user.email",
-            phone: "$user.phone",
-            profile_picture: "$user.profile_picture"
-          },
-
-          // Service Info
-          service: {
-            _id: "$service._id",
-            service_name: "$service.service_name",
-            service_status: "$service.service_status",
-            service_description: "$service.service_description"
-          },
-
-          // Location Info
-          location: {
-            _id: "$location._id",
-            country: "$location.country",
-            state: "$location.state",
-            city: "$location.city",
-            address_line: "$location.address_line",
-            zipcode: "$location.zipcode",
-            coordinates: "$location.coordinates"
-          },
-
-          // Timestamps
-          createdAt: 1,
-          updatedAt: 1
-        }
+    // Sort by rating_avg (highest first), then by total_review, then by total_hire
+    filteredResults.sort((a, b) => {
+      const ratingA = a.professional_id?.rating_avg || 0;
+      const ratingB = b.professional_id?.rating_avg || 0;
+      
+      // First sort by rating
+      if (ratingB !== ratingA) {
+        return ratingB - ratingA;
       }
-    ]);
+      
+      // If ratings are equal, sort by reviews
+      const reviewsA = a.professional_id?.total_review || 0;
+      const reviewsB = b.professional_id?.total_review || 0;
+      if (reviewsB !== reviewsA) {
+        return reviewsB - reviewsA;
+      }
+      
+      // If reviews are equal, sort by hires
+      const hiresA = a.professional_id?.total_hire || 0;
+      const hiresB = b.professional_id?.total_hire || 0;
+      return hiresB - hiresA;
+    });
 
-    return professionals;
+    // Apply limit
+    return filteredResults.slice(0, limit);
+
   } catch (error) {
     throw error;
   }
 }
 }
 
-export default new findServicePros();
+export default new FindServicePros();
