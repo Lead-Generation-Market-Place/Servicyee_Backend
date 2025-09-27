@@ -12,7 +12,7 @@ export const UpdateprofessionalSchema = Joi.object({
     .valid(...businessTypes)
     .optional(),
   website: Joi.string().optional(),
-  founded_year: Joi.number().optional(),
+  founded_year: Joi.number().min(1).optional(),
   employees: Joi.number().min(1).optional(),
   profile_image: Joi.string().uri().optional(),
   total_hire: Joi.number().optional(),

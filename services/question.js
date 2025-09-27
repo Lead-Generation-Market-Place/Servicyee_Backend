@@ -21,6 +21,10 @@ class QuestionService {
   async deleteQuestion(id) {
     return await QuestionModel.findByIdAndDelete(id);
   }
+
+  async getQuestionByServiceId(serviceId) {
+    return await QuestionModel.find({ service_id: serviceId });
+  }
 }
 
 export default new QuestionService();

@@ -9,7 +9,7 @@ import {
   getServicesOFAuthenticatedUser,
   assignServiceToProfessional,
   getProfessionalCount
-  
+  , toggleServiceStatus
 } from '../controllers/serviceController.js';
 
 import { validateBody } from '../middlewares/validate.middleware.js';
@@ -19,6 +19,7 @@ const router = express.Router();
 
 // ✅ Static/specific routes first
 router.get('/location', getProfessionalCount); // Needs to come before /:id
+router.put('/toggle-service-status', toggleServiceStatus);
 router.get('/auth/:id', getServicesOFAuthenticatedUser);
 router.post('/asp', assignServiceToProfessional);
 

@@ -89,4 +89,15 @@ export const getProfessionalCount =async (req,res,next)=>{
     next(error);
   }
 }
-
+export const toggleServiceStatus = async (req, res, next) => {
+  try {
+    const { serviceId, status } = req.body;
+    if (typeof status !== 'boolean') {
+      return res.status(400).json({ message: 'Status must be a boolean value.' });
+    }
+    const updatedService = await servicesService.activeInactiveServiceToggle(serviceId, status);
+    res.status(200).json({ data: updatedService });
+  } catch (error) {
+    next(error);
+  }
+};

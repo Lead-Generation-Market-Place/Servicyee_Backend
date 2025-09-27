@@ -13,10 +13,7 @@ const ProfessionalSchema = new Schema(
     introduction: String,
     business_type: { type: String, enum: BusinessType },
     website: { type: String, required: false },
-    founded_year: {
-      type: Number,
-      required: false,
-    },
+    founded_year: { type: Number, min: 1, required: false },
     employees: { type: Number, min: 1, required: false },
     total_hire: { type: Number, default: 0 },
     total_review: { type: Number, default: 0 },

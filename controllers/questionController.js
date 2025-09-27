@@ -52,3 +52,16 @@ export const deleteQuestion = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const getQuestionByServiceId = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    console.log(id);
+    const questions = await questionService.getQuestionByServiceId(id);
+    if (!questions) return res.status(404).json({ message: 'Questions not found' });
+    res.status(200).json({ data: questions });
+  } catch (error) {
+    next(error);
+  }
+};
