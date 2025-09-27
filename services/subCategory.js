@@ -4,7 +4,7 @@ import Category from '../models/categoryModel.js';  // Import Category model
 class SubCategoryService {
   async getAllSubCategories(filter = {}) {
     try {
-      return await SubCategories.find(filter).populate('category_id');
+      return await SubCategories.find(filter);
     } catch (error) {
       throw error;
     }

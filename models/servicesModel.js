@@ -1,7 +1,5 @@
 import mongoose from 'mongoose';
 
-
-
 const ServiceSchema = new mongoose.Schema({
  service_name: { type: String },
   subcategory_id: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategories',},
