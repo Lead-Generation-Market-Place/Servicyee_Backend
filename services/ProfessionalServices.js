@@ -38,7 +38,7 @@ export async function updateProfessionalService(id, data) {
   }
   const {
     business_name,
-    year_founded,
+    founded_year,
     employees,
     website,
     payment_methods,
@@ -49,7 +49,7 @@ export async function updateProfessionalService(id, data) {
 
   const professionalUpdate = {
     business_name,
-    year_founded,
+    founded_year,
     employees,
     website,
     payment_methods,

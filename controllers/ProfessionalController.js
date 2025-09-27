@@ -7,6 +7,8 @@ import {
   deleteProfessional,
   updateProfessionalService,
 } from "../services/ProfessionalServices.js";
+const backendUrl = process.env.BACKEND_URL || "https://frontend-servicyee.vercel.app";
+
 
 export async function createProfessionalHandler(req, res) {
   try {
@@ -135,7 +137,7 @@ export async function updateProfessionalInfo(req, res) {
   const { id } = req.params;
   const {
     business_name,
-    year_founded,
+    founded_year,
     employees,
     website,
     payment_methods,
@@ -143,12 +145,13 @@ export async function updateProfessionalInfo(req, res) {
     zipcode,
   } = req.body;
 
-  const profile_image = req.file ? req.file.path : undefined;
+  const fullImageUrl = req.file ? req.file.path : undefined;
+  const profile_image = `${backendUrl}/${fullImageUrl}`;
 
   try {
     const result = await updateProfessionalService(id, {
       business_name,
-      year_founded,
+      founded_year,
       employees,
       website,
       payment_methods,
