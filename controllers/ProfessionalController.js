@@ -1,9 +1,11 @@
+import Professional from "../models/ProfessionalModel.js";
 import {
   createProfessional,
   getProfessionalByUserId,
   getAllProfessionals,
   updateProfessional,
   deleteProfessional,
+  updateProfessionalService,
 } from "../services/ProfessionalServices.js";
 
 export async function createProfessionalHandler(req, res) {
@@ -121,10 +123,57 @@ export async function updateProfessionalIntroductionById(req, res) {
       professional,
     });
   } catch (error) {
-    console.error("Update error:", error);
     res.status(500).json({
       success: false,
       message: "Error updating introduction",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+export async function updateProfessionalInfo(req, res) {
+  const { id } = req.params;
+  const {
+    business_name,
+    year_founded,
+    employees,
+    website,
+    payment_methods,
+    address_line,
+    zipcode,
+  } = req.body;
+
+  const profile_image = req.file ? req.file.path : undefined;
+
+  try {
+    const result = await updateProfessionalService(id, {
+      business_name,
+      year_founded,
+      employees,
+      website,
+      payment_methods,
+      address_line,
+      zipcode,
+      profile_image,
+    });
+
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Professional not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Professional info updated successfully",
+      professional: result.professional,
+      location: result.location,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating professional info",
       error: error?.message || "An unexpected error occurred",
     });
   }
