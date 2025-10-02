@@ -70,3 +70,19 @@ export async function register(req, res) {
     });
   }
 }
+
+export async function getAllusers(req, res) {
+  try {
+    const users = await authService.getAllUserService();
+    if (!users) {
+      res.status(401).json({message:"Unable to get all users"});
+    }
+    return res.status(201).json({users});
+  } catch (error) {
+    return res.status(500).json({
+      success:false,
+      message:"Unable to get all users",
+      error:error?.message || "An unexpected error occured"
+    });
+  }
+}
