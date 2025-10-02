@@ -145,11 +145,8 @@ export async function updateProfessionalInfo(req, res) {
     zipcode,
   } = req.body;
 
-  const fullImageUrl = req.file ? req.file.path : undefined;
-  const profile_image = `${backendUrl}/${fullImageUrl}`;
-
   try {
-    const result = await updateProfessionalService(id, {
+    const updateData = {
       business_name,
       founded_year,
       employees,
@@ -157,8 +154,14 @@ export async function updateProfessionalInfo(req, res) {
       payment_methods,
       address_line,
       zipcode,
-      profile_image,
-    });
+    };
+
+    if (req.file) {
+      const fullImageUrl = req.file.path;
+      updateData.profile_image = `${backendUrl}/${fullImageUrl}`;
+    }
+
+    const result = await updateProfessionalService(id, updateData);
 
     if (!result) {
       return res.status(404).json({
