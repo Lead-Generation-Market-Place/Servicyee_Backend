@@ -3,7 +3,7 @@
 export function authenticateJWT(req, res, next) {
   // For testing purposes, we hardcode the authenticated user
   req.user = {
-    id: '68cee65d0cc10d7c38193f16',
+    id: '68d6aca9df0080a85e3fa284',
   };
   next();
 }
