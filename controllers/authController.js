@@ -35,7 +35,9 @@ export async function login(req, res) {
     } catch (error) {
         console.log("Login error: ", error);
         res.status(500).json({
-            message:"Server error"
+            success:false,
+            message:"Server error",
+            error:error?.message || "An an expected error occured"
         });
     }
 }
