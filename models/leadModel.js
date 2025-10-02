@@ -12,10 +12,10 @@ const FileSchema = new Schema({
 
 const LeadSchema = new Schema({
   service_id: { type: Types.ObjectId, ref: "Service", required: true },
-  customer_id: { type: Types.ObjectId, ref: "Customer", required: true },
+  user_id: { type: Types.ObjectId, ref: "User", required: true },
   title: { type: String, required: true }, // store service name
   answers: [AnswerSchema],
-  note: { type: String },
+  note: { type: String }, 
   files: [FileSchema],
   created_at: { type: Date, default: Date.now }
 }, { timestamps: true, versionKey: false, collection: "leads" });

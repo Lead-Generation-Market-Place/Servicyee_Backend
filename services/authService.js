@@ -19,3 +19,8 @@ export async function register(data) {
 
   return await user.save();
 }
+
+export function getAllUserService() {
+  return User.find().exec();
+  
+}
