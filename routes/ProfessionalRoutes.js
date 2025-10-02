@@ -14,7 +14,7 @@ import createUploader from '../config/multer.js';  // rename to reflect it's a f
 import { authenticateJWT } from '../middleware/auth.js';
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
 const router = express.Router();
-const upload = createUploader('profile_images'); 
+const upload = createUploader('professionals'); 
 router.get('/', getAllProfessionalsHandler);
 router.get('/pro', authenticateJWT, getProfessionalByUserIdHandler);
 router.post('/', celebrate({ [Segments.BODY]: professionalSchema }), createProfessionalHandler);
