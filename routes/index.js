@@ -156,9 +156,7 @@ export const getRouteSummary = () => {
   return summary;
 };
 
-// Log route summary on import (for development)
 if (process.env.NODE_ENV === 'development') {
-  console.log('📁 Route Summary:');
   console.table(apiRoutes.map(route => ({
     Path: route.path,
     Developer: route.developer,

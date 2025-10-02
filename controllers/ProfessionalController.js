@@ -7,7 +7,7 @@ import {
   deleteProfessional,
   updateProfessionalService,
 } from "../services/ProfessionalServices.js";
-const backendUrl = process.env.BACKEND_URL || "https://frontend-servicyee.vercel.app";
+const backendUrl = process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
 
 
 export async function createProfessionalHandler(req, res) {
