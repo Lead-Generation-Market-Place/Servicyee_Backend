@@ -1,4 +1,4 @@
-import { createLeadService } from "../services/leadService.js";
+import { acceptLeadService, createLeadService } from "../services/leadService.js";
 
 export const createLead = async (req, res) => {
   try {
@@ -36,3 +36,29 @@ export const createLead = async (req, res) => {
     });
   }
 };
+
+export const acceptLead = async (req, res) => {
+  try {
+    const {leadId, professionalId } = req.body;
+    if (!leadId || !professionalId) {
+      return res.status(400).json({
+        success:false,
+        message:"Lead and professional are required"
+      });
+    }
+
+    const accepted = await acceptLeadService({leadId, professionalId});
+    return res.status(200).json({
+      success: true,
+      message: "Lead accepted successfully",
+      data: accepted
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Unable to accept lead",
+      error:error?.message || "An unexpected error occured"
+    });
+  }
+}
