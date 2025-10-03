@@ -4,40 +4,53 @@ import jwt from "jsonwebtoken";
 
 export async function login(req, res) {
     try {
-        const {email, password} = req.body
-        if(!email || !password) {
-            return res.status(400).json({message:"Email and password are required"});
-        }
-        const user = await authService.login({email});
-        if (!user) {
-            return res.status(401).json({message: "Invalid email or password"});
-        }
+        const { email, password } = req.body;
         
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required"
+            });
+        }
+
+        const user = await authService.login({ email });
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password"
+            });
+        }
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({message: "Invalid email or password"});
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password"
+            });
         }
 
         const token = jwt.sign(
-            {id: user._id, email: user.email},
+            { id: user._id, email: user.email },
             process.env.JWT_SECRET,
-            { expiresIn: 60 * 60 * 24 } 
+            { expiresIn: '24h' } // 24 hours
         );
+
         return res.json({
-            message:"login successful",
+            success: true,
+            message: "Login successful",
             token,
-            user:{
+            user: {
                 id: user._id,
                 username: user.username,
                 email: user.email
-            },
+            }
         });
     } catch (error) {
         console.log("Login error: ", error);
         res.status(500).json({
-            success:false,
-            message:"Server error",
-            error:error?.message || "An an expected error occured"
+            success: false,
+            message: "Server error",
+            error: error?.message || "An unexpected error occurred"
         });
     }
 }
