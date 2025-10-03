@@ -31,8 +31,6 @@ export function updateProfessionalIntroductionById(id, data) {
 }
 
 export async function updateProfessionalService(id, data) {
-    console.log("Updating professional with ID:", id);
-  console.log("Incoming data:", data);
   if (data.payment_methods) {
     if (!Array.isArray(data.payment_methods)) {
       data.payment_methods = [data.payment_methods]; 
@@ -68,7 +66,7 @@ export async function updateProfessionalService(id, data) {
   
   const locationUpdate = { address_line, zipcode };
   const location = await Location.findOneAndUpdate(
-    { user_id: professional.user_id },  // Use the user_id from the professional document
+    { user_id: professional.user_id },  
     locationUpdate,
     { new: true, runValidators: true, upsert: true }
   );
