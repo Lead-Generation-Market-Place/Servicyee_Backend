@@ -1,5 +1,5 @@
 import express from 'express';
-import { celebrate, Joi, errors, Segments } from 'celebrate';
+import { celebrate, Segments } from 'celebrate';
 import { professionalSchema } from '../validators/professionalValidator.js';
 import {
 	getAllProfessionalsHandler,

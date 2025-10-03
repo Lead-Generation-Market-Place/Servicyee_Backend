@@ -2,167 +2,179 @@ import professionalRoutes from "./ProfessionalRoutes.js";
 import locationRoutes from "./LocationRoutes.js";
 import wishlistsRoutes from "./wishlistsRoute.js";
 import findServiceProsRoute from "./findServiceProsRoute.js";
-import serviceRoute from './serviceRoute.js';
-import categoryRoute from './categoryRoute.js';
-import subCategoriesRoute from './subCategoryRoute.js';
-import questionRoute from './questionRoute.js';
-import answerRoute from './answerRoute.js';
-import searchRoute from './searchRoute.js';
-import subcategoryServicesRoute from './subcategoryServicesRoute.js';
+import serviceRoute from "./serviceRoute.js";
+import categoryRoute from "./categoryRoute.js";
+import subCategoriesRoute from "./subCategoryRoute.js";
+import questionRoute from "./questionRoute.js";
+import answerRoute from "./answerRoute.js";
+import searchRoute from "./searchRoute.js";
+import subcategoryServicesRoute from "./subcategoryServicesRoute.js";
 import authRoute from "./authRoute.js";
 import serviceQuestionsRoute from "./serviceQuestionsRoute.js";
 import leadRoute from "./leadRoute.js";
+import ReviewsRoutes from "./ReviewsRoutes.js";
 
 // Organized by feature
 const apiRoutes = [
   // Authentication & Users
   {
-    path: '/auth',
+    path: "/auth",
     router: authRoute,
-    developer: 'esmatullah',
-    domain: 'authentication',
-    description: 'User authentication and authorization'
+    developer: "esmatullah",
+    domain: "authentication",
+    description: "User authentication and authorization",
   },
 
   // Professionals
   {
-    path: '/professionals',
+    path: "/professionals",
     router: professionalRoutes,
-    developer: 'liaqat',
-    domain: 'professionals',
-    description: 'Professional management and profiles'
+    developer: "liaqat",
+    domain: "professionals",
+    description: "Professional management and profiles",
   },
+
   {
-    path: '/findpros',
+    path: "/reviews",
+    router: ReviewsRoutes,
+    developer: "liaqat",
+    domain: "reviews",
+    description: "Reviews management",
+  },
+
+  {
+    path: "/findpros",
     router: findServiceProsRoute,
-    developer: 'durrani',
-    domain: 'professionals',
-    description: 'Find service professionals'
+    developer: "durrani",
+    domain: "professionals",
+    description: "Find service professionals",
   },
   {
-    path: '/lead',
+    path: "/lead",
     router: leadRoute,
-    developer: 'esmatullah',
-    domain: 'business',
-    description: 'Lead management'
+    developer: "esmatullah",
+    domain: "business",
+    description: "Lead management",
   },
 
   // Services & Categories
   {
-    path: '/services',
+    path: "/services",
     router: serviceRoute,
-    developer: 'bashery',
-    domain: 'services',
-    description: 'Service management'
+    developer: "bashery",
+    domain: "services",
+    description: "Service management",
   },
   {
-    path: '/categories',
+    path: "/categories",
     router: categoryRoute,
-    developer: 'bashery',
-    domain: 'categories',
-    description: 'Service categories'
+    developer: "bashery",
+    domain: "categories",
+    description: "Service categories",
   },
   {
-    path: '/subcategories',
+    path: "/subcategories",
     router: subCategoriesRoute,
-    developer: 'bashery',
-    domain: 'categories',
-    description: 'Service subcategories'
+    developer: "bashery",
+    domain: "categories",
+    description: "Service subcategories",
   },
   {
-    path: '/subcategories',
+    path: "/subcategories",
     router: subcategoryServicesRoute,
-    developer: 'esmatullah',
-    domain: 'categories',
-    description: 'Subcategory services'
+    developer: "esmatullah",
+    domain: "categories",
+    description: "Subcategory services",
   },
 
   // Questions & answers
   {
-    path: '/questions',
+    path: "/questions",
     router: questionRoute,
-    developer: 'bashery',
-    domain: 'qna',
-    description: 'Service questions'
+    developer: "bashery",
+    domain: "qna",
+    description: "Service questions",
   },
   {
-    path: '/answers',
+    path: "/answers",
     router: answerRoute,
-    developer: 'bashery',
-    domain: 'qna',
-    description: 'Question answers'
+    developer: "bashery",
+    domain: "qna",
+    description: "Question answers",
   },
   {
-    path: '/service',
+    path: "/service",
     router: serviceQuestionsRoute,
-    developer: 'esmatullah',
-    domain: 'qna',
-    description: 'Service-related questions'
+    developer: "esmatullah",
+    domain: "qna",
+    description: "Service-related questions",
   },
 
   // location
   {
-    path: '/location',
+    path: "/location",
     router: locationRoutes,
-    developer: 'liaqat',
-    domain: 'business',
-    description: 'Location management'
+    developer: "liaqat",
+    domain: "business",
+    description: "Location management",
   },
-  
+
   //customer
   {
-    path: '/wishlists',
+    path: "/wishlists",
     router: wishlistsRoutes,
-    developer: 'durrani',
-    domain: 'business',
-    description: 'User wishlists'
+    developer: "durrani",
+    domain: "business",
+    description: "User wishlists",
   },
 
   // Search
   {
-    path: '/search',
+    path: "/search",
     router: searchRoute,
-    developer: 'bashery',
-    domain: 'search',
-    description: 'Global search functionality'
-  }
+    developer: "bashery",
+    domain: "search",
+    description: "Global search functionality",
+  },
 ];
 
 // Utility functions
 export const getRoutesByDeveloper = (developer) => {
-  return apiRoutes.filter(route => route.developer === developer);
+  return apiRoutes.filter((route) => route.developer === developer);
 };
 
 export const getRoutesByDomain = (domain) => {
-  return apiRoutes.filter(route => route.domain === domain);
+  return apiRoutes.filter((route) => route.domain === domain);
 };
 
 export const getAllRoutePaths = () => {
-  return apiRoutes.map(route => `/api/v1${route.path}`);
+  return apiRoutes.map((route) => `/api/v1${route.path}`);
 };
 
 export const getRouteSummary = () => {
   const summary = {};
-  apiRoutes.forEach(route => {
+  apiRoutes.forEach((route) => {
     if (!summary[route.developer]) {
       summary[route.developer] = [];
     }
     summary[route.developer].push({
       path: route.path,
       domain: route.domain,
-      description: route.description
+      description: route.description,
     });
   });
   return summary;
 };
 
-if (process.env.NODE_ENV === 'development') {
-  console.table(apiRoutes.map(route => ({
-    Path: route.path,
-    Developer: route.developer,
-    Domain: route.domain,
-    Description: route.description
-  })));
+if (process.env.NODE_ENV === "development") {
+  console.table(
+    apiRoutes.map((route) => ({
+      Path: route.path,
+      Developer: route.developer,
+      Domain: route.domain,
+      Description: route.description,
+    }))
+  );
 }
 
 export default apiRoutes;
