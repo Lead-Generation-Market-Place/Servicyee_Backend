@@ -12,20 +12,20 @@ import {
 } from '../controllers/ProfessionalController.js';
 import createUploader from '../config/multer.js';  
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authenticateToken } from '../middleware/authMiddleware.js';
 const router = express.Router();
 const upload = createUploader('professionals'); 
-router.get('/',  authMiddleware, getAllProfessionalsHandler);
-router.get('/pro', authMiddleware, getProfessionalByUserIdHandler);
-router.post('/',  authMiddleware, celebrate({ [Segments.BODY]: professionalSchema }), createProfessionalHandler);
-router.put('/:id', authMiddleware, celebrate({ [Segments.BODY]: UpdateprofessionalSchema }), updateProfessionalIntroductionById);
+router.get('/',  authenticateToken, getAllProfessionalsHandler);
+router.get('/pro', authenticateToken, getProfessionalByUserIdHandler);
+router.post('/',  authenticateToken, celebrate({ [Segments.BODY]: professionalSchema }), createProfessionalHandler);
+router.put('/:id', authenticateToken, celebrate({ [Segments.BODY]: UpdateprofessionalSchema }), updateProfessionalIntroductionById);
 router.put('/:id/introduction', 
-	 authMiddleware,
+	 authenticateToken,
 	upload.single('profile_image'), 
 	celebrate({ [Segments.BODY]: UpdateprofessionalSchema }),  
 	updateProfessionalInfo
 );
-router.delete('/:id',authMiddleware, deleteProfessionalHandler);
+router.delete('/:id',authenticateToken, deleteProfessionalHandler);
 
 
 export default router;
