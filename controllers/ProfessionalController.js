@@ -25,6 +25,7 @@ export async function createProfessionalHandler(req, res) {
 
 export async function getProfessionalByUserIdHandler(req, res) {
   try {
+
     const user_id = req.user.id; // Get authenticated user id from JWT middleware
 
     const professional = await getProfessionalByUserId(user_id);
