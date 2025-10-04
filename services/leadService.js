@@ -23,12 +23,14 @@ export const createLeadService = async ({ service_id, user_id, note, answers, fi
 
   // 3. Find top 5 professionals for this service
   const professionals = await professionalServicesModel.find({
-    services: service_id,
-    // is_active: true, // uncomment when available
+    service_id: service_id,
+    service_availability: true, // uncomment when available
   })
     .sort({ rating_avg: -1 }) // highest rating first
     .limit(5)
     .select("_id");
+
+ 
 
   if (!professionals.length) {
     console.warn("No professionals found for this service");
@@ -49,3 +51,22 @@ export const createLeadService = async ({ service_id, user_id, note, answers, fi
 
   return { lead, assigned: professionals.length };
 };
+
+
+export const acceptLeadService = async ({leadId, professionalId}) => {
+  const accepted = await ProfessionalLead.findOneAndUpdate(
+    {lead_id:leadId, professional_id:professionalId, available:true},
+    {status: "accepted", available: true},
+    {new: true}
+  ); 
+
+  if (!accepted) {
+    throw new Error("Lead not available or already accepted");
+  }
+  await ProfessionalLead.updateMany(
+    {lead_id: leadId, professional_id:{$ne:professionalId}},
+    {available: false}
+  );
+
+  return accepted;
+}

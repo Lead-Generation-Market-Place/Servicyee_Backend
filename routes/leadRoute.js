@@ -1,8 +1,9 @@
 import express from "express";
-import { createLead } from "../controllers/leadController.js";
+import { acceptLead, createLead } from "../controllers/leadController.js";
 
 const router = express.Router();
 
 router.post("/generate", createLead);
+router.put("/accept", acceptLead);
 
 export default router;
