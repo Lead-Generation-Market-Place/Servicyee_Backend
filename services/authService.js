@@ -40,17 +40,12 @@ export async function registerUserService({ email, username, password }) {
 
 export async function loginUserService({ email, password }, ip, userAgent) {
   const normalizedEmail = email.toLowerCase();
-  console.log('[loginUserService] Attempt login:', { email: normalizedEmail });
   const user = await User.findOne({ email: normalizedEmail });
-
+  if (!user) {
+    throw new Error("Invalid credentials");
+  }
   const isMatch = await bcrypt.compare(password.trim(), user.password);
- console.log('The password comparison result is:', password);
- console.log('The password comparison result is:', user.password);
-await bcrypt.compare(password, user.password).then(console.log);
-
-
   if (!isMatch) {
-    console.log('[loginUserService] Password mismatch for user:', normalizedEmail);
     throw new Error("Invalid credentials");
   }
   const accessToken = signAccessToken({ id: user._id });
@@ -63,7 +58,6 @@ await bcrypt.compare(password, user.password).then(console.log);
     expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
   });
 
-  console.log('[loginUserService] Login successful for:', normalizedEmail);
   return { user, accessToken, refreshToken };
 }
 

@@ -20,7 +20,7 @@ dotenv.config();
 
 const app = express();
 
-// ---------- Security & Middleware ----------
+
 app.use(helmet()); // secure headers
 app.use(morgan("combined")); // logging
 app.use(cookieParser()); // parse cookies
@@ -97,15 +97,12 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", message: "Server is running" });
 });
 
-// ---------- Root ----------
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to Servicyee API", version: "1.0.0" });
 });
 
-// ---------- Celebrate Error Handling ----------
 app.use(errors());
 
-// ---------- Generic Error Handling ----------
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   if (err.joi) {
