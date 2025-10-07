@@ -6,9 +6,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import mongoSanitize from "express-mongo-sanitize";
-import xss from "xss-clean";
-import hpp from "hpp";
+
 
 import { run } from "./config/db.js";
 import apiRoutes from "./routes/index.js"; 
@@ -17,15 +15,10 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
 dotenv.config();
-
 const app = express();
-
-
+app.use(cookieParser()); // parse cookies
 app.use(helmet()); // secure headers
 app.use(morgan("combined")); // logging
-app.use(cookieParser()); // parse cookies
-
-
 app.set("trust proxy", 1); // if behind proxy
 
 // ---------- CORS ----------
