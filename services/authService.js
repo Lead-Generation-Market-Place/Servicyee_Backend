@@ -14,7 +14,6 @@ export async function registerUserService({ email, username, password }) {
   const normalizedEmail = email.toLowerCase();
   const normalizedUsername = username.trim();
 
-  console.log("[registerUserService] Incoming data:", { email, username, password });
 
   const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) throw new Error("Email already exists");
@@ -23,7 +22,6 @@ export async function registerUserService({ email, username, password }) {
   if (existingUsername) throw new Error("Username already exists");
 
   const hashedPassword = await bcrypt.hash(password.trim(), 12);
-  console.log("[registerUserService] Hashed password:", hashedPassword);
 
   const user = new User({
     email: normalizedEmail,
@@ -33,24 +31,18 @@ export async function registerUserService({ email, username, password }) {
 
   const savedUser = await user.save();
 
-  // Remove password from returned object
   const { password: _, ...userData } = savedUser.toObject();
   return userData;
 }
 
 export async function loginUserService({ email, password }, ip, userAgent) {
   const normalizedEmail = email.toLowerCase();
-  console.log('[loginUserService] Attempt login:', { email: normalizedEmail });
   const user = await User.findOne({ email: normalizedEmail });
-
+  if (!user) {
+    throw new Error("Invalid credentials");
+  }
   const isMatch = await bcrypt.compare(password.trim(), user.password);
- console.log('The password comparison result is:', password);
- console.log('The password comparison result is:', user.password);
-await bcrypt.compare(password, user.password).then(console.log);
-
-
   if (!isMatch) {
-    console.log('[loginUserService] Password mismatch for user:', normalizedEmail);
     throw new Error("Invalid credentials");
   }
   const accessToken = signAccessToken({ id: user._id });
@@ -63,7 +55,6 @@ await bcrypt.compare(password, user.password).then(console.log);
     expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
   });
 
-  console.log('[loginUserService] Login successful for:', normalizedEmail);
   return { user, accessToken, refreshToken };
 }
 
