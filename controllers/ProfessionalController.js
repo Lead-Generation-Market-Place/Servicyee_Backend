@@ -7,7 +7,7 @@ import {
   deleteProfessional,
   updateProfessionalService,
 } from "../services/ProfessionalServices.js";
-const backendUrl = process.env.BACKEND_URL || "https://frontend-servicyee.vercel.app";
+const backendUrl = process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
 
 
 export async function createProfessionalHandler(req, res) {
@@ -25,6 +25,7 @@ export async function createProfessionalHandler(req, res) {
 
 export async function getProfessionalByUserIdHandler(req, res) {
   try {
+
     const user_id = req.user.id; // Get authenticated user id from JWT middleware
 
     const professional = await getProfessionalByUserId(user_id);
@@ -145,11 +146,8 @@ export async function updateProfessionalInfo(req, res) {
     zipcode,
   } = req.body;
 
-  const fullImageUrl = req.file ? req.file.path : undefined;
-  const profile_image = `${backendUrl}/${fullImageUrl}`;
-
   try {
-    const result = await updateProfessionalService(id, {
+    const updateData = {
       business_name,
       founded_year,
       employees,
@@ -157,8 +155,14 @@ export async function updateProfessionalInfo(req, res) {
       payment_methods,
       address_line,
       zipcode,
-      profile_image,
-    });
+    };
+
+    if (req.file) {
+      const fullImageUrl = req.file.path;
+      updateData.profile_image = `${backendUrl}/${fullImageUrl}`;
+    }
+
+    const result = await updateProfessionalService(id, updateData);
 
     if (!result) {
       return res.status(404).json({

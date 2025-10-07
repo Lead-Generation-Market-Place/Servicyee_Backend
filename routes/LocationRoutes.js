@@ -7,15 +7,14 @@ import {
     getLocationHandler,
     updateLocationHandler 
 } from "../controllers/LocationController.js";
-import { authenticateJWT } from "../middleware/auth.js";
-
+import { authenticateToken } from "../middleware/authMiddleware.js";
 
 
 const router = express.Router();
-router.get('/all', getLocationHandler);
-router.get('/pro',authenticateJWT, getLocationByUserIdHandler); // Get location by authenticated user
-router.post('/create',createLocationHandler);
-router.put('/:id/update', updateLocationHandler);
-router.delete('/:id/delete', deleteLocationByIdHandler);
+router.get('/all',authenticateToken, getLocationHandler);
+router.get('/pro',authenticateToken, getLocationByUserIdHandler); // Get location by authenticated user
+router.post('/create',authenticateToken, createLocationHandler);
+router.put('/:id/update',authenticateToken, updateLocationHandler);
+router.delete('/:id/delete' ,authenticateToken, deleteLocationByIdHandler);
 
 export default router;

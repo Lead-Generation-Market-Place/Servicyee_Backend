@@ -1,20 +1,23 @@
 import jwt from "jsonwebtoken";
 
-export function authMiddleware(req, res, next) {
-  const authHeader = req.headers["authorization"];
+export const authenticateToken = (req, res, next) => {
+  let token;
 
-  // Expected format: "Bearer <token>"
-  const token = authHeader && authHeader.split(" ")[1];
+  if (req.cookies?.accessToken) {
+    token = req.cookies.accessToken;
+  } else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
 
   if (!token) {
-    return res.status(401).json({ message: "Access denied. No token provided." });
+    return res.status(401).json({ message: "No access token" });
   }
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { id, email }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, payload) => {
+    if (err) {
+      return res.status(401).json({ message: "Invalid or expired access token" });
+    }
+    req.user = payload;
     next();
-  } catch (error) {
-    return res.status(403).json({ message: "Invalid or expired token" });
-  }
-}
+  });
+};

@@ -43,8 +43,11 @@ export async function getLocationByUserIdHandler(req, res) {
   try {
     const user_id = req.user.id; // Get authenticated user id from JWT middleware
     const location = await GetLocationByUserId(user_id);
-    if (!location) {
-      return res.status(404).json({ message: "Location not found" });
+         if (!location) {
+      return res.json({
+        address_line: "",
+        zipcode: "",
+      });
     }
     return res.json(location);
   } catch (error) {

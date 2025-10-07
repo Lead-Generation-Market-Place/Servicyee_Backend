@@ -1,93 +1,101 @@
 import dotenv from "dotenv";
-import express, { json } from "express";
+import express from "express";
 import { errors } from "celebrate";
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 import helmet from "helmet";
-
-
 import cors from "cors";
+import cookieParser from "cookie-parser";
+
+
 import { run } from "./config/db.js";
-
-import professionalRoutes from "./routes/ProfessionalRoutes.js";
-import locationRoutes from "./routes/LocationRoutes.js";
-
-
-import wishlistsRoutes from "./routes/wishlistsRoute.js";
-import findServiceProsRoute from "./routes/findServiceProsRoute.js";
+import apiRoutes from "./routes/index.js"; 
 
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
-import serviceRoute from './routes/serviceRoute.js';
-import categoryRoute from './routes/categoryRoute.js';
-import subCategoriesRoute from './routes/subCategoryRoute.js';
-import questionRoute from './routes/questionRoute.js';
-import answerRoute from './routes/answerRoute.js';
-import searchRoute from './routes/searchRoute.js';
-import subcategoryServicesRoute from './routes/subcategoryServicesRoute.js';
-import authRoute from "./routes/authRoute.js";
-
 dotenv.config();
-
 const app = express();
+app.use(cookieParser()); // parse cookies
+app.use(helmet()); // secure headers
+app.use(morgan("combined")); // logging
+app.set("trust proxy", 1); // if behind proxy
+
+// ---------- CORS ----------
 const allowedOrigins = [
   "http://localhost:3000",
   "https://frontend-servicyee.vercel.app",
 ];
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
+      if (!origin) return callback(null, true); // allow non-browser requests
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       callback(new Error("Not allowed by CORS"));
     },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(helmet());
-app.use(morgan("combined"));
 
-// Recommended: Rate Limiting for API endpoints
+app.options(/.*/, cors());
+
+// ---------- Body Parsers ----------
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+// ---------- Rate Limiting ----------
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  standardHeaders: true, // Return rate limit info in the RateLimit-* headers
-  legacyHeaders: false, // Disable the X-RateLimit-* headers
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     status: 429,
     error: "Too many requests, please try again later.",
   },
 });
-
-// liaqat
 app.use("/api/", apiLimiter);
-app.use("/api/v1/professionals", professionalRoutes);
-app.use("/api/v1/location", locationRoutes);
+
+// ---------- Static Files ----------
 app.use("/uploads", express.static("uploads"));
 
-// Bashery
-app.use('/api/v1/services', serviceRoute);
-app.use('/api/v1/categories',categoryRoute)
-app.use('/api/v1/subcategories',subCategoriesRoute)
-app.use('/api/v1/questions',questionRoute)
-app.use('/api/v1/answers',answerRoute)
-app.use('/api/v1/search',searchRoute)
+// ---------- API Routes ----------
+apiRoutes.forEach((route) => {
+  app.use(`/api/v1${route.path}`, route.router);
+});
 
-// Esmatullah
+// ---------- Swagger ----------
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Servicyee API",
+      version: "1.0.0",
+      description: "API documentation for Servicyee microservices",
+    },
+    servers: [{ url: "http://localhost:4000/api/v1" }],
+  },
+  apis: ["./routes/*.js"],
+};
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use("/api/v1/auth", authRoute);
-app.use("/api/v1/subcategories", subcategoryServicesRoute);
+// ---------- Health Check ----------
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK", message: "Server is running" });
+});
 
-// Durrani
-app.use('/api/v1/wishlists',wishlistsRoutes);
-app.use('/api/v1/findpros',findServiceProsRoute);
-// Routes
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to Servicyee API", version: "1.0.0" });
+});
 
 app.use(errors());
+
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   if (err.joi) {
@@ -102,27 +110,24 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Swagger/OpenAPI setup
-const swaggerOptions = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Servicyee API",
-      version: "1.0.0",
-      description: "API documentation for Servicyee microservices",
-    },
-    servers: [{ url: "http://localhost:4000/api/v1" }],
-  },
-  apis: ["./routes/*.js"], // Path to the API docs
-};
+// ---------- 404 Handler ----------
+app.use((req, res) => {
+  res.status(404).json({
+    status: 404,
+    error: "Route not found",
+    path: req.originalUrl,
+  });
+});
 
-const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// ---------- Start Server ----------
 run()
   .then(() => {
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((err) => {
-    console.error("Failed to connect to the database:", err);
+    console.error("Database connection failed:", err);
+    process.exit(1);
   });
+
+export default app;
