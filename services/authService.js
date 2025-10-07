@@ -14,7 +14,6 @@ export async function registerUserService({ email, username, password }) {
   const normalizedEmail = email.toLowerCase();
   const normalizedUsername = username.trim();
 
-  console.log("[registerUserService] Incoming data:", { email, username, password });
 
   const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) throw new Error("Email already exists");
@@ -23,7 +22,6 @@ export async function registerUserService({ email, username, password }) {
   if (existingUsername) throw new Error("Username already exists");
 
   const hashedPassword = await bcrypt.hash(password.trim(), 12);
-  console.log("[registerUserService] Hashed password:", hashedPassword);
 
   const user = new User({
     email: normalizedEmail,
@@ -33,7 +31,6 @@ export async function registerUserService({ email, username, password }) {
 
   const savedUser = await user.save();
 
-  // Remove password from returned object
   const { password: _, ...userData } = savedUser.toObject();
   return userData;
 }
