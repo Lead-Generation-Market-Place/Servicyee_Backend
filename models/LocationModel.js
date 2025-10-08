@@ -1,11 +1,11 @@
 import { Schema, model } from "mongoose";
 
-const Locationtype = ["user", "service", "lead", "project"];
+const Locationtype = ["user", "service", "lead", "project", "professional"];
 
 const locationSchema = new Schema({
   type: {
     type: String,
-    enum: ["user", "service", "lead", "project"],
+    enum: Locationtype,
     required: true
   },
   user_id: { type: Schema.Types.ObjectId, ref: "User" },
