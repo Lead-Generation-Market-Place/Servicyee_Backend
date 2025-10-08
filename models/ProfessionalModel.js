@@ -33,7 +33,6 @@ const ProfessionalSchema = new Schema(
     ],
     business_hours: [
       {
-        service_id: { type: ObjectId, ref: "Service" },
         status: { type: String, enum: OpenClose },
         start_time: Date,
         end_time: Date,
