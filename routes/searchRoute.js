@@ -2,8 +2,8 @@ import express from 'express';
 import {
 searchServiceByLocation,
 getAllPopularSearchByUserLocation
-} from '../controllers/searchController.js';
-import { searchServiceHandler } from '../controllers/searchServiceController.js';
+} from '../controllers/home/searchController.js';
+import { searchServiceHandler } from '../controllers/home/searchServiceController.js';
 // import { validateBody } from '../middlewares/validate.middleware.js';
 
 

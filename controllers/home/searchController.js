@@ -1,8 +1,5 @@
 
 
-import search from '../services/search.js';
-import Search from '../services/search.js'; // adjust the path if needed
-
 export const searchServiceByLocation = async (req, res, next) => {
   try {
     const { service_id, zip_code, searchText } = req.body;
