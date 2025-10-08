@@ -39,7 +39,6 @@ export const professionalSchema = Joi.object({
   business_hours: Joi.array()
     .items(
       Joi.object({
-        service_id: Joi.string().optional(),
         status: Joi.string()
           .valid(...openClose)
           .optional(),

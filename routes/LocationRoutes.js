@@ -13,7 +13,7 @@ import { authenticateToken } from "../middleware/authMiddleware.js";
 const router = express.Router();
 router.get('/all',authenticateToken, getLocationHandler);
 router.get('/pro',authenticateToken, getLocationByUserIdHandler); // Get location by authenticated user
-router.post('/create',authenticateToken, createLocationHandler);
+router.post('/create', createLocationHandler);
 router.put('/:id/update',authenticateToken, updateLocationHandler);
 router.delete('/:id/delete' ,authenticateToken, deleteLocationByIdHandler);
 
