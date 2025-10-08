@@ -2,7 +2,7 @@ import { searchService } from "../services/searchService.js";
 
 export const searchServiceHandler = async (req, res) => {
     try {
-        const { q } = req.query;
+        const { q } = req.query ;
         if (!q ||q.trim() === '') {
             return res.status(400).json({
                 success: false,
