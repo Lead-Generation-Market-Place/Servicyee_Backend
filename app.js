@@ -5,46 +5,52 @@ import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+
 
 import { run } from "./config/db.js";
-import apiRoutes from "./routes/index.js";
+import apiRoutes from "./routes/index.js"; 
 
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
 dotenv.config();
-
 const app = express();
+app.use(cookieParser()); // parse cookies
+app.use(helmet()); // secure headers
+app.use(morgan("combined")); // logging
+app.set("trust proxy", 1); // if behind proxy
 
+// ---------- CORS ----------
 const allowedOrigins = [
   "http://localhost:3000",
   "https://frontend-servicyee.vercel.app",
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow non-browser requests
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    callback(new Error("Not allowed by CORS"));
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // allow non-browser requests
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.options(/.*/, cors());
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// ---------- Body Parsers ----------
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-app.use(helmet());
-app.use(morgan("combined"));
-
-// Rate Limiting
+// ---------- Rate Limiting ----------
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 15 * 60 * 1000, // 15 min
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
@@ -53,16 +59,17 @@ const apiLimiter = rateLimit({
     error: "Too many requests, please try again later.",
   },
 });
-
 app.use("/api/", apiLimiter);
+
+// ---------- Static Files ----------
 app.use("/uploads", express.static("uploads"));
 
-// Routes
-apiRoutes.forEach(route => {
+// ---------- API Routes ----------
+apiRoutes.forEach((route) => {
   app.use(`/api/v1${route.path}`, route.router);
 });
 
-// Swagger
+// ---------- Swagger ----------
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
@@ -75,22 +82,20 @@ const swaggerOptions = {
   },
   apis: ["./routes/*.js"],
 };
-
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'Server is running' });
+// ---------- Health Check ----------
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK", message: "Server is running" });
 });
 
-// Root
-app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to Servicyee API', version: '1.0.0' });
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to Servicyee API", version: "1.0.0" });
 });
 
-// Error handling
 app.use(errors());
+
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   if (err.joi) {
@@ -105,16 +110,16 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler - SIMPLIFIED VERSION
+// ---------- 404 Handler ----------
 app.use((req, res) => {
   res.status(404).json({
     status: 404,
-    error: 'Route not found',
-    path: req.originalUrl
+    error: "Route not found",
+    path: req.originalUrl,
   });
 });
 
-// Server start
+// ---------- Start Server ----------
 run()
   .then(() => {
     const PORT = process.env.PORT || 5000;

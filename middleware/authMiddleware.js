@@ -1,39 +1,23 @@
+import jwt from "jsonwebtoken";
 
-
-import jwt from 'jsonwebtoken';
-// Middleware to verify JWT token
 export const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  let token;
 
+  if (req.cookies?.accessToken) {
+    token = req.cookies.accessToken;
+  } else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
 
   if (!token) {
-    return res.status(401).json({ 
-      success: false,
-      message: "Access denied, no token provided" 
-    });
+    return res.status(401).json({ message: "No access token" });
   }
 
-  try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = verified;
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, payload) => {
+    if (err) {
+      return res.status(401).json({ message: "Invalid or expired access token" });
+    }
+    req.user = payload;
     next();
-  } catch (error) {
-    return res.status(403).json({ 
-      success: false,
-      message: "Invalid or expired token" 
-    });
-  }
-};
-
-// Optional: Middleware to check if user is admin
-export const requireAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next();
-  } else {
-    return res.status(403).json({ 
-      success: false,
-      message: "Admin access required" 
-    });
-  }
+  });
 };
