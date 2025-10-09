@@ -13,6 +13,7 @@ import {
 import createUploader from '../config/multer.js';  
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
+import { searchProfessionalsController } from "../controllers/SearchLog.js";
 const router = express.Router();
 const upload = createUploader('professionals'); 
 router.get('/',  authenticateToken, getAllProfessionalsHandler);
@@ -27,5 +28,8 @@ router.put('/:id/introduction',
 );
 router.delete('/:id',authenticateToken, deleteProfessionalHandler);
 
+
+// Search Log Routes
+router.get('/search', searchProfessionalsController);
 
 export default router;
