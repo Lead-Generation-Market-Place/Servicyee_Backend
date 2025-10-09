@@ -13,7 +13,7 @@ import authRoute from "./authRoute.js";
 import serviceQuestionsRoute from "./serviceQuestionsRoute.js";
 import leadRoute from "./leadRoute.js";
 import ReviewsRoutes from "./ReviewsRoutes.js";
-
+import promotionRoutes from "./promotionRoute.js";
 // Organized by feature
 const apiRoutes = [
   // Authentication & Users
@@ -135,6 +135,13 @@ const apiRoutes = [
     developer: "bashery",
     domain: "search",
     description: "Global search functionality",
+  },
+  {
+    path: "/promotions",
+    router: promotionRoutes,
+    developer: "durrani",
+    domain: "promotions",
+    description: "Promotion discount related",
   },
 ];
 
