@@ -85,8 +85,6 @@ export const updateCategory = async (req, res, next) => {
           }
         } catch (err) {
           console.error('Failed to delete old image:', err);
-          // Don't fail the entire update if image deletion fails
-          // Continue with the update but log the error
         }
       }
 
