@@ -13,12 +13,12 @@ import fileupload from '../config/multer.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
-router.get('/', authenticateToken, getCategories);
-router.get('/with-service-count', authenticateToken, getAllWithServiceCount);
-router.post('/', authenticateToken, fileupload('category').single('category_image'), validateBody(createCategorySchema), addCategory);
-router.get('/:id', authenticateToken, getCategoryById);
-router.put('/:id', authenticateToken, fileupload('category').single('category_image'), validateBody(updateCategorySchema), updateCategory);
-router.delete('/:id', authenticateToken, deleteCategory);
+router.get('/', getCategories);
+router.get('/with-service-count', getAllWithServiceCount);
+router.post('/', fileupload('category').single('category_image_url'), addCategory);
+router.get('/:id', getCategoryById);
+router.put('/:id', fileupload('category').single('category_image_url'), updateCategory);
+router.delete('/:id', deleteCategory);
 
 
 export default router;
