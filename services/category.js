@@ -3,7 +3,7 @@
   class CategoryService {
     async getAllCategories() {
       try {
-        return await CategoryModel.find({});
+        return await CategoryModel.find();
       } catch (error) {
         throw error;
       }
