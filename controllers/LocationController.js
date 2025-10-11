@@ -5,14 +5,17 @@ import {
   getLocationById,
   updateLcoation,
   GetLocationByUserId,
+  getLocationServiceByProfessionalId
 } from "../services/LocationServices.js";
 
 export async function createLocationHandler(req, res) {
   try {
-    const location = await createLocation(req.body);
-    res.status(201).json(location);
+    console.log(req.body);
+    const locationId = await createLocation(req.body);
+    res.status(201).json({ locationId });
   } catch (error) {
-    res.status(500).json({ message: "Error Creating Location", error });
+    console.error("Error creating location:", error);
+    res.status(500).json({ message: "Error creating location", error: error.message });
   }
 }
 
@@ -81,6 +84,27 @@ export async function deleteLocationByIdHandler(req, res) {
     res.status(500).json({
       success: false,
       message: "Error deleting location",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+export async function getServiceLocationByProfessionalId(req, res) {
+  try {
+    const professionalId = req.params.id;
+    console.log(professionalId);
+    const location = await getLocationServiceByProfessionalId(professionalId);
+         if (!location) {
+      return res.json({
+        address_line: "",
+        zipcode: "",
+      });
+    }
+    return res.json(location);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching location",
       error: error?.message || "An unexpected error occurred",
     });
   }
