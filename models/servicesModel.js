@@ -28,6 +28,9 @@ const ServiceSchema = new mongoose.Schema({
     type: Boolean, 
     default: true 
   },
+  
+  is_featured:{type:Boolean, default:false}
+  
 }, { 
   timestamps: true, 
   versionKey: false, 

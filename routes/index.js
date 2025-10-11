@@ -14,6 +14,7 @@ import serviceQuestionsRoute from "./serviceQuestionsRoute.js";
 import leadRoute from "./leadRoute.js";
 import ReviewsRoutes from "./ReviewsRoutes.js";
 import promotionRoutes from "./promotionRoute.js";
+import popularServicesRoute from './popularServicesRoute.js';
 // Organized by feature
 const apiRoutes = [
   // Authentication & Users
@@ -64,6 +65,13 @@ const apiRoutes = [
     developer: "bashery",
     domain: "services",
     description: "Service management",
+  },
+  {
+    path:"/popular-services",
+    router:popularServicesRoute,
+    developer:"esmatullah",
+    domain: "popular services",
+    description: "get all popular services by user location if provided"
   },
   {
     path: "/categories",

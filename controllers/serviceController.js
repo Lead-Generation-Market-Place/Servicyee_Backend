@@ -148,6 +148,14 @@ export const deleteService = async (req, res, next) => {
   try {
     const deletedService = await servicesService.deleteService(req.params.id);
     if (!deletedService) return res.status(404).json({ message: 'Service not found' });
+    if (deletedService.image_url) {
+      const imagePath = path.join('uploads/service', deletedService.image_url);
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error('Failed to delete service image:', err);
+        }
+      });
+    }
     res.status(200).json({ message: 'Service deleted successfully' });
   } catch (error) {
     next(error);
