@@ -30,7 +30,7 @@ export function GetLocationByUserId(user_id) {
     return location;
 }
 
-export function getLocationServiceByProfessionalId(professionalId){
-  const location = Location.find({professional_id:professionalId}).exec();
+export function getLocationServiceByProfessionalId(professionalId,serviceId){
+  const location = Location.find({professional_id:professionalId,service_id:serviceId}).exec();
   return location;
 }
