@@ -1,9 +1,10 @@
 import Location from "../models/LocationModel.js";
 
 
-export function createLocation(data) {
-    const location = new Location(data);
-    return location.save();
+export async function createLocation(data) {
+  const location = new Location(data);
+  const savedLocation = await location.save();
+  return savedLocation._id; 
 }
 
 export function getAllLocations() {
@@ -27,4 +28,9 @@ export function deleteLocationById(id) {
 export function GetLocationByUserId(user_id) {
     const location = Location.findOne({ user_id }).exec();
     return location;
+}
+
+export function getLocationServiceByProfessionalId(professionalId){
+  const location = Location.find({professional_id:professionalId}).exec();
+  return location;
 }
