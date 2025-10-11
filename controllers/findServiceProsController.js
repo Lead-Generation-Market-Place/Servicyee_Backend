@@ -22,54 +22,13 @@ export const getProfessionalsByService = async (req, res, next) => {
       });
     }
 
-    //Formating Response for better understanding
-    const formattedData = professionalServices.map((ps) => {
-      return {
-        serviceListing: {
-          id: ps._id,
-          description: ps.description,
-          availability: ps.service_availability,
-          status: ps.service_status,
-        },
-
-        // Professional Information
-        professional: {
-          id: ps.professional_id?._id,
-          businessName: ps.professional_id?.business_name,
-          businessType: ps.professional_id?.business_type,
-          profileImage: ps.professional_id?.profile_image,
-        },
-
-        // User Information (from Professional)
-        user: {
-          id: ps.professional_id?.user_id?._id,
-          username: ps.professional_id?.user_id?.username,
-          email: ps.professional_id?.user_id?.email,
-        },
-
-        // Service Information
-        service: {
-          id: ps.service_id,
-        },
-
-        // Location Information
-        location: {
-          id: ps.location_id?._id,
-          address: ps.location_id?.address_line,
-          city: ps.location_id?.city,
-          state: ps.location_id?.state,
-          country: ps.location_id?.country,
-          zipcode: ps.location_id?.zipcode,
-          coordinates: ps.location_id?.coordinates,
-        },
-      };
-    });
+   
 
     res.status(200).json({
       success: true,
       message: "Professionals found successfully",
-      count: formattedData.length,
-      data: formattedData,
+      count: professionalServices.length,
+      data: professionalServices,
     });
   } catch (error) {
     next(error);
