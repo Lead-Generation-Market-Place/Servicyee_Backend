@@ -123,6 +123,14 @@ export const deleteSubCategory = async (req, res, next) => {
     if (!deletedSubCategory) {
       return res.status(404).json({ message: 'SubCategory not found' });
     }
+    if (deletedSubCategory.subcategory_image_url) {
+      const imagePath = path.join('uploads/SubCategory', deletedSubCategory.subcategory_image_url);
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error('Failed to delete subcategory image:', err);
+        }
+      });
+    }
 
     res.status(200).json({ message: 'SubCategory deleted successfully' });
   } catch (error) {
