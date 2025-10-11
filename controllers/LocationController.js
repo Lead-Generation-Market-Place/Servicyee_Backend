@@ -91,9 +91,10 @@ export async function deleteLocationByIdHandler(req, res) {
 
 export async function getServiceLocationByProfessionalId(req, res) {
   try {
-    const professionalId = req.params.id;
-    console.log(professionalId);
-    const location = await getLocationServiceByProfessionalId(professionalId);
+  const { id: professionalId, serviceid } = req.params;
+
+    console.log(professionalId,serviceid);
+    const location = await getLocationServiceByProfessionalId(professionalId,serviceid);
          if (!location) {
       return res.json({
         address_line: "",
