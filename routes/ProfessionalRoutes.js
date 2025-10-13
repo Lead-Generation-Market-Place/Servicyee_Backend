@@ -8,13 +8,16 @@ import {
 	getProfessionalByUserIdHandler,
 	updateProfessionalIntroductionById,
 	updateProfessionalInfo,
-	uploadFile
+	uploadFile,
+	createProfessionalAccount
 } from '../controllers/ProfessionalController.js';
 import createUploader from '../config/multer.js';  
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 const router = express.Router();
 const upload = createUploader('professionals'); 
+
+router.post('/register', createProfessionalAccount);
 router.get('/',  authenticateToken, getAllProfessionalsHandler);
 router.get('/pro', authenticateToken, getProfessionalByUserIdHandler);
 router.post('/',  authenticateToken, celebrate({ [Segments.BODY]: professionalSchema }), createProfessionalHandler);
