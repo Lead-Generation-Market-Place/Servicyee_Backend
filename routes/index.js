@@ -80,7 +80,7 @@ const apiRoutes = [
     description: "Service subcategories",
   },
   {
-    path: "/subcategories",
+    path: "/subcategory-services",
     router: subcategoryServicesRoute,
     developer: "esmatullah",
     domain: "categories",
