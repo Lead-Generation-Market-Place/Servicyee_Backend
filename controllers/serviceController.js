@@ -1,6 +1,4 @@
 import servicesService from '../services/services.js';
-import path from 'path';
-import fs from 'fs';
 
 export const getServices = async (req, res, next) => {
   try {
@@ -10,30 +8,10 @@ export const getServices = async (req, res, next) => {
     next(error);
   }
 };
-// Add a new service 
+// Add a new service (like "Home Cleaning")
 export const addServices = async (req, res, next) => {
   try {
-    
-    console.log('Request Body:', req.body);
-    console.log('Uploaded File:', req.file);
-    
-    const serviceData = {
-      ...req.body,
-      is_active:req.body.is_active === 'true' || req.body.is_active === true
-    };
- 
-    const requiredFields = ['name', 'slug','subcategory_id'];
-    const missingFields = requiredFields.filter(field => !serviceData[field]);
-
-    if (missingFields.length > 0) {
-      return res.status(400).json({ message: `Missing required fields: ${missingFields.join(', ')}` });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({message: 'Service image is required.' });
-    }
-
-    serviceData.image_url = req.file.filename;
+    const serviceData = req.body;
    
     if (req.file) {
       serviceData.image_url = req.file.filename;
@@ -79,67 +57,24 @@ export const getServiceById = async (req, res, next) => {
 
 export const updateService = async (req, res, next) => {
   try {
+    const updatedServiceDaata = req.body;
     const serviceId = req.params.id;
-    const updatedServiceData = { ...req.body };
-
-    // Check if service exists
     const existingService = await servicesService.getServiceById(serviceId);
     if (!existingService) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Service not found' 
-      });
+      return res.status(404).json({ message: 'Service not found' });
     }
-
-    // Handle file upload
     if (req.file) {
-      // Delete old image if exists
       if (existingService.image_url) {
         const oldImagePath = path.join('uploads/service', existingService.image_url);
-        
-        try {
-          if (fs.existsSync(oldImagePath)) {
-            await fs.promises.unlink(oldImagePath);
-          }
-        } catch (err) {
-          console.error('✗ Error deleting old image:', err.message);
-          
-        }
+        fs.unlink(oldImagePath, (err) => {
+          if (err) console.error('Error deleting old image:', err);
+        });
       }
-      
-      // Add new image to update data
-      updatedServiceData.image_url = req.file.filename;
-      console.log('✓ New image set:', updatedServiceData.image_url);
+      updatedServiceDaata.image_url = req.file.filename;
     }
-
-    // Update service
-    const updatedService = await servicesService.updateService(serviceId, updatedServiceData);
-    
-    res.status(200).json({ 
-      success: true,
-      message: 'Service updated successfully',
-      data: updatedService 
-    });
-    
+    const updatedService = await servicesService.updateService(serviceId, updatedServiceDaata);
+    res.status(200).json({ data: updatedService });
   } catch (error) {
-    console.error('Error in updateService controller:', error);
-    
-    // Handle validation errors
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: Object.values(error.errors).map(err => err.message).join(', ')
-      });
-    }
-    
-    // Handle cast errors (invalid ID)
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid service ID'
-      });
-    }
-    
     next(error);
   }
 };
@@ -148,14 +83,6 @@ export const deleteService = async (req, res, next) => {
   try {
     const deletedService = await servicesService.deleteService(req.params.id);
     if (!deletedService) return res.status(404).json({ message: 'Service not found' });
-    if (deletedService.image_url) {
-      const imagePath = path.join('uploads/service', deletedService.image_url);
-      fs.unlink(imagePath, (err) => {
-        if (err) {
-          console.error('Failed to delete service image:', err);
-        }
-      });
-    }
     res.status(200).json({ message: 'Service deleted successfully' });
   } catch (error) {
     next(error);

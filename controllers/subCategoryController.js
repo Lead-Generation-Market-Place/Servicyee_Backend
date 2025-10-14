@@ -10,7 +10,7 @@ export const getSubCategories = async (req, res, next) => {
       filter.category = req.query.category;
     }
 
-    const subCategories = await subCategoryService.getAllSubCategories(filter);
+    const subCategories = await subCategoryService.getAllSubcategories(filter);
     res.status(200).json({ data: subCategories });
   } catch (error) {
     next(error);
