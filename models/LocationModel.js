@@ -19,6 +19,11 @@ const locationSchema = new Schema({
   city: { type: String, index: true },
   zipcode: { type: String, index: true },
   address_line: { type: String },
+  mile_id: { 
+    type: Schema.Types.ObjectId, 
+    ref: "Mile",
+    required: true 
+  },
   coordinates: {
     type: {
       type: String,
