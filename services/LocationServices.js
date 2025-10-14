@@ -1,4 +1,5 @@
 import Location from "../models/LocationModel.js";
+import milesModel from "../models/milesModel.js";
 
 
 export async function createLocation(data) {
@@ -33,4 +34,14 @@ export function GetLocationByUserId(user_id) {
 export function getLocationServiceByProfessionalId(professionalId,serviceId){
   const location = Location.find({professional_id:professionalId,service_id:serviceId}).exec();
   return location;
+}
+
+export function getAllMiles() {
+  return milesModel.find().select('mile _id').exec();
+}
+
+
+export async function addMiles(data) {
+  const miles = new milesModel(data);
+  await miles.save(); // No need to return anything
 }
