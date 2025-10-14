@@ -190,6 +190,11 @@ async assignServiceToProfessional(professionalServiceData) {
   async getServicesOfProfessional(professionalId) {
     return await ServiceModel.find({ professional_id: professionalId });
   }
+  
+  //featured services
+  async getFeaturedServices() {
+    return servicesModel.find({ is_featured: true }).exec();
+}
 
 // async searchServiceByLocation(service_id, zip_code) {
 //   const query = {};

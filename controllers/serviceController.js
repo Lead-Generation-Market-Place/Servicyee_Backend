@@ -1,4 +1,6 @@
 import servicesService from '../services/services.js';
+import path from 'path';
+import fs from 'fs';
 
 export const getServices = async (req, res, next) => {
   try {
@@ -123,3 +125,30 @@ export const toggleServiceStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+
+// featured services
+export const featuredServicesHandler = async (req, res) => {
+    try {
+        const featuredServices = await servicesService.getFeaturedServices();
+        
+        if (!featuredServices || featuredServices.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No featured services found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: featuredServices
+        });
+    } catch (error) {
+        console.error("Error fetching featured services:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+}
