@@ -1,3 +1,4 @@
+
 import {
   createLocation,
   deleteLocationById,
@@ -5,7 +6,8 @@ import {
   getLocationById,
   updateLcoation,
   GetLocationByUserId,
-  getLocationServiceByProfessionalId
+  getLocationServiceByProfessionalId,
+  getAllMiles,addMiles
 } from "../services/LocationServices.js";
 
 export async function createLocationHandler(req, res) {
@@ -41,10 +43,10 @@ export async function updateLocationHandler(req, res) {
   }
 }
 
-// GET Location by userId
+
 export async function getLocationByUserIdHandler(req, res) {
   try {
-    const user_id = req.user.id; // Get authenticated user id from JWT middleware
+    const user_id = req.user.id; 
     const location = await GetLocationByUserId(user_id);
          if (!location) {
       return res.json({
@@ -106,6 +108,36 @@ export async function getServiceLocationByProfessionalId(req, res) {
     res.status(500).json({
       success: false,
       message: "Error fetching location",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+
+export async function addMilesToDb(req, res) {
+  try {
+    console.log("Add miles request body:", req.body);
+    await addMiles(req.body); // No need to capture return
+    res.status(201).json({ message: "Miles added successfully" });
+  } catch (error) {
+    console.error("Error adding miles:", error);
+    res.status(500).json({
+      message: "Error adding miles",
+      error: error.message
+    });
+  }
+}
+
+
+
+export async function getAllMilesFromDB(req,res){
+try{
+const miles= await getAllMiles();
+   return res.json(miles);
+  }catch(error){
+   res.status(500).json({
+      success: false,
+      message: "Error fetching miles",
       error: error?.message || "An unexpected error occurred",
     });
   }
