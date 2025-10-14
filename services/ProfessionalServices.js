@@ -118,15 +118,12 @@ export async function CreateProAccountStepOne(data) {
       .filter((id) => mongoose.Types.ObjectId.isValid(id))
       .map((id) => new mongoose.Types.ObjectId(id));
 
-    await ProfessionalService.create(
-      [
-        {
-          professional_id: professional._id,
-          service_id: serviceObjectIds, 
-        },
-      ],
-      { session }
-    );
+    const professionalServices = serviceObjectIds.map((serviceId) => ({
+      professional_id: professional._id,
+      service_id: serviceId,
+    }));
+
+    await ProfessionalService.insertMany(professionalServices, { session });
     await session.commitTransaction();
     session.endSession();
     return { user, professional };

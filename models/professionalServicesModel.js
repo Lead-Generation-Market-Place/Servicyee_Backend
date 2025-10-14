@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const PricingType = ["fixed", "hourly", "per_project", "custom"];
 const professionalServiceSchema = new mongoose.Schema({
   professional_id: { type: mongoose.Schema.Types.ObjectId, ref: "Professional", required: true, index: true },
-  service_id: [{ type: mongoose.Schema.Types.ObjectId, ref: "Service", required: true, index: true }],
+  service_id: { type: mongoose.Schema.Types.ObjectId, ref: "Service", required: true, index: true },
   service_name: { type: String, index: true },
   location_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "Location" }],
   maximum_price: Number,
