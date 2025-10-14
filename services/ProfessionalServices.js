@@ -85,9 +85,8 @@ export async function CreateProAccountStepOne(data) {
   try {
     const existingUser = await User.findOne({
       email: data.email,
-      username: data.firstName + data.lastName,
     }).session(session);
-    if (existingUser) throw new Error("User already exists");
+    if (existingUser) throw new Error("User already exists in this email");
 
     const hashedPassword = await bcrypt.hash(data.password.trim(), 12);
     const user = new User({
@@ -126,7 +125,8 @@ export async function CreateProAccountStepOne(data) {
     await ProfessionalService.insertMany(professionalServices, { session });
     await session.commitTransaction();
     session.endSession();
-    return { user, professional };
+    const GetProfessional = await Professional.findById(professional._id).populate('user_id').lean();
+    return { user, professional: GetProfessional };
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
