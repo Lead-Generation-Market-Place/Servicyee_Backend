@@ -9,7 +9,8 @@ import {
   getServicesOFAuthenticatedUser,
   assignServiceToProfessional,
   getProfessionalCount
-  , toggleServiceStatus
+  , toggleServiceStatus,
+  featuredServicesHandler
 } from '../controllers/serviceController.js';
 
 import { validateBody } from '../middlewares/validate.middleware.js';
@@ -29,10 +30,14 @@ router.post('/asp', assignServiceToProfessional);
 router.get('/', getServices);
 router.post('/', fileupload('service').single('image_url'),
  addServices);
+ //featured services
+router.get('/featured', featuredServicesHandler);
 
 // ✅ Dynamic route must be LAST
 router.get('/:id', getServiceById);
 router.put('/:id', fileupload('service').single('image_url'), updateService);
 router.delete('/:id', deleteService);
+
+
 
 export default router;
