@@ -221,7 +221,7 @@ export async function createProfessionalAccount(req, res) {
     return res.status(201).json({
       success: true,
       message: "Professional account created successfully",
-      professional,
+      professional
     });
   } catch (error) {
     res.status(500).json({
