@@ -1,4 +1,5 @@
 import Professional from "../models/ProfessionalModel.js";
+import { User } from "../models/user.js";
 import {
   createProfessional,
   getProfessionalByUserId,
@@ -6,9 +7,11 @@ import {
   updateProfessional,
   deleteProfessional,
   updateProfessionalService,
+  CreateProAccountStepOne,
+  CreateProAccountStepThree,
 } from "../services/ProfessionalServices.js";
-const backendUrl = process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
-
+const backendUrl =
+  process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
 
 export async function createProfessionalHandler(req, res) {
   try {
@@ -25,7 +28,6 @@ export async function createProfessionalHandler(req, res) {
 
 export async function getProfessionalByUserIdHandler(req, res) {
   try {
-
     const user_id = req.user.id; // Get authenticated user id from JWT middleware
 
     const professional = await getProfessionalByUserId(user_id);
@@ -183,5 +185,59 @@ export async function updateProfessionalInfo(req, res) {
       message: "Error updating professional info",
       error: error?.message || "An unexpected error occurred",
     });
+  }
+}
+
+// Create Professional Account Step 01
+export async function createProfessionalAccount(req, res) {
+  const data = req.body;
+  try {
+    const professional = await CreateProAccountStepOne(data);
+    if (!professional) {
+      return res.status(400).json({
+        success: false,
+        message: "Email Address already exists",
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Professional account created successfully",
+      professional,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error creating professional account",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+// End of Professional Account creation
+
+// Create Professional Account Step 03
+export async function createProfessionalStepThree(req, res) {
+  const { id } = req.params;
+  const { business_name } = req.body;
+  try {
+    const professional = await CreateProAccountStepThree(id, { business_name });
+
+    return res.status(200).json({
+      success: true,
+      message: "Professional Business Name updated successfully",
+      professional,
+    });
+  } catch (error) {
+    
+    if (error.message === "Professional not found.") {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    
+    return res.status(400).json({
+      success: false,
+      message: "Error updating professional info",
+      error: error?.message || "An unexpected error occurred",
+    });
+
   }
 }

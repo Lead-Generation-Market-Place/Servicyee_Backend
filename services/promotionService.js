@@ -11,7 +11,7 @@ class PromotionService {
         })
         .populate({
           path: "service_id",
-      
+    
           select: "-_id name is_active image_url",
         })
         .lean()

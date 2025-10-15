@@ -1,8 +1,9 @@
 import express from "express";
-import {getServicesBySubcategoris} from "../controllers/getSubcategoryServicesController.js";
+import { subcategoriesServicesHandler } from "../controllers/subcategoriesServicesController.js";
+
 
 const router = express();
 
-router.get('/all/servies', getServicesBySubcategoris);
+router.get('/', subcategoriesServicesHandler);
 
 export default router;

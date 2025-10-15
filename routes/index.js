@@ -13,7 +13,8 @@ import authRoute from "./authRoute.js";
 import serviceQuestionsRoute from "./serviceQuestionsRoute.js";
 import leadRoute from "./leadRoute.js";
 import ReviewsRoutes from "./ReviewsRoutes.js";
-
+import promotionRoutes from "./promotionRoute.js";
+import popularServicesRoute from './popularServicesRoute.js';
 // Organized by feature
 const apiRoutes = [
   // Authentication & Users
@@ -66,6 +67,13 @@ const apiRoutes = [
     description: "Service management",
   },
   {
+    path:"/popular-services",
+    router:popularServicesRoute,
+    developer:"esmatullah",
+    domain: "popular services",
+    description: "get all popular services by user location if provided"
+  },
+  {
     path: "/categories",
     router: categoryRoute,
     developer: "bashery",
@@ -80,7 +88,7 @@ const apiRoutes = [
     description: "Service subcategories",
   },
   {
-    path: "/subcategories",
+    path: "/subcategory-services",
     router: subcategoryServicesRoute,
     developer: "esmatullah",
     domain: "categories",
@@ -135,6 +143,13 @@ const apiRoutes = [
     developer: "bashery",
     domain: "search",
     description: "Global search functionality",
+  },
+  {
+    path: "/promotions",
+    router: promotionRoutes,
+    developer: "durrani",
+    domain: "promotions",
+    description: "Promotion discount related",
   },
 ];
 

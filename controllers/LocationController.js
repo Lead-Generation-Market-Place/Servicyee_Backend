@@ -1,3 +1,4 @@
+
 import {
   createLocation,
   deleteLocationById,
@@ -5,14 +6,19 @@ import {
   getLocationById,
   updateLcoation,
   GetLocationByUserId,
+  getLocationServiceByProfessionalId,
+  getAllMiles,addMiles,
+  addMinutes,getAllMinutes,addVehileTypes,getAllVehicleType
 } from "../services/LocationServices.js";
 
 export async function createLocationHandler(req, res) {
   try {
-    const location = await createLocation(req.body);
-    res.status(201).json(location);
+    console.log(req.body);
+    const locationId = await createLocation(req.body);
+    res.status(201).json({ locationId });
   } catch (error) {
-    res.status(500).json({ message: "Error Creating Location", error });
+    console.error("Error creating location:", error);
+    res.status(500).json({ message: "Error creating location", error: error.message });
   }
 }
 
@@ -38,10 +44,10 @@ export async function updateLocationHandler(req, res) {
   }
 }
 
-// GET Location by userId
+
 export async function getLocationByUserIdHandler(req, res) {
   try {
-    const user_id = req.user.id; // Get authenticated user id from JWT middleware
+    const user_id = req.user.id; 
     const location = await GetLocationByUserId(user_id);
          if (!location) {
       return res.json({
@@ -75,12 +81,137 @@ export async function getLocationByIdHandler(req, res) {
 
 export async function deleteLocationByIdHandler(req, res) {
   try {
-    await deleteLocationById(req.params.id);
-    res.status(204).send();
+    const { id } = req.params;
+    const deletedLocation = await deleteLocationById(id);
+
+    if (!deletedLocation) {
+      return res.status(404).json({
+        success: false,
+        message: `Location with ID ${id} not found.`,
+      });
+    }
+
+    return res.json({
+      message: `Location with ID ${id} is deleted.`,
+    });
+
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Error deleting location",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+
+export async function getServiceLocationByProfessionalId(req, res) {
+  try {
+  const { id: professionalId, serviceid } = req.params;
+
+    console.log(professionalId,serviceid);
+    const location = await getLocationServiceByProfessionalId(professionalId,serviceid);
+         if (!location) {
+      return res.json({
+        address_line: "",
+        zipcode: "",
+      });
+    }
+    return res.json(location);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching location",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+
+export async function addMilesToDb(req, res) {
+  try {
+    console.log("Add miles request body:", req.body);
+    await addMiles(req.body); // No need to capture return
+    res.status(201).json({ message: "Miles added successfully" });
+  } catch (error) {
+    console.error("Error adding miles:", error);
+    res.status(500).json({
+      message: "Error adding miles",
+      error: error.message
+    });
+  }
+}
+
+
+
+export async function getAllMilesFromDB(req,res){
+try{
+const miles= await getAllMiles();
+   return res.json(miles);
+  }catch(error){
+   res.status(500).json({
+      success: false,
+      message: "Error fetching miles",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+
+export async function addMinute(req,res) {
+    try{
+      console.log("Add miles request body:", req.body);
+    await addMinutes(req.body); // No need to capture return
+    res.status(201).json({ message: "Minutes added successfully" });
+    }catch(error){
+      res.status(500).json({
+      success: false,
+      message: "Error fetching miles",
+      error: error?.message || "An unexpected error occurred",
+    });
+    }
+}
+
+export async function getAllMinutesFromDB(req,res){
+try{
+const miles= await getAllMinutes();
+   return res.json(miles);
+  }catch(error){
+   res.status(500).json({
+      success: false,
+      message: "Error fetching minutes",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+
+
+
+
+//
+export async function addVehicleType(req,res) {
+    try{
+      console.log("Add miles request body:", req.body);
+    await addVehileTypes(req.body); // No need to capture return
+    res.status(201).json({ message: "Vehicle type added successfully" });
+    }catch(error){
+      res.status(500).json({
+      success: false,
+      message: "Error fetching vehicle type",
+      error: error?.message || "An unexpected error occurred",
+    });
+    }
+}
+
+export async function getAllVehicleTypesFromDb(req,res){
+try{
+const miles= await getAllVehicleType();
+   return res.json(miles);
+  }catch(error){
+   res.status(500).json({
+      success: false,
+      message: "Error fetching vehicle types.",
       error: error?.message || "An unexpected error occurred",
     });
   }

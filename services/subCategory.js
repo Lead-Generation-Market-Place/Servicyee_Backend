@@ -1,10 +1,10 @@
-import SubCategories from '../models/subCategoryModel.js';
+import Subcategories from '../models/subCategoryModel.js';
 import Category from '../models/categoryModel.js';  // Import Category model
 
 class SubCategoryService {
-  async getAllSubCategories(filter = {}) {
+  async getAllSubcategories(filter = {}) {
     try {
-      return await SubCategories.find(filter);
+      return await Subcategories.find(filter);
     } catch (error) {
       throw error;
     }
@@ -12,11 +12,47 @@ class SubCategoryService {
 
     async getSubCategoryById(subCategoryId) {
       try {
-        return await SubCategories.findById(subCategoryId);
+        return await Subcategories.findById(subCategoryId);
       } catch (error) {
         throw error;
       }
     }
+
+    // get subcategory by slug
+   async getSubcategoryBySlug(subcategorySlug) {
+    try {
+      const result = await Subcategories.aggregate([
+        {
+          $match: { slug: subcategorySlug, is_active: true }
+        },
+        {
+          $lookup: {
+            from: "services", // Services collection
+            localField: "_id", // subcategory _id
+            foreignField: "subcategory_id", // service's subcategory_id field
+            as: "services" // This will contain all services for this subcategory
+          }
+        },
+        // Optional: Filter only active services
+        {
+          $addFields: {
+            services: {
+              $filter: {
+                input: "$services",
+                as: "service",
+                cond: { $eq: ["$$service.is_active", true] } // if you have is_active field
+              }
+            }
+          }
+        }
+      ]).exec();
+
+      return result.length > 0 ? result[0] : null;
+    } catch(error) {
+      console.error("Error fetching subcategory with services:", error);
+      throw error;
+    }
+  }
 
   async addSubCategory(subCategoryData) {
     try {
@@ -26,7 +62,7 @@ class SubCategoryService {
         throw new Error('Category not found');
       }
 
-      const newSubCategory = new SubCategories(subCategoryData);
+      const newSubCategory = new Subcategories(subCategoryData);
       return await newSubCategory.save();
     } catch (error) {
       throw error;
@@ -43,7 +79,7 @@ class SubCategoryService {
         }
       }
 
-      const updatedSubCategory = await SubCategories.findByIdAndUpdate(
+      const updatedSubCategory = await Subcategories.findByIdAndUpdate(
         subCategoryId,
         updateData,
         { new: true, runValidators: true }
@@ -56,7 +92,7 @@ class SubCategoryService {
 
   async deleteSubCategory(subCategoryId) {
     try {
-      const deletedSubCategory = await SubCategories.findByIdAndDelete(subCategoryId);
+      const deletedSubCategory = await Subcategories.findByIdAndDelete(subCategoryId);
       return deletedSubCategory;
     } catch (error) {
       throw error;
@@ -65,9 +101,9 @@ class SubCategoryService {
 
 
 
- async getAllSubCategoriesWithServicesCount() {
+ async getAllSubcategoriesWithServicesCount() {
   try {
-    const result = await SubCategories.aggregate([
+    const result = await Subcategories.aggregate([
       {
         $lookup: {
           from: 'services',
@@ -102,7 +138,7 @@ class SubCategoryService {
 
     return result;
   } catch (error) {
-    console.error('Error in getAllSubCategoriesWithServicesCount:', error);
+    console.error('Error in getAllSubcategoriesWithServicesCount:', error);
     throw error;
   }
 }
