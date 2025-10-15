@@ -133,3 +133,26 @@ export async function CreateProAccountStepOne(data) {
     throw new Error(error.message || "Failed to create professional account");
   }
 }
+
+
+// Create Professional Account Step 03
+export async function CreateProAccountStepThree(id, { business_name }) {
+  if (!business_name || typeof business_name !== "string" || !business_name.trim()) {
+    throw new Error("Business name is required and must be a least 3 character.");
+  }
+  try {
+    const professional = await Professional.findByIdAndUpdate(
+      id,
+      { business_name: business_name.trim() },
+      { new: true, runValidators: true }
+    );
+    if (!professional) {
+      throw new Error("Professional not found.");
+    }
+
+    return professional;
+  } catch (error) {
+  
+    throw new Error(error?.message || "Failed to update professional business name.");
+  }
+}
