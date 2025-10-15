@@ -18,6 +18,15 @@ class SubCategoryService {
       }
     }
 
+    // get subcategory by slug
+    async getSubcategoryBySlug(subcategorySlug) {
+      try {
+        return await Subcategories.find({slug: subcategorySlug}).exec();
+      } catch(error) {
+        throw error;
+      }
+    }
+
   async addSubCategory(subCategoryData) {
     try {
       // Check if category exists

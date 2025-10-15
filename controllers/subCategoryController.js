@@ -31,6 +31,26 @@ export const getSubCategoryById = async (req, res, next) => {
   }
 };
 
+// subcategory gy slug
+export const getSubcategoryBySlugHandler = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const subcategoryData = await subCategoryService.getSubcategoryBySlug(slug);
+    if (!subcategoryData) {
+      return res.status(404).json({message: 'subcategory not found'});
+    }
+
+    res.status(200).json({
+      success:true,
+      message:`${slug} subcategory data`,
+      data:subcategoryData
+    });
+
+  } catch (error) {
+    next(error);
+  }
+}
+
 // create subcategory
 export const addSubCategory = async (req, res, next) => {
   try {
