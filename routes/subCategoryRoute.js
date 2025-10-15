@@ -8,8 +8,8 @@ import {
   getSubCategoryById,
   getSubcategoryBySlugHandler
 } from '../controllers/subCategoryController.js';
-import { validateBody } from '../middlewares/validate.middleware.js';
-import { createSubCategorySchema, updateSubCategorySchema } from '../validators/subcategory.validators.js';
+
+
 import fileupload from '../config/multer.js';
 
 const router = express.Router();

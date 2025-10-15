@@ -1,5 +1,7 @@
 import Location from "../models/LocationModel.js";
 import milesModel from "../models/milesModel.js";
+import minute_model from "../models/minute_model.js";
+import vehicle_type_model from "../models/vehicle_type_model.js";
 
 
 export async function createLocation(data) {
@@ -21,20 +23,56 @@ export function getLocationById(id) {
     .exec();
 }
 
-export function deleteLocationById(id) {
-    return Location.findByIdAndDelete(id).exec();
+export async function deleteLocationById(id) {
+  try {
+    const res = await Location.findByIdAndDelete(id).exec();
+    if (res) {
+      console.log(`Location with ID ${id} was deleted.`);
+    } else {
+      console.log(`No location found with ID ${id}.`);
+    }
+    return res;
+  } catch (error) {
+    console.error(`Error deleting location with ID ${id}:`, error);
+    throw error;
+  }
 }
+
 
 // Get Location by userId
 export function GetLocationByUserId(user_id) {
     const location = Location.findOne({ user_id }).exec();
     return location;
 }
+export async function getLocationServiceByProfessionalId(professionalId, serviceId) {
+  const locations = await Location.find({ 
+    professional_id: professionalId, 
+    service_id: serviceId 
+  })
+    .populate('mile_id', 'mile') 
+    .populate('minute_id', 'minute') 
+    .populate('vehicle_type_id', 'vehicle_type')  
+    .lean()
+    .exec();
 
-export function getLocationServiceByProfessionalId(professionalId,serviceId){
-  const location = Location.find({professional_id:professionalId,service_id:serviceId}).exec();
-  return location;
+  const transformedLocations = locations.map(location => {
+    return {
+      ...location,
+      mile: location.mile_id?.mile || null,
+      mile_id: location.mile_id?._id || null,
+
+      minute: location.minute_id?.minute || null,
+      minute_id: location.minute_id?._id || null,
+
+      vehicleType: location.vehicle_type_id?.vehicle_type || null,
+      vehicle_type_id: location.vehicle_type_id?._id || null
+    };
+  });
+
+  return transformedLocations;
 }
+
+
 
 export function getAllMiles() {
   return milesModel.find().select('mile _id').exec();
@@ -44,4 +82,28 @@ export function getAllMiles() {
 export async function addMiles(data) {
   const miles = new milesModel(data);
   await miles.save(); // No need to return anything
+}
+
+
+export async function addMinutes(data) {
+  const minute = new minute_model(data);
+  await minute.save();
+}
+
+
+export async function getAllMinutes(data) {
+  return minute_model.find().select('minute _id');
+  
+}
+
+
+export async function addVehileTypes(data) {
+  const vehicelType = new vehicle_type_model(data);
+  await vehicelType.save();
+}
+
+
+export async function getAllVehicleType(data) {
+  return vehicle_type_model.find().select('vehicle_type _id');
+  
 }

@@ -7,7 +7,7 @@ import {
   getCategoryById,
   getAllWithServiceCount
 } from '../controllers/categoryController.js';
-import { validateBody } from '../middlewares/validate.middleware.js';
+
 import { createCategorySchema, updateCategorySchema } from '../validators/category.validators.js';
 import fileupload from '../config/multer.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
