@@ -13,7 +13,7 @@ class FindServicePros {
         })
         .populate({
           path: "professional_id",
-          select: "business_name introduction business_type profile_image",
+          select: "business_name introduction business_type profile_image total_hire total_review rating_avg",
           populate: {
             path: "user_id",
             select: "username email",
