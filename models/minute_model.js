@@ -8,4 +8,6 @@ const MinuteSchema = new Schema({
   collection: "minutes"
 });
 
-export default model("Minutes", MinuteSchema);
+
+export default model("Minute", MinuteSchema); 
+

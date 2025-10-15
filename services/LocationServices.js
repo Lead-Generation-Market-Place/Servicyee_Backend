@@ -44,27 +44,35 @@ export function GetLocationByUserId(user_id) {
     const location = Location.findOne({ user_id }).exec();
     return location;
 }
-
 export async function getLocationServiceByProfessionalId(professionalId, serviceId) {
   const locations = await Location.find({ 
     professional_id: professionalId, 
     service_id: serviceId 
   })
-  .populate('mile_id', 'mile') // Populate the mile field
-  .lean() // Convert to plain JavaScript objects
-  .exec();
+    .populate('mile_id', 'mile') 
+    .populate('minute_id', 'minute') 
+    .populate('vehicle_type_id', 'vehicle_type')  
+    .lean()
+    .exec();
 
-  // Transform the data to include mile value
   const transformedLocations = locations.map(location => {
     return {
       ...location,
-      mile: location.mile_id?.mile || null, // Add mile value directly
-      mile_id: location.mile_id?._id || null // Keep the ID as well
+      mile: location.mile_id?.mile || null,
+      mile_id: location.mile_id?._id || null,
+
+      minute: location.minute_id?.minute || null,
+      minute_id: location.minute_id?._id || null,
+
+      vehicleType: location.vehicle_type_id?.vehicle_type || null,
+      vehicle_type_id: location.vehicle_type_id?._id || null
     };
   });
 
   return transformedLocations;
 }
+
+
 
 export function getAllMiles() {
   return milesModel.find().select('mile _id').exec();

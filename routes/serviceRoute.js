@@ -12,8 +12,7 @@ import {
   , toggleServiceStatus
 } from '../controllers/serviceController.js';
 
-import { validateBody } from '../middlewares/validate.middleware.js';
-import { createServiceSchema, updateServiceSchema } from '../validators/service.validators.js';
+
 import  fileupload  from "../config/multer.js";
 import { uploadFile } from '../controllers/ProfessionalController.js';
 
