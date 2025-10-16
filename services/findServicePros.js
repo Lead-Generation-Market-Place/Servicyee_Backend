@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import Professional from "../models/ProfessionalModel.js";
 import professionalServices from "../models/professionalServicesModel.js";
 import services from "../models/servicesModel.js";
-
 class FindServicePros {
  
   async getProfessionalsByService(serviceId) {
@@ -22,12 +21,14 @@ class FindServicePros {
         .populate({
           path: "service_id",
           select: "service_name service_status",
-          model: services,
+         
         })
         .populate({
-          path: "location_id",
-          select: "country state",
-        })
+          path: "location_ids",
+        
+        }).populate({
+          path: "question_ids",
+         })
         .limit(5)
         .exec();
       return pros;
@@ -100,7 +101,7 @@ class FindServicePros {
           model: services,
         })
         .populate({
-          path: "location_id",
+          path: "location_ids",
           select: "country state city address_line zipcode coordinates",
         })
         .exec();
@@ -125,7 +126,7 @@ class FindServicePros {
       minRating = 0,
       minHires = 0,
       minReviews = 0,
-      limit = 10
+      limit = 5
     } = filters;
 
     // Build the base query

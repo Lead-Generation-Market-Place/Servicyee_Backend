@@ -85,9 +85,8 @@ export async function CreateProAccountStepOne(data) {
   try {
     const existingUser = await User.findOne({
       email: data.email,
-      username: data.firstName + data.lastName,
     }).session(session);
-    if (existingUser) throw new Error("User already exists");
+    if (existingUser) throw new Error("User already exists in this email");
 
     const hashedPassword = await bcrypt.hash(data.password.trim(), 12);
     const user = new User({
@@ -118,21 +117,42 @@ export async function CreateProAccountStepOne(data) {
       .filter((id) => mongoose.Types.ObjectId.isValid(id))
       .map((id) => new mongoose.Types.ObjectId(id));
 
-    await ProfessionalService.create(
-      [
-        {
-          professional_id: professional._id,
-          service_id: serviceObjectIds, 
-        },
-      ],
-      { session }
-    );
+    const professionalServices = serviceObjectIds.map((serviceId) => ({
+      professional_id: professional._id,
+      service_id: serviceId,
+    }));
+
+    await ProfessionalService.insertMany(professionalServices, { session });
     await session.commitTransaction();
     session.endSession();
-    return { user, professional };
+    const GetProfessional = await Professional.findById(professional._id).populate('user_id').lean();
+    return { user, professional: GetProfessional };
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     throw new Error(error.message || "Failed to create professional account");
+  }
+}
+
+
+// Create Professional Account Step 03
+export async function CreateProAccountStepThree(id, { business_name }) {
+  if (!business_name || typeof business_name !== "string" || !business_name.trim()) {
+    throw new Error("Business name is required and must be a least 3 character.");
+  }
+  try {
+    const professional = await Professional.findByIdAndUpdate(
+      id,
+      { business_name: business_name.trim() },
+      { new: true, runValidators: true }
+    );
+    if (!professional) {
+      throw new Error("Professional not found.");
+    }
+
+    return professional;
+  } catch (error) {
+  
+    throw new Error(error?.message || "Failed to update professional business name.");
   }
 }

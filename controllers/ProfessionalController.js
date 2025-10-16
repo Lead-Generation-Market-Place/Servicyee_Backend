@@ -8,6 +8,7 @@ import {
   deleteProfessional,
   updateProfessionalService,
   CreateProAccountStepOne,
+  CreateProAccountStepThree,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -187,28 +188,9 @@ export async function updateProfessionalInfo(req, res) {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Create Professional Account Step 01
 export async function createProfessionalAccount(req, res) {
-    const data = req.body;
+  const data = req.body;
   try {
     const professional = await CreateProAccountStepOne(data);
     if (!professional) {
@@ -232,3 +214,30 @@ export async function createProfessionalAccount(req, res) {
   }
 }
 // End of Professional Account creation
+
+// Create Professional Account Step 03
+export async function createProfessionalStepThree(req, res) {
+  const { id } = req.params;
+  const { business_name } = req.body;
+  try {
+    const professional = await CreateProAccountStepThree(id, { business_name });
+
+    return res.status(200).json({
+      success: true,
+      message: "Professional Business Name updated successfully",
+      professional,
+    });
+  } catch (error) {
+    
+    if (error.message === "Professional not found.") {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    
+    return res.status(400).json({
+      success: false,
+      message: "Error updating professional info",
+      error: error?.message || "An unexpected error occurred",
+    });
+
+  }
+}

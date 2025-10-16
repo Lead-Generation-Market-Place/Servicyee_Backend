@@ -101,7 +101,7 @@ export async function logoutService(token) {
 }
 
 
-export async function getUserByIdService(userId) {
+export async function getCurrentUserServices(userId) {
   return User.findById(userId).select("-password").exec();
 }
 

@@ -8,16 +8,23 @@ import {
 	getProfessionalByUserIdHandler,
 	updateProfessionalIntroductionById,
 	updateProfessionalInfo,
-	uploadFile,
-	createProfessionalAccount
+	createProfessionalAccount,
+	createProfessionalStepThree
 } from '../controllers/ProfessionalController.js';
 import createUploader from '../config/multer.js';  
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
+import { searchProfessionalsController } from "../controllers/SearchLog.js";
 const router = express.Router();
 const upload = createUploader('professionals'); 
 
+
+// Professional Registration Route with account creation
 router.post('/register', createProfessionalAccount);
+router.put('/update-business-name/:id', createProfessionalStepThree)
+// End of Professional Registration Route with account creation
+
+// CRUD Routes for Professionals Account Management
 router.get('/',  authenticateToken, getAllProfessionalsHandler);
 router.get('/pro', authenticateToken, getProfessionalByUserIdHandler);
 router.post('/',  authenticateToken, celebrate({ [Segments.BODY]: professionalSchema }), createProfessionalHandler);
@@ -30,5 +37,10 @@ router.put('/:id/introduction',
 );
 router.delete('/:id',authenticateToken, deleteProfessionalHandler);
 
+// End of CRUD Routes for Professionals Account Management
+
+
+// Search Log Routes
+router.get('/search', searchProfessionalsController);
 
 export default router;

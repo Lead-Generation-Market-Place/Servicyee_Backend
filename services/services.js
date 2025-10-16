@@ -13,20 +13,27 @@ class ServicesService {
   }
 
   async addService(serviceData) {
-  const { service_name, subcategory_id } = serviceData;
+    try {
+      const { name, slug, subcategory_id } = serviceData;
+      if (!name || !slug || !subcategory_id) {
+        throw new Error('Name, slug, and subcategory_id are required fields.');
+      }
+      const existingService = await ServiceModel.findOne({
+        slug: slug.trim(),
+        subcategory_id
+      });
+      if (existingService) {
+        throw new Error('Service already exists under this subcategory');
+      }
+      const newService = new ServiceModel(serviceData);
+      return await newService.save();
 
-  const existingService = await ServiceModel.findOne({
-    service_name: service_name.trim(),
-    subcategory_id
-  });
-
-  if (existingService) {
-    throw new Error('Service already exists under this subcategory');
-  }
-
-  const newService = new ServiceModel(serviceData);
-  return await newService.save();
+    } catch (error) {
+      console.error('Error in addService:', error);
+    throw error;
+    }
 }
+
 async assignServiceToProfessional(professionalServiceData) {
   const {
     professional_id,
@@ -183,6 +190,11 @@ async assignServiceToProfessional(professionalServiceData) {
   async getServicesOfProfessional(professionalId) {
     return await ServiceModel.find({ professional_id: professionalId });
   }
+  
+  //featured services
+  async getFeaturedServices() {
+    return servicesModel.find({ is_featured: true }).exec();
+}
 
 // async searchServiceByLocation(service_id, zip_code) {
 //   const query = {};

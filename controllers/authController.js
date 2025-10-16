@@ -62,9 +62,9 @@ export async function logout(req, res) {
   }
 }
 
-export async function me(req, res) {
+export async function getCurrentUser(req, res) {
   try {
-    const user = await authService.getUserByIdService(req.user.id);
+    const user = await authService.getCurrentUserServices(req.user.id);
     res.json({ user });
   } catch (err) {
     res.status(400).json({ message: err.message });

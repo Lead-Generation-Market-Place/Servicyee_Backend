@@ -9,11 +9,13 @@ import {
   getServicesOFAuthenticatedUser,
   assignServiceToProfessional,
   getProfessionalCount
-  , toggleServiceStatus
+  , toggleServiceStatus,
+  featuredServicesHandler
 } from '../controllers/serviceController.js';
 
-import { validateBody } from '../middlewares/validate.middleware.js';
-import { createServiceSchema, updateServiceSchema } from '../validators/service.validators.js';
+
+import  fileupload  from "../config/multer.js";
+import { uploadFile } from '../controllers/ProfessionalController.js';
 
 const router = express.Router();
 
@@ -25,11 +27,16 @@ router.post('/asp', assignServiceToProfessional);
 
 // ✅ General routes
 router.get('/', getServices);
-router.post('/', validateBody(createServiceSchema), addServices);
+router.post('/', fileupload('service').single('image_url'),
+ addServices);
+ //featured services
+router.get('/featured', featuredServicesHandler);
 
 // ✅ Dynamic route must be LAST
 router.get('/:id', getServiceById);
-router.put('/:id', validateBody(updateServiceSchema), updateService);
+router.put('/:id', fileupload('service').single('image_url'), updateService);
 router.delete('/:id', deleteService);
+
+
 
 export default router;
