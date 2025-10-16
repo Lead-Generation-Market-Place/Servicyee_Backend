@@ -107,3 +107,30 @@ export async function getAllVehicleType(data) {
   return vehicle_type_model.find().select('vehicle_type _id');
   
 }
+
+// user location fetch and insert
+
+export async function insertUserLocationById(data, userId) {
+  try {
+    // Create location with user association
+    const locationData = {
+      ...data,
+      user_id: userId
+    };
+    
+    const location = new Location(locationData);
+    const savedLocation = await location.save();
+    return savedLocation;
+  } catch (error) {
+    throw new Error(`Failed to insert user location: ${error.message}`);
+  }
+}
+
+export async function getUserLocationById(userId) {
+  try {
+    const location = await Location.findOne({user_id: userId });
+    return location;
+  } catch (error) {
+    throw new Error(`Failed to get user location: ${error.message}`);
+  }
+}
