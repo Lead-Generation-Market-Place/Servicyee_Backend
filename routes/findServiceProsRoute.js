@@ -13,7 +13,7 @@ router.get('/:serviceId',getProfessionalsByService);
 router.get('/details/:professionalId',getProfessionalsDetailsByService);
 router.get('/ratings/:serviceId',getProfessionalsByServiceWithHighestRating);
 router.get('/ratings/:businessType/:serviceId',getProsAndCompaniesByServiceHighestRating);
-router.get('/zip/:serviceId/:zipCode', getServicesByNameZip);
+router.post('/', getServicesByNameZip);
 
 
 

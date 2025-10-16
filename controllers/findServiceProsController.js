@@ -145,39 +145,25 @@ export const getProsAndCompaniesByServiceHighestRating = async (
 
 export const getServicesByNameZip = async (req, res, next) => {
   try {
-    const { serviceId, zipCode } = req.params;
+    const { serviceId, zipCode } = req.body;
 
-    // 🛑 Validate required parameters
-    if (!serviceId) {
+    if (!serviceId || !zipCode) {
       return res.status(400).json({
         success: false,
-        message: "Service ID is required",
+        message: "Both serviceId and zipCode are required",
       });
     }
 
-    if (!zipCode) {
-      return res.status(400).json({
-        success: false,
-        message: "ZIP code is required",
-      });
-    }
+    const professionals = await findServicePros.getServicesByNameZip(serviceId, zipCode);
 
-    // 🧠 Fetch professionals using the service layer
-    const professionals = await findServicePros.getServicesByNameZip(
-      serviceId,
-      zipCode
-    );
-
-    // 🕵️ Handle empty results
     if (!professionals || professionals.length === 0) {
       return res.status(404).json({
-        success: false,
-        message: `No professionals found for service ID: ${serviceId} and ZIP code: ${zipCode}`,
+        success: true,
+        message: `No professionals found for service ID: ${serviceId} and zip code ${zipCode}`,
         data: [],
       });
     }
 
-    // ✅ Return success response
     res.status(200).json({
       success: true,
       message: "Professionals found successfully",
@@ -185,8 +171,8 @@ export const getServicesByNameZip = async (req, res, next) => {
       data: professionals,
     });
   } catch (error) {
-    console.error("Error in getServicesByNameZip:", error);
     next(error);
   }
 };
+
 
