@@ -22,8 +22,6 @@ export const getProfessionalsByService = async (req, res, next) => {
       });
     }
 
-   
-
     res.status(200).json({
       success: true,
       message: "Professionals found successfully",
@@ -144,3 +142,51 @@ export const getProsAndCompaniesByServiceHighestRating = async (
     next(error);
   }
 };
+
+export const getServicesByNameZip = async (req, res, next) => {
+  try {
+    const { serviceId, zipCode } = req.params;
+
+    // 🛑 Validate required parameters
+    if (!serviceId) {
+      return res.status(400).json({
+        success: false,
+        message: "Service ID is required",
+      });
+    }
+
+    if (!zipCode) {
+      return res.status(400).json({
+        success: false,
+        message: "ZIP code is required",
+      });
+    }
+
+    // 🧠 Fetch professionals using the service layer
+    const professionals = await findServicePros.getServicesByNameZip(
+      serviceId,
+      zipCode
+    );
+
+    // 🕵️ Handle empty results
+    if (!professionals || professionals.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No professionals found for service ID: ${serviceId} and ZIP code: ${zipCode}`,
+        data: [],
+      });
+    }
+
+    // ✅ Return success response
+    res.status(200).json({
+      success: true,
+      message: "Professionals found successfully",
+      count: professionals.length,
+      data: professionals,
+    });
+  } catch (error) {
+    console.error("Error in getServicesByNameZip:", error);
+    next(error);
+  }
+};
+
