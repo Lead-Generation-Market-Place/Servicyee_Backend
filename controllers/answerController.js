@@ -21,6 +21,30 @@ export const createAnswer = async (req, res, next) => {
   }
 };
 
+export const createAnswers = async (req, res, next) => {
+  try {
+    const { answers } = req.body; // Expecting { answers: [...] }
+    
+    if (!answers || !Array.isArray(answers)) {
+      return formatErrorResponse(res, 400, 'Answers array is required');
+    }
+
+    const createdAnswers = await answerService.createMultipleAnswers(answers);
+    
+    if (!createdAnswers) {
+      return formatErrorResponse(res, 500, 'Failed to create answers');
+    }
+    
+    res.status(201).json({ 
+      success: true, 
+      data: createdAnswers,
+      message: `${createdAnswers.length} answers created successfully` 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getAllAnswers = async (req, res, next) => {
   try {
     const answers = await answerService.getAllAnswers();

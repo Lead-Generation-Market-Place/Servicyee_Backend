@@ -28,14 +28,20 @@ export const addServices = async (req, res, next) => {
 };
 
 export const assignServiceToProfessional = async (req, res, next) => {
-  try {
-
+  try {  console.log('Received data:', req.body);
     const assignedService = await servicesService.assignServiceToProfessional(req.body);
-    res.status(201).json({ data: assignedService });
+
+    return res.status(201).json({
+      assignedService 
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Failed to assign service."
+    });
   }
 };
+
 // Optional: get all assigned services of a professional
 export const getAssignedServicesForProfessional = async (req, res, next) => {
   try {

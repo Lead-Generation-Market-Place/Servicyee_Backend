@@ -15,6 +15,6 @@ const professionalServiceSchema = new mongoose.Schema({
   question_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
 }, { timestamps: true, versionKey: false, collection: "professional_services" });
 
-professionalServiceSchema.index({ service_name: "text", professional_id: 1, service_status: 1 });
+// professionalServiceSchema.index({ service_name: "text", professional_id: 1, service_status: 1 });
 
 export default mongoose.model("ProfessionalService", professionalServiceSchema);
