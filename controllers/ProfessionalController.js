@@ -10,6 +10,7 @@ import {
   CreateProAccountStepOne,
   CreateProAccountStepThree,
   CreateProAccountStepFour,
+  createProAccountStepSeven,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -266,6 +267,32 @@ export async function createProfessionalStepFour(req, res) {
       return res.status(404).json({ success: false, message: error.message });
     }
 
+    return res.status(400).json({
+      success: false,
+      message: "Error updating professional info",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Create Professional Account Step 07
+export async function createProfessionalStepSeven(req, res) {
+  const id = req.params.id;
+  const { schedule, timezone } = req.body;
+  try {
+    const professional = await createProAccountStepSeven(id, {
+      schedule,
+      timezone,
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Professional Business Availability updated successfully",
+      professional,
+    });
+  } catch (error) {
+    if (error.message === "Professional not found.") {
+      return res.status(404).json({ success: false, message: error.message });
+    }
     return res.status(400).json({
       success: false,
       message: "Error updating professional info",

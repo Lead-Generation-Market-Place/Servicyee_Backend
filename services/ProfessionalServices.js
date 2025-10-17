@@ -167,8 +167,11 @@ export async function CreateProAccountStepThree(id, { business_name }) {
   }
 }
 
-// Create Professional Account Step 04 
-export async function CreateProAccountStepFour(id, { businessType, employees, founded, about, profile }) {
+// Create Professional Account Step 04
+export async function CreateProAccountStepFour(
+  id,
+  { businessType, employees, founded, about, profile }
+) {
   try {
     const updateData = {
       business_type: businessType.trim(),
@@ -180,9 +183,39 @@ export async function CreateProAccountStepFour(id, { businessType, employees, fo
     if (profile) {
       updateData.profile_image = profile;
     }
+    const professional = await Professional.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+    if (!professional) {
+      throw new Error("Professional not found.");
+    }
+    return professional;
+  } catch (error) {
+    throw new Error(
+      error?.message || "Failed to update professional business info."
+    );
+  }
+}
+
+// Create Professional Account Step 07
+export async function createProAccountStepSeven(id, { schedule, timezone }) {
+  try {
+    const business_hours = schedule.flatMap((day) =>
+      day.shifts.map((shift) => ({
+        day: day.dayOfWeek,
+        status: shift.isClosed ? "close" : "open",
+        start_time: shift.isClosed
+          ? null
+          : new Date(`1970-01-01T${shift.openTime}:00Z`),
+        end_time: shift.isClosed
+          ? null
+          : new Date(`1970-01-01T${shift.closeTime}:00Z`),
+      }))
+    );
     const professional = await Professional.findByIdAndUpdate(
       id,
-      updateData,
+      { business_hours, timezone },
       { new: true, runValidators: true }
     );
     if (!professional) {
@@ -190,6 +223,8 @@ export async function CreateProAccountStepFour(id, { businessType, employees, fo
     }
     return professional;
   } catch (error) {
-    throw new Error(error?.message || "Failed to update professional business info.");
+    throw new Error(
+      error?.message || "Failed to update professional business info."
+    );
   }
 }
