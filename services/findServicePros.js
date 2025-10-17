@@ -227,7 +227,7 @@ class FindServicePros {
       throw error;
     }
   }
-   async getServicesByNameZip(serviceId, zipCode) {
+  async getServicesByNameZip(serviceId, zipCode) {
     try {
       // Step 1: Find professionals that match the service ID and zip code
       const pros = await professionalServices
@@ -246,6 +246,9 @@ class FindServicePros {
           path: "location_ids",
           match: { zipcode: zipCode },
         })
+        .populate({
+          path: "question_ids",
+        })
         .exec();
 
       // Step 2: Filter only those that have at least one matching location
@@ -255,7 +258,10 @@ class FindServicePros {
 
       // Step 3: Store the search in the `searches` table
       // Avoid duplicates (optional, depends on your design)
-      const existingSearch = await searches.findOne({ service_id: serviceId, zip_code: zipCode });
+      const existingSearch = await searches.findOne({
+        service_id: serviceId,
+        zip_code: zipCode,
+      });
 
       if (!existingSearch) {
         await searches.create({
