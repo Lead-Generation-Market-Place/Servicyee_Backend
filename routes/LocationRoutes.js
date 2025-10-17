@@ -9,7 +9,11 @@ import {
     ,addMilesToDb,
     insertUserLocationHandler,
     getUserLocationHandler,
-    getServiceLocationByProfessionalId,getAllMilesFromDB,addMinute,getAllMinutesFromDB,addVehicleType,getAllVehicleTypesFromDb
+    getServiceLocationByProfessionalId,
+    getAllMilesFromDB,addMinute,
+    getAllMinutesFromDB,
+    addVehicleType,
+    getAllVehicleTypesFromDb
 } from "../controllers/LocationController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 
@@ -25,8 +29,8 @@ router.post('/create', authenticateToken,createLocationHandler);
 router.post('/minute',authenticateToken,addMinute);
 router.post('/miles',authenticateToken,addMilesToDb);
 router.post('/vehicle_type',authenticateToken,addVehicleType);
-
-router.post('/user/:id/create', insertUserLocationHandler);
+// insert and get user location 
+router.post('/user/:id/create',authenticateToken, insertUserLocationHandler);
 router.get('/user/:id', getUserLocationHandler);
 
 
