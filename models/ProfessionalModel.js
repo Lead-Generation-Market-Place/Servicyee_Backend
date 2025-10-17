@@ -12,6 +12,7 @@ const ProfessionalSchema = new Schema(
     business_name: String,
     introduction: String,
     business_type: { type: String, enum: BusinessType },
+    timezone: { type: String, default: "UTC" }, 
     website: { type: String, required: false },
     founded_year: { type: Number, min: 1, required: false },
     employees: { type: Number, min: 1, required: false },
