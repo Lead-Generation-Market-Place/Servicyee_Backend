@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Professional from "../models/ProfessionalModel.js";
 import professionalServices from "../models/professionalServicesModel.js";
 import services from "../models/servicesModel.js";
+import searches from "../models/searchModel.js";
 class FindServicePros {
   async getProfessionalsByService(serviceId) {
     try {
@@ -228,35 +229,50 @@ class FindServicePros {
   }
   async getServicesByNameZip(serviceId, zipCode) {
     try {
+      // Step 1: Find professionals that match the service ID and zip code
       const pros = await professionalServices
-        .find({ service_id: serviceId, service_status: true })
+        .find({
+          service_id: serviceId,
+        })
         .populate({
           path: "professional_id",
-          select:
-            "business_name introduction business_type profile_image total_hire total_review rating_avg",
-          populate: {
-            path: "user_id",
-            select: "username email phone",
-          },
+          select: "business_name introduction business_type profile_image",
         })
         .populate({
           path: "service_id",
-          select: "service_name service_status",
+          select: "service_name",
         })
         .populate({
           path: "location_ids",
-          select: "country state city address_line zipcode coordinates",
           match: { zipcode: zipCode },
         })
-        .lean();
+        .populate({
+          path: "question_ids",
+        })
+        .exec();
+
+      // Step 2: Filter only those that have at least one matching location
       const filteredPros = pros.filter(
-        (item) => item.location_ids && item.location_ids.length > 0
+        (pro) => pro.location_ids && pro.location_ids.length > 0
       );
+
+      // Step 3: Store the search in the `searches` table
+      // Avoid duplicates (optional, depends on your design)
+      const existingSearch = await searches.findOne({
+        service_id: serviceId,
+        zip_code: zipCode,
+      });
+
+      if (!existingSearch) {
+        await searches.create({
+          service_id: serviceId,
+          zip_code: zipCode,
+        });
+      }
 
       return filteredPros;
     } catch (error) {
-    
-      throw new Error("Failed to fetch professionals");
+      throw error;
     }
   }
 }
