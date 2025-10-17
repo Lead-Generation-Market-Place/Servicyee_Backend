@@ -3,6 +3,8 @@ import {
   createLocation,
   deleteLocationById,
   getAllLocations,
+  insertUserLocationById,
+  getUserLocationById,
   getLocationById,
   updateLcoation,
   GetLocationByUserId,
@@ -212,6 +214,101 @@ const miles= await getAllVehicleType();
    res.status(500).json({
       success: false,
       message: "Error fetching vehicle types.",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+
+// user loacation:
+
+
+export async function insertUserLocationHandler(req, res) {
+  try {
+    const userLocationData = { ...req.body };
+    const userId  = req.params.id; // Fixed: destructure userId properly
+    console.log("UserId: ", userId);
+    // Validate required fields
+    const { type, country, state, city, zipcode } = userLocationData;
+    console.log(`${type}, ${country}, ${state}, ${city}, ${zipcode}`);
+    if (!type || !country || !state || !city || !zipcode) {
+      return res.status(400).json({
+        success: false,
+        message: "type, country, state, city, zipcode, and userId are required fields"
+      });
+    }
+
+    const createdUserLocation = await insertUserLocationById(userLocationData, userId);
+    
+    res.status(201).json({
+      success: true,
+      message: "User location has been created successfully",
+      data: {
+        locationId: createdUserLocation.id,
+        userId: userId,
+        type: type,
+        country: country,
+        state: state,
+        city: city,
+        zipcode: zipcode
+      }
+    });
+  } catch (error) {
+    console.error('Error creating user location:', error);
+    
+    // Handle specific error types
+    if (error.message.includes('duplicate') || error.message.includes('unique')) {
+      return res.status(409).json({
+        success: false,
+        message: "Location already exists for this user"
+      });
+    }
+    
+    if (error.message.includes('foreign key') || error.message.includes('user')) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: "Error creating user location",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+export async function getUserLocationHandler(req, res) {
+  try {
+    const userId = req.params.id;
+    
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "userId is required"
+      });
+    }
+
+    const userLocation = await getUserLocationById(userId);
+    
+    if (!userLocation) {
+      return res.status(404).json({
+        success: false,
+        message: "Location not found for this user"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User location retrieved successfully",
+      data: userLocation
+    });
+  } catch (error) {
+    console.error('Error getting user location:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error retrieving user location",
       error: error?.message || "An unexpected error occurred",
     });
   }

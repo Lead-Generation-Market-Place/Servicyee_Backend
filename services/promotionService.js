@@ -1,5 +1,4 @@
 import promotionModel from "../models/promotionModel.js";
-import service from "../models/servicesModel.js";
 class PromotionService {
   async getAllPromotions() {
     try {
@@ -12,7 +11,7 @@ class PromotionService {
         })
         .populate({
           path: "service_id",
-          model: service,
+      
           select: "-_id name is_active image_url",
         })
         .lean()

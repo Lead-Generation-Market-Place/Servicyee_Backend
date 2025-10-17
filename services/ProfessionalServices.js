@@ -78,6 +78,7 @@ export async function updateProfessionalService(id, data) {
   return { professional, location };
 }
 
+// Create Professional Account Step 01
 export async function CreateProAccountStepOne(data) {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -125,7 +126,9 @@ export async function CreateProAccountStepOne(data) {
     await ProfessionalService.insertMany(professionalServices, { session });
     await session.commitTransaction();
     session.endSession();
-    const GetProfessional = await Professional.findById(professional._id).populate('user_id').lean();
+    const GetProfessional = await Professional.findById(professional._id)
+      .populate("user_id")
+      .lean();
     return { user, professional: GetProfessional };
   } catch (error) {
     await session.abortTransaction();
@@ -133,12 +136,18 @@ export async function CreateProAccountStepOne(data) {
     throw new Error(error.message || "Failed to create professional account");
   }
 }
-
+// End of Professional Account Step 01
 
 // Create Professional Account Step 03
 export async function CreateProAccountStepThree(id, { business_name }) {
-  if (!business_name || typeof business_name !== "string" || !business_name.trim()) {
-    throw new Error("Business name is required and must be a least 3 character.");
+  if (
+    !business_name ||
+    typeof business_name !== "string" ||
+    !business_name.trim()
+  ) {
+    throw new Error(
+      "Business name is required and must be a least 3 character."
+    );
   }
   try {
     const professional = await Professional.findByIdAndUpdate(
@@ -152,7 +161,35 @@ export async function CreateProAccountStepThree(id, { business_name }) {
 
     return professional;
   } catch (error) {
-  
-    throw new Error(error?.message || "Failed to update professional business name.");
+    throw new Error(
+      error?.message || "Failed to update professional business name."
+    );
+  }
+}
+
+// Create Professional Account Step 04 
+export async function CreateProAccountStepFour(id, { businessType, employees, founded, about, profile }) {
+  try {
+    const updateData = {
+      business_type: businessType.trim(),
+      employees: employees !== undefined ? employees : undefined,
+      founded_year: founded !== undefined ? founded : undefined,
+      introduction: about !== undefined ? about : undefined,
+    };
+
+    if (profile) {
+      updateData.profile_image = profile;
+    }
+    const professional = await Professional.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+    if (!professional) {
+      throw new Error("Professional not found.");
+    }
+    return professional;
+  } catch (error) {
+    throw new Error(error?.message || "Failed to update professional business info.");
   }
 }
