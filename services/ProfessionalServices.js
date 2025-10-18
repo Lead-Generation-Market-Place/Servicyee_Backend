@@ -4,6 +4,7 @@ import { User } from "../models/user.js";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import ProfessionalService from "../models/professionalServicesModel.js";
+import questionModel from "../models/questionModel.js";
 
 export function createProfessional(data) {
   const professional = new Professional(data);
@@ -226,5 +227,35 @@ export async function createProAccountStepSeven(id, { schedule, timezone }) {
     throw new Error(
       error?.message || "Failed to update professional business info."
     );
+  }
+}
+
+// Get Professional Services Questions for Registeration Step 08
+export async function getProServicesQuestions(id) {
+  try {
+    const proServices = await ProfessionalService.find({
+      professional_id: id,
+    }).select('service_id');
+
+    if (!proServices.length) {
+      throw new Error('No services found for this professional.');
+    }
+    const service_id = proServices.map(s => s.service_id);
+    const questions = await questionModel.find({
+      service_id: { $in: service_id },
+      active: true
+    }).select('service_id question_name form_type options required order');
+    const servicesWithQuestions = proServices.map(service => ({
+      service_id: service.service_id,
+      questions: questions
+        .filter(q => q.service_id.toString() === service.service_id.toString())
+        .sort((a, b) => a.order - b.order) 
+    }));
+
+    return {
+      services: servicesWithQuestions
+    };
+  } catch (error) {
+    throw new Error(error.message || 'Error fetching service questions');
   }
 }
