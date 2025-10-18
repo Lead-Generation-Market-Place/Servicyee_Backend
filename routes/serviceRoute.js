@@ -10,7 +10,7 @@ import {
   assignServiceToProfessional,
   getProfessionalCount
   , toggleServiceStatus,
-  featuredServicesHandler
+  featuredServicesHandler,fetchAllServicesOfAProfessional
 } from '../controllers/serviceController.js';
 
 
@@ -23,6 +23,7 @@ const router = express.Router();
 router.get('/location', getProfessionalCount); // Needs to come before /:id
 router.put('/toggle-service-status', toggleServiceStatus);
 router.get('/auth/:id', getServicesOFAuthenticatedUser);
+router.get('/pro/:id', fetchAllServicesOfAProfessional);
 router.post('/asp', assignServiceToProfessional);
 
 // ✅ General routes

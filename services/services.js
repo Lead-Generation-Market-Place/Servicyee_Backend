@@ -1,6 +1,7 @@
 // servicesService.js
 import ServiceModel from "../models/servicesModel.js";
 import ProfessionalServicesModel from "../models/professionalServicesModel.js";
+import answerModel from "../models/answerModel.js";
 
 class ServicesService {
   // ✅ Get all services
@@ -155,6 +156,36 @@ async assignServiceToProfessional(data) {
     service.service_status = status;
     return await service.save();
   }
+async getAllServicesOfAProfessional(professionalId) {
+  if (!professionalId) {
+    throw new Error('Professional ID is required');
+  }
+
+  // Fetch only service_id with name and subcategory (category) with name
+  const services = await ProfessionalServicesModel.find({ professional_id: professionalId })
+    .populate({
+      path: 'service_id',
+      select: 'name subcategory_id',
+      populate: {
+        path: 'subcategory_id',
+        select: 'name',
+      }
+    })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  if (!services.length) return [];
+
+  // Map to only return service and subcategory name info
+  return services.map(service => ({
+    service_id: service.service_id._id,
+    service_name: service.service_id.name,
+    category_name: service.service_id.subcategory_id?.name || null,
+  }));
 }
+
+
+}
+
 
 export default new ServicesService();

@@ -158,3 +158,26 @@ export const featuredServicesHandler = async (req, res) => {
         });
     }
 }
+
+
+
+export const fetchAllServicesOfAProfessional = async (req, res) => {
+  try {
+    const professionalId = req.params.id;
+
+    const services = await servicesService.getAllServicesOfAProfessional(professionalId);
+
+    res.status(200).json({
+      success: true,
+      data: services,
+    });
+
+  } catch (error) {
+    console.error('Error fetching services of professional:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message,
+    });
+  }
+};

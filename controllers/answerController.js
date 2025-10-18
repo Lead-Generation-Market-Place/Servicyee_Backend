@@ -1,3 +1,4 @@
+import professionalServicesModel from '../models/professionalServicesModel.js';
 import answerService from '../services/answer.js';
 
 const formatErrorResponse = (res, statusCode, message) => {
@@ -23,27 +24,72 @@ export const createAnswer = async (req, res, next) => {
 
 export const createAnswers = async (req, res, next) => {
   try {
-    const { answers } = req.body; // Expecting { answers: [...] }
-    
-    if (!answers || !Array.isArray(answers)) {
+    const { answers } = req.body;
+
+    if (!answers || !Array.isArray(answers) || answers.length === 0) {
       return formatErrorResponse(res, 400, 'Answers array is required');
     }
 
+    // Extract service_id from first answer
+    const service_id = answers[0]?.service_id;
+    if (!service_id) {
+      return formatErrorResponse(res, 400, 'service_id is required in answers');
+    }
+
+    // Optionally, collect all service_location_ids from answers
+    // Suppose each answer may have a service_location_ids array
+    const serviceLocationIds = new Set();
+    answers.forEach(ans => {
+      if (Array.isArray(ans.service_location_ids)) {
+        ans.service_location_ids.forEach(locId => {
+          serviceLocationIds.add(locId.toString());
+        });
+      }
+    });
+
+    // Create answers
     const createdAnswers = await answerService.createMultipleAnswers(answers);
-    
-    if (!createdAnswers) {
+
+    if (!createdAnswers || createdAnswers.length === 0) {
       return formatErrorResponse(res, 500, 'Failed to create answers');
     }
-    
-    res.status(201).json({ 
-      success: true, 
+
+    // Extract professional_id and question_ids
+    const professionalId = createdAnswers[0].professional_id;
+    const questionIds = createdAnswers.map(ans => ans.question_id);
+
+    // Prepare update object
+    const updateObj = {
+      $addToSet: {
+        question_ids: { $each: questionIds }
+      }
+    };
+
+    if (serviceLocationIds.size > 0) {
+      updateObj.$addToSet.location_ids = { $each: Array.from(serviceLocationIds) };
+    }
+
+    // Update ProfessionalService
+    await professionalServicesModel.updateOne(
+      {
+        professional_id: professionalId,
+        service_id: service_id
+      },
+      updateObj
+    );
+
+    // Return success
+    res.status(201).json({
+      success: true,
       data: createdAnswers,
-      message: `${createdAnswers.length} answers created successfully` 
+      message: `${createdAnswers.length} answers created successfully`,
     });
+
   } catch (error) {
     next(error);
   }
 };
+
 
 export const getAllAnswers = async (req, res, next) => {
   try {
