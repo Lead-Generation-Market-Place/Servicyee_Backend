@@ -11,6 +11,7 @@ import {
   CreateProAccountStepThree,
   CreateProAccountStepFour,
   createProAccountStepSeven,
+  getProServicesQuestions,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -296,6 +297,41 @@ export async function createProfessionalStepSeven(req, res) {
     return res.status(400).json({
       success: false,
       message: "Error updating professional info",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Get Question of Services - Pro Register Step 08
+export async function getServicesQuestions(req, res) {
+  const professional = await Professional.findOne({
+    user_id: req.user.id,
+  }).select("_id");
+  if (!professional) {
+    return res.status(404).json({
+      success: false,
+      message: "Professional profile not found for this user",
+    });
+  }
+  const id = professional._id;
+  try {
+    const services = await getProServicesQuestions(id);
+
+    if (!services) {
+      return res.status(404).json({
+        success: false,
+        message: "Questions not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Questions of services fetched successfully",
+      services,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching questions",
       error: error?.message || "An unexpected error occurred",
     });
   }
