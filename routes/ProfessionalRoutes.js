@@ -23,7 +23,7 @@ const upload = createUploader('professionals');
 
 // Professional Registration Route with account creation
 router.post('/register', createProfessionalAccount);
-router.put('/update-business-name/:id', createProfessionalStepThree)
+router.put('/update-business-name/:id', authenticateToken, createProfessionalStepThree)
 router.put('/availability/:id', authenticateToken, createProfessionalStepSeven)
 router.put('/businessInfo/:id', authenticateToken, upload.single('profile'), createProfessionalStepFour)
 // End of Professional Registration Route with account creation
