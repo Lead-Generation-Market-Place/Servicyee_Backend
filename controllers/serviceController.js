@@ -165,7 +165,7 @@ export const fetchAllServicesOfAProfessional = async (req, res) => {
   try {
     const professionalId = req.params.id;
 
-    const services = await servicesService.getAllServicesOfAProfessional(professionalId);
+    const services = await servicesService.getServicesAndSubcategoriesByProfessional(professionalId);
 
     res.status(200).json({
       success: true,
@@ -181,3 +181,35 @@ export const fetchAllServicesOfAProfessional = async (req, res) => {
     });
   }
 };
+
+
+export const updateProfessionalService = async (req, res, next) => {
+  try {
+    const { _id: proServiceId, serviceId, ...updateData } = req.body;
+
+    if (!proServiceId || !serviceId) {
+      return res.status(400).json({
+        success: false,
+        message: 'proServiceId (_id) and serviceId are required in the request body',
+      });
+    }
+
+    const updatedService = await servicesService.updateProfessionalServiceByProAndService(
+      proServiceId,
+      serviceId,
+      updateData
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedService,
+    });
+  } catch (error) {
+    console.error('Error updating professional service:', error.message);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to update professional service',
+    });
+  }
+};
+

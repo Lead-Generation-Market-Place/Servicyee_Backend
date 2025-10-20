@@ -10,7 +10,8 @@ import {
   assignServiceToProfessional,
   getProfessionalCount
   , toggleServiceStatus,
-  featuredServicesHandler,fetchAllServicesOfAProfessional
+  featuredServicesHandler,fetchAllServicesOfAProfessional,
+  updateProfessionalService
 } from '../controllers/serviceController.js';
 
 
@@ -36,6 +37,9 @@ router.get('/featured', featuredServicesHandler);
 // ✅ Dynamic route must be LAST
 router.get('/:id', getServiceById);
 router.put('/:id', fileupload('service').single('image_url'), updateService);
+// Use this pattern: /professional-service/:professionalId/:serviceId
+router.put('/professional-service/update', updateProfessionalService);
+
 router.delete('/:id', deleteService);
 
 
