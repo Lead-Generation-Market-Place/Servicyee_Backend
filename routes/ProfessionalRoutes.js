@@ -12,7 +12,8 @@ import {
 	createProfessionalStepThree,
 	createProfessionalStepFour,
 	createProfessionalStepSeven,
-	getServicesQuestions
+	getServicesQuestions,
+	createProfessionalStepEight
 } from '../controllers/ProfessionalController.js';
 import createUploader from '../config/multer.js';  
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
@@ -27,6 +28,7 @@ router.post('/register', createProfessionalAccount);
 router.put('/update-business-name/:id', authenticateToken, createProfessionalStepThree);
 router.put('/businessInfo/:id', authenticateToken, upload.single('profile'), createProfessionalStepFour);
 router.put('/availability/:id', authenticateToken, createProfessionalStepSeven);
+router.put('/services-answers', authenticateToken, createProfessionalStepEight);
 router.get('/questions', authenticateToken, getServicesQuestions);
 // End of Professional Registration Route with account creation
 

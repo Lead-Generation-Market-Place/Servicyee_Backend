@@ -5,6 +5,8 @@ import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import ProfessionalService from "../models/professionalServicesModel.js";
 import questionModel from "../models/questionModel.js";
+import professionalServicesModel from "../models/professionalServicesModel.js";
+import answerModel from "../models/answerModel.js";
 
 export function createProfessional(data) {
   const professional = new Professional(data);
@@ -259,3 +261,70 @@ export async function getProServicesQuestions(id) {
     throw new Error(error.message || 'Error fetching service questions');
   }
 }
+// End of Get Service Question
+
+
+// Create Professional Services - Step 08
+export async function createProfessionalServicesAnswers(professionalId, serviceId, { answers }) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    let profService = await professionalServicesModel.findOne({
+      professional_id: new mongoose.Types.ObjectId(professionalId),
+      service_id: new mongoose.Types.ObjectId(serviceId),
+    }).session(session);
+
+    if (!profService) {
+      profService = new professionalServicesModel({
+        professional_id: new mongoose.Types.ObjectId(professionalId),
+        service_id: new mongoose.Types.ObjectId(serviceId),
+        question_ids: [],
+      });
+    }
+    const operations = [];
+
+    for (const a of answers) {
+      const questionId = new mongoose.Types.ObjectId(a.question_id);
+      if (!profService.question_ids.map(q => q.toString()).includes(questionId.toString())) {
+        profService.question_ids.push(questionId);
+      }
+      operations.push({
+        updateOne: {
+          filter: {
+            professional_id: new mongoose.Types.ObjectId(professionalId),
+            question_id: questionId,
+          },
+          update: {
+            $set: {
+              professional_id: new mongoose.Types.ObjectId(professionalId),
+              service_id: new mongoose.Types.ObjectId(serviceId),
+              question_id: questionId,
+              answers: a.answer,
+            },
+          },
+          upsert: true,
+        },
+      });
+    }
+    if (operations.length > 0) {
+      await answerModel.bulkWrite(operations, { session });
+    }
+    await profService.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+    const updatedAnswers = await answerModel.find({
+      professional_id: new mongoose.Types.ObjectId(professionalId),
+      service_id: new mongoose.Types.ObjectId(serviceId),
+    });
+
+    return updatedAnswers;
+
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error?.message || "Failed to save professional service answers.");
+  }
+}
+    // End of Step 08
