@@ -15,6 +15,7 @@ import leadRoute from "./leadRoute.js";
 import ReviewsRoutes from "./ReviewsRoutes.js";
 import promotionRoutes from "./promotionRoute.js";
 import popularServicesRoute from './popularServicesRoute.js';
+import professionalServiceProviderRoute from './professionalServiceProviderRoute.js';
 // Organized by feature
 const apiRoutes = [
   // Authentication & Users
@@ -56,6 +57,13 @@ const apiRoutes = [
     developer: "esmatullah",
     domain: "business",
     description: "Lead management",
+  },
+  {
+    path: "/providers",
+    router: professionalServiceProviderRoute,
+    developer: "esmatullah",
+    domain: "professional",
+    description: "get the top professional when a user select a service",
   },
 
   // Services & Categories
