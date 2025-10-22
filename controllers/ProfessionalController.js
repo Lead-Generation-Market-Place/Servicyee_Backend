@@ -1,3 +1,4 @@
+import { error } from "console";
 import Professional from "../models/ProfessionalModel.js";
 import { User } from "../models/user.js";
 import {
@@ -12,6 +13,7 @@ import {
   CreateProAccountStepFour,
   createProAccountStepSeven,
   getProServicesQuestions,
+  createProfessionalServicesAnswers,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -332,6 +334,46 @@ export async function getServicesQuestions(req, res) {
     res.status(500).json({
       success: false,
       message: "Error fetching questions",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Create Professional Account Step 08 
+export async function createProfessionalStepEight(req, res) {
+  try {
+    const answers = Array.isArray(req.body) ? req.body : req.body.answers;
+    if (!Array.isArray(answers) || answers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Answers payload must be a non-empty array",
+      });
+    }
+    const grouped = {};
+    answers.forEach(({ professional_id, service_id, question_id, answer }) => {
+      if (!professional_id || !service_id || !question_id) return;
+      const key = `${professional_id}-${service_id}`;
+      if (!grouped[key]) grouped[key] = { professional_id, service_id, answers: [] };
+      grouped[key].answers.push({ question_id, answer });
+    });
+
+    const updatedAnswers = [];
+
+    for (const key in grouped) {
+      const { professional_id, service_id, answers } = grouped[key];
+      const result = await createProfessionalServicesAnswers(professional_id, service_id, { answers });
+      updatedAnswers.push(...result);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Professional Services Answers added/updated successfully",
+      answers: updatedAnswers,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error updating professional answers",
       error: error?.message || "An unexpected error occurred",
     });
   }
