@@ -1,4 +1,3 @@
-import { error } from "console";
 import Professional from "../models/ProfessionalModel.js";
 import { User } from "../models/user.js";
 import {
@@ -305,7 +304,7 @@ export async function createProfessionalStepSeven(req, res) {
 }
 
 // Get Question of Services - Pro Register Step 08
-export async function getServicesQuestions(req, res) {
+export async function getServicesQuestionsPro(req, res) {
   const professional = await Professional.findOne({
     user_id: req.user.id,
   }).select("_id");

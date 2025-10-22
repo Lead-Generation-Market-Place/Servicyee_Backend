@@ -232,37 +232,38 @@ export async function createProAccountStepSeven(id, { schedule, timezone }) {
   }
 }
 
+
+
+
 // Get Professional Services Questions for Registeration Step 08
-export async function getProServicesQuestions(id) {
+export async function getProServicesQuestions(professionalId) {
   try {
     const proServices = await ProfessionalService.find({
-      professional_id: id,
-    }).select('service_id');
+      professional_id: professionalId,
+    }).select("service_id");
 
     if (!proServices.length) {
-      throw new Error('No services found for this professional.');
+      throw new Error("No services found for this professional.");
     }
-    const service_id = proServices.map(s => s.service_id);
-    const questions = await questionModel.find({
-      service_id: { $in: service_id },
-      active: true
-    }).select('service_id question_name form_type options required order');
-    const servicesWithQuestions = proServices.map(service => ({
-      service_id: service.service_id,
+    const serviceIds = proServices.map((s) => s.service_id);
+    const questions = await questionModel
+      .find({ service_id: { $in: serviceIds } })
+      .select("service_id question_name form_type options required order");
+    const servicesWithQuestions = serviceIds.map((sid) => ({
+      service_id: sid,
       questions: questions
-        .filter(q => q.service_id.toString() === service.service_id.toString())
-        .sort((a, b) => a.order - b.order) 
+        .filter((q) => q.service_id.toString() === sid.toString())
+        .sort((a, b) => a.order - b.order),
     }));
-
     return {
-      services: servicesWithQuestions
+      success: true,
+      services: servicesWithQuestions,
     };
   } catch (error) {
-    throw new Error(error.message || 'Error fetching service questions');
+    throw new Error(error.message || "Error fetching service questions");
   }
 }
 // End of Get Service Question
-
 
 // Create Professional Services - Step 08
 export async function createProfessionalServicesAnswers(professionalId, serviceId, { answers }) {
