@@ -1,11 +1,11 @@
 import { Schema, model } from "mongoose";
 
-const Locationtype = ["user", "service", "lead", "project", "professional"];
+const LocationTypes = ["user", "service", "lead", "project", "professional"];
 
 const locationSchema = new Schema({
   type: {
     type: String,
-    enum: Locationtype,
+    enum: LocationTypes,
     required: true
   },
   user_id: { type: Schema.Types.ObjectId, ref: "User" },
@@ -38,18 +38,19 @@ const locationSchema = new Schema({
     type: {
       type: String,
       enum: ["Point"],
+      required: true,
       default: "Point"
     },
     coordinates: {
-      type: [Number],
-      index: "2dsphere"
+      type: [Number], // [longitude, latitude]
     }
-  }
+  },
+  serviceRadiusMiles: { type: Number, default: 50 } // optional
 }, {
   timestamps: true,
   versionKey: false,
   collection: "locations"
 });
-
+locationSchema.index({ coordinates: "2dsphere" });
 
 export default model("Location", locationSchema);
