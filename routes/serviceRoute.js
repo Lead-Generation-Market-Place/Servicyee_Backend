@@ -11,7 +11,7 @@ import {
   getProfessionalCount
   , toggleServiceStatus,
   featuredServicesHandler,fetchAllServicesOfAProfessional,
-  updateProfessionalService
+  updateProfessionalService,deleteProService,addServicePricing,updateServicePricing
 } from '../controllers/serviceController.js';
 
 
@@ -31,16 +31,20 @@ router.post('/asp', assignServiceToProfessional);
 router.get('/', getServices);
 router.post('/', fileupload('service').single('image_url'),
  addServices);
+ router.post('/pricing', addServicePricing);
+
  //featured services
 router.get('/featured', featuredServicesHandler);
 
 // ✅ Dynamic route must be LAST
 router.get('/:id', getServiceById);
+router.put('/pricing/update', updateProfessionalService);
 router.put('/:id', fileupload('service').single('image_url'), updateService);
 // Use this pattern: /professional-service/:professionalId/:serviceId
 router.put('/professional-service/update', updateProfessionalService);
 
 router.delete('/:id', deleteService);
+router.delete('/pro-service/delete/:id', deleteProService);
 
 
 

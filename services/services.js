@@ -344,9 +344,101 @@ async getServicesAndSubcategoriesByProfessional(professionalId) {
 
     return updated;
   }
+
+async deleteProfessionalService(proServiceId) {
+  if (!mongoose.Types.ObjectId.isValid(proServiceId)) {
+    throw new Error("Valid proServiceId is required");
+  }
+
+  const deleted = await ProfessionalServicesModel.findByIdAndDelete(proServiceId);
+
+  if (!deleted) {
+    throw new Error("Professional service not found with the given ID");
+  }
+
+  return deleted;
 }
 
+  async addServicePricing(professionalId, serviceId, pricingData) {
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(professionalId)) {
+      throw new Error("Valid professionalId is required");
+    }
+    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+      throw new Error("Valid serviceId is required");
+    }
+
+    // Find the professional-service record
+    const professionalService = await ProfessionalServicesModel.findOne({
+      professional_id: professionalId,
+      service_id: serviceId,
+    });
+
+    if (!professionalService) {
+      throw new Error("Professional service not found for the given professional and service IDs");
+    }
+
+    // Update only the specified fields
+    const allowedFields = [
+      "maximum_price",
+      "minimum_price",
+      "description",
+      "pricing_type",
+      "completed_tasks",
+    ];
+
+    for (const field of allowedFields) {
+      if (pricingData[field] !== undefined) {
+        professionalService[field] = pricingData[field];
+      }
+    }
+
+    // Save updated record
+    return await professionalService.save();
+  }
 
 
+
+   async updateServicePricing(professionalId, serviceId, updateData) {
+    if (!mongoose.Types.ObjectId.isValid(professionalId)) {
+      throw new Error("Valid professionalId is required");
+    }
+    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+      throw new Error("Valid serviceId is required");
+    }
+
+    const professionalService = await ProfessionalServicesModel.findOne({
+      professional_id: professionalId,
+      service_id: serviceId,
+    });
+
+    if (!professionalService) {
+      throw new Error("Professional service not found for the given professional and service IDs");
+    }
+
+    const allowedFields = [
+      "maximum_price",
+      "minimum_price",
+      "description",
+      "pricing_type",
+      "completed_tasks",
+    ];
+
+    let isUpdated = false;
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        professionalService[field] = updateData[field];
+        isUpdated = true;
+      }
+    }
+
+    if (!isUpdated) {
+      throw new Error("No valid fields provided for update");
+    }
+
+    const updatedService = await professionalService.save();
+    return updatedService;
+  }
+}
 
 export default new ServicesService();

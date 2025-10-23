@@ -213,3 +213,75 @@ export const updateProfessionalService = async (req, res, next) => {
   }
 };
 
+
+export const deleteProService = async (req, res) => {
+  try {
+    const proServiceId = req.params.id; 
+
+    const result = await servicesService.deleteProfessionalService(proServiceId);
+
+    res.status(200).json({
+      success: true,
+      message: "Professional service deleted successfully",
+      data: result,
+    });
+  } catch (error) {
+    // Differentiate between 400 and 500 errors if needed
+    const statusCode = error.message.includes("not found") || error.message.includes("Valid")
+      ? 400
+      : 500;
+
+    res.status(statusCode).json({
+      success: false,
+      message: error.message || "Failed to delete professional service",
+    });
+  }
+};
+
+
+export const addServicePricing = async (req, res) => {
+  try {
+    const { professional_id, service_id, ...pricingData } = req.body;
+
+    if (!professional_id || !service_id) {
+      return res.status(400).json({ message: "professional_id and service_id are required" });
+    }
+
+    const updatedPricing = await servicesService.addServicePricing(
+      professional_id,
+      service_id,
+      pricingData
+    );
+
+    res.status(200).json({
+      message: "Service pricing updated successfully",
+      data: updatedPricing,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+export const updateServicePricing = async (req, res) => {
+  try {
+    const { professional_id, service_id, ...updateData } = req.body;
+
+    if (!professional_id || !service_id) {
+      return res.status(400).json({ message: "professional_id and service_id are required" });
+    }
+
+    const updatedPricing = await servicesService.updateServicePricing(
+      professional_id,
+      service_id,
+      updateData
+    );
+
+    res.status(200).json({
+      message: "Service pricing updated successfully",
+      data: updatedPricing,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
