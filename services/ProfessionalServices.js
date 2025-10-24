@@ -131,9 +131,7 @@ export async function CreateProAccountStepOne(data) {
     await session.commitTransaction();
     session.endSession();
     const GetProfessional = await Professional.findById(professional._id)
-      .populate("user_id")
-      .lean();
-    return { user, professional: GetProfessional };
+    return {  professional: GetProfessional };
   } catch (error) {
     await session.abortTransaction();
     session.endSession();

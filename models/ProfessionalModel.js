@@ -17,6 +17,7 @@ const ProfessionalSchema = new Schema(
     founded_year: { type: Number, min: 1, required: false },
     employees: { type: Number, min: 1, required: false },
     total_hire: { type: Number, default: 0 },
+    credit_balance: { type: Number, default: 0, min: 0 }, 
     total_review: { type: Number, default: 0 },
     rating_avg: { type: Number, default: 0 },
     profile_image: { type: String, required: false },
