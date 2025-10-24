@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 import ProfessionalService from "../models/professionalServicesModel.js";
 import questionModel from "../models/questionModel.js";
 import professionalServicesModel from "../models/professionalServicesModel.js";
-import answerModel from "../models/answerModel.js";
+import Answer from "../models/answerModel.js";
 import LocationModel from "../models/LocationModel.js";
 
 export function createProfessional(data) {
@@ -131,7 +131,9 @@ export async function CreateProAccountStepOne(data) {
     await session.commitTransaction();
     session.endSession();
     const GetProfessional = await Professional.findById(professional._id)
-    return {  professional: GetProfessional };
+      .populate("user_id")
+      .lean();
+    return { professional: GetProfessional };
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -418,7 +420,68 @@ export async function createProAccountStepNine(data) {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    throw new Error(error.message || "Failed to create or update professional location");
+    throw new Error(
+      error.message || "Failed to create or update professional location"
+    );
   }
 }
 
+
+
+// Create Professional Account - Profile Account - Reviews
+export async function createProfessionalAccountReview(data) {
+  const { professional_id } = data;
+
+  if (!professional_id) throw new Error("Professional ID is required.");
+
+  try {
+    const professional = await Professional.findById(professional_id).lean();
+    if (!professional) throw new Error("Professional not found");
+    const professionalServices = await ProfessionalService.find({ professional_id })
+      .populate({
+        path: "question_ids",
+        model: "Question",
+        select: "question_name form_type options required order active",
+      })
+      .lean();
+    const locations = await Location.find({ professional_id }).lean();
+    const answersData = await Answer.find({ professional_id })
+      .populate({
+        path: "question_id",
+        model: "Question",
+        select: "question_name form_type options required order active",
+      })
+      .lean();
+    const answers = answersData.map((a) => ({
+      answer_id: a._id,
+      professional_id: a.professional_id,
+      question: a.question_id, 
+      answer: a.answers,    
+    }));
+    const answeredQuestions = professionalServices.map((service) => ({
+      ...service,
+      answered_questions: service.question_ids.map((q) => {
+        const matchedAnswer = answers.find(
+          (ans) => ans.question?._id?.toString() === q._id?.toString()
+        );
+        return {
+          ...q,
+          answer: matchedAnswer ? matchedAnswer.answer : null, // include answer if available
+        };
+      }),
+    }));
+    return {
+      success: true,
+      message: "Professional account review fetched successfully",
+      professional,
+      services: answeredQuestions,
+      locations,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Error fetching professional review",
+      error: error.message,
+    };
+  }
+}

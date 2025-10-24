@@ -14,6 +14,7 @@ import {
   getProServicesQuestions,
   createProfessionalServicesAnswers,
   createProAccountStepNine,
+  createProfessionalAccountReview,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -380,8 +381,6 @@ export async function createProfessionalStepEight(req, res) {
 }
 
 
-
-
 // Create Professional Step 09 
 export async function createProfessionalStepNine(req, res) {
   const data = req.body;
@@ -400,6 +399,33 @@ export async function createProfessionalStepNine(req, res) {
     return res.status(500).json({
       success: false,
       message: "Error updating professional info",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Create Professional Account - Review Account 
+export async function createProfessionalReview(req, res)
+{
+  const data = req.body;
+  try {
+    const professional = await createProfessionalAccountReview(data);
+    if (!professional) {
+      return res.status(400).json({
+        success: false,
+        message: "Professional Not exists",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Professional account - Get details successfully",
+      professional,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error creating professional account",
       error: error?.message || "An unexpected error occurred",
     });
   }
