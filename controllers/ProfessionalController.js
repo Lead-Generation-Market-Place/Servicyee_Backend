@@ -1,5 +1,4 @@
 import Professional from "../models/ProfessionalModel.js";
-import { User } from "../models/user.js";
 import {
   createProfessional,
   getProfessionalByUserId,
@@ -405,27 +404,41 @@ export async function createProfessionalStepNine(req, res) {
 }
 
 // Create Professional Account - Review Account 
-export async function createProfessionalReview(req, res)
-{
-  const data = req.body;
+export async function createProfessionalReview(req, res) {
   try {
-    const professional = await createProfessionalAccountReview(data);
-    if (!professional) {
-      return res.status(400).json({
+    const userId = req.user?._id || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        message: "Professional Not exists",
+        message: "User not authenticated",
       });
     }
-
+    const professional = await Professional.findOne({ user_id: userId }).lean();
+    if (!professional) {
+      return res.status(404).json({
+        success: false,
+        message: "Professional account not found for this user",
+      });
+    }
+    const reviewData = await createProfessionalAccountReview(professional._id);
+    if (!reviewData?.success) {
+      return res.status(400).json({
+        success: false,
+        message: reviewData.message || "Unable to fetch professional review",
+        error: reviewData.error,
+      });
+    }
     return res.status(200).json({
       success: true,
       message: "Professional account - Get details successfully",
-      professional,
+      professional: reviewData,
     });
+
   } catch (error) {
+    console.error("Error creating professional review:", error);
     res.status(500).json({
       success: false,
-      message: "Error creating professional account",
+      message: "Error creating professional account review",
       error: error?.message || "An unexpected error occurred",
     });
   }
