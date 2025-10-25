@@ -26,7 +26,7 @@ const LeadSchema = new Schema({
   user_location: LocationSchema,
   professionals: [{ type: Types.ObjectId, ref: "Professional" }],
   send_option: { type: String, enum: ["top5", "selected"], default: "selected" },
-  description: {type: String},
+ 
   created_at: { type: Date, default: Date.now }
 }, { timestamps: true, versionKey: false, collection: "leads" });
 
