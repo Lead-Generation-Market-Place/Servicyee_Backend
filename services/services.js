@@ -4,6 +4,8 @@ import ProfessionalServicesModel from "../models/professionalServicesModel.js";
 import answerModel from "../models/answerModel.js";
 import mongoose from "mongoose";
 import questionModel from "../models/questionModel.js";
+import answer from "./answer.js";
+import LocationModel from "../models/LocationModel.js";
 
 class ServicesService {
   // ✅ Get all services
@@ -348,6 +350,26 @@ async getServicesAndSubcategoriesByProfessional(professionalId) {
 async deleteProfessionalService(proServiceId) {
   if (!mongoose.Types.ObjectId.isValid(proServiceId)) {
     throw new Error("Valid proServiceId is required");
+  }
+
+
+  // 1️⃣ Find the professional service
+  const proService = await ProfessionalServicesModel.findById(proServiceId);
+  if (!proService) {
+    throw new Error("Professional service not found with the given ID");
+  }
+
+  const { professional_id, location_ids, question_ids } = proService;
+
+  // 2️⃣ Delete all related answers
+  await answerModel.deleteMany({
+    professional_id,
+    question_id: { $in: question_ids || [] },
+  });
+
+  // 3️⃣ Delete all related locations
+  if (Array.isArray(location_ids) && location_ids.length > 0) {
+    await LocationModel.deleteMany({ _id: { $in: location_ids } });
   }
 
   const deleted = await ProfessionalServicesModel.findByIdAndDelete(proServiceId);
