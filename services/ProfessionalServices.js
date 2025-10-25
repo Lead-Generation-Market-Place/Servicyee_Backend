@@ -317,13 +317,13 @@ export async function createProfessionalServicesAnswers(
       });
     }
     if (operations.length > 0) {
-      await answerModel.bulkWrite(operations, { session });
+      await Answer.bulkWrite(operations, { session });
     }
     await profService.save({ session });
 
     await session.commitTransaction();
     session.endSession();
-    const updatedAnswers = await answerModel.find({
+    const updatedAnswers = await Answer.find({
       professional_id: new mongoose.Types.ObjectId(professionalId),
       service_id: new mongoose.Types.ObjectId(serviceId),
     });
@@ -429,8 +429,7 @@ export async function createProAccountStepNine(data) {
 
 
 // Create Professional Account - Profile Account - Reviews
-export async function createProfessionalAccountReview(data) {
-  const { professional_id } = data;
+export async function createProfessionalAccountReview(professional_id) {
 
   if (!professional_id) throw new Error("Professional ID is required.");
 

@@ -38,14 +38,15 @@ const locationSchema = new Schema({
     type: {
       type: String,
       enum: ["Point"],
-      required: true,
       default: "Point"
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
+      default: [0,0]
+
     }
   },
-  serviceRadiusMiles: { type: Number, default: 50 } // optional
+  serviceRadiusMiles: { type: Number, default: 0 } // optional
 }, {
   timestamps: true,
   versionKey: false,
