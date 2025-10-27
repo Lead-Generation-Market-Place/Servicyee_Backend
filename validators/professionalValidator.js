@@ -11,6 +11,14 @@ export const professionalSchema = Joi.object({
   business_type: Joi.string()
     .valid(...businessTypes)
     .required(),
+  timezone: Joi.string()
+    .default("UTC")
+    .pattern(/^[a-zA-Z]+\/[a-zA-Z_]+$/)
+    .messages({
+      "string.pattern.base":
+        "Timezone must be a valid IANA timezone, e.g., 'America/New_York'",
+    })
+    .optional(),
   website: Joi.string().optional(),
   founded_year: Joi.number().min(1900).max(new Date().getFullYear()).optional(),
   employees: Joi.number().min(1).optional(),
@@ -58,8 +66,6 @@ export const professionalSchema = Joi.object({
     .optional(),
 });
 
-
-
 export const createProAccountSchema = Joi.object({
   username: Joi.string().min(3).required().messages({
     "string.empty": "Business name is required",
@@ -97,10 +103,14 @@ export const createProAccountSchema = Joi.object({
     "string.empty": "Email is required",
     "string.email": "Enter a valid email",
   }),
-  phone: Joi.string().pattern(/^[0-9]+$/).min(10).required().messages({
-    "string.empty": "Phone number is required",
-    "string.min": "Phone number must be at least 10 digits",
-  }),
+  phone: Joi.string()
+    .pattern(/^[0-9]+$/)
+    .min(10)
+    .required()
+    .messages({
+      "string.empty": "Phone number is required",
+      "string.min": "Phone number must be at least 10 digits",
+    }),
   password: Joi.string().min(8).required().messages({
     "string.empty": "Password is required",
     "string.min": "Password must be at least 8 characters",

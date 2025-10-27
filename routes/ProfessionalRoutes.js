@@ -9,7 +9,13 @@ import {
 	updateProfessionalIntroductionById,
 	updateProfessionalInfo,
 	createProfessionalAccount,
-	createProfessionalStepThree
+	createProfessionalStepThree,
+	createProfessionalStepFour,
+	createProfessionalStepSeven,
+	createProfessionalStepEight,
+	getServicesQuestionsPro,
+	createProfessionalStepNine,
+	createProfessionalReview
 } from '../controllers/ProfessionalController.js';
 import createUploader from '../config/multer.js';  
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
@@ -21,7 +27,14 @@ const upload = createUploader('professionals');
 
 // Professional Registration Route with account creation
 router.post('/register', createProfessionalAccount);
-router.put('/update-business-name/:id', createProfessionalStepThree)
+router.put('/update-business-name/:id', authenticateToken, createProfessionalStepThree);
+router.put('/businessInfo/:id', authenticateToken, upload.single('profile'), createProfessionalStepFour);
+router.put('/availability/:id', authenticateToken, createProfessionalStepSeven);
+router.post('/services-answers', authenticateToken, createProfessionalStepEight);
+router.post('/servicesLocation', authenticateToken, createProfessionalStepNine);
+router.get('/questionsAnswers', authenticateToken, getServicesQuestionsPro);
+router.get('/profileReviews', authenticateToken, createProfessionalReview);
+
 // End of Professional Registration Route with account creation
 
 // CRUD Routes for Professionals Account Management

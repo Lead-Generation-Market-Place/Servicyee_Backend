@@ -9,6 +9,12 @@ import {
   updateProfessionalService,
   CreateProAccountStepOne,
   CreateProAccountStepThree,
+  CreateProAccountStepFour,
+  createProAccountStepSeven,
+  getProServicesQuestions,
+  createProfessionalServicesAnswers,
+  createProAccountStepNine,
+  createProfessionalAccountReview,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -228,16 +234,199 @@ export async function createProfessionalStepThree(req, res) {
       professional,
     });
   } catch (error) {
-    
     if (error.message === "Professional not found.") {
       return res.status(404).json({ success: false, message: error.message });
     }
-    
+
     return res.status(400).json({
       success: false,
       message: "Error updating professional info",
       error: error?.message || "An unexpected error occurred",
     });
+  }
+}
 
+// Create Professioanl Account Step 04
+export async function createProfessionalStepFour(req, res) {
+  const { id } = req.params;
+  const { businessType, employees, founded, about } = req.body;
+  const profile = req.file
+    ? `/uploads/professionals/${req.file.filename}`
+    : null;
+  try {
+    const professional = await CreateProAccountStepFour(id, {
+      businessType,
+      employees: employees ? Number(employees) : null,
+      founded: founded ? Number(founded) : null,
+      about,
+      profile,
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Professional Business Info updated successfully",
+      professional,
+    });
+  } catch (error) {
+    if (error.message === "Professional not found.") {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: "Error updating professional info",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Create Professional Account Step 07
+export async function createProfessionalStepSeven(req, res) {
+  const id = req.params.id;
+  const { schedule, timezone } = req.body;
+  try {
+    const professional = await createProAccountStepSeven(id, {
+      schedule,
+      timezone,
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Professional Business Availability updated successfully",
+      professional,
+    });
+  } catch (error) {
+    if (error.message === "Professional not found.") {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    return res.status(400).json({
+      success: false,
+      message: "Error updating professional info",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Get Question of Services - Pro Register Step 08
+export async function getServicesQuestionsPro(req, res) {
+  const professional = await Professional.findOne({
+    user_id: req.user.id,
+  }).select("_id");
+  if (!professional) {
+    return res.status(404).json({
+      success: false,
+      message: "Professional profile not found for this user",
+    });
+  }
+  const id = professional._id;
+  try {
+    const services = await getProServicesQuestions(id);
+
+    if (!services) {
+      return res.status(404).json({
+        success: false,
+        message: "Questions not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Questions of services fetched successfully",
+      services,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching questions",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Create Professional Account Step 08 
+export async function createProfessionalStepEight(req, res) {
+  try {
+    const answers = Array.isArray(req.body) ? req.body : req.body.answers;
+    if (!Array.isArray(answers) || answers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Answers payload must be a non-empty array",
+      });
+    }
+    const grouped = {};
+    answers.forEach(({ professional_id, service_id, question_id, answer }) => {
+      if (!professional_id || !service_id || !question_id) return;
+      const key = `${professional_id}-${service_id}`;
+      if (!grouped[key]) grouped[key] = { professional_id, service_id, answers: [] };
+      grouped[key].answers.push({ question_id, answer });
+    });
+
+    const updatedAnswers = [];
+
+    for (const key in grouped) {
+      const { professional_id, service_id, answers } = grouped[key];
+      const result = await createProfessionalServicesAnswers(professional_id, service_id, { answers });
+      updatedAnswers.push(...result);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Professional Services Answers added/updated successfully",
+      answers: updatedAnswers,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error updating professional answers",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+
+// Create Professional Step 09 
+export async function createProfessionalStepNine(req, res) {
+  const data = req.body;
+  try {
+    const professional = await createProAccountStepNine(data);
+    return res.status(200).json({
+      success: true,
+      message: "Professional Service Location added successfully",
+      professional,
+    });
+  } catch (error) {
+    if (error.message === "Professional not found.") {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Error updating professional info",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Create Professional Account - Review Account 
+export async function createProfessionalReview(req, res)
+{
+  const data = req.body;
+  try {
+    const professional = await createProfessionalAccountReview(data);
+    if (!professional) {
+      return res.status(400).json({
+        success: false,
+        message: "Professional Not exists",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Professional account - Get details successfully",
+      professional,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error creating professional account",
+      error: error?.message || "An unexpected error occurred",
+    });
   }
 }

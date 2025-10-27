@@ -19,13 +19,40 @@ class SubCategoryService {
     }
 
     // get subcategory by slug
-    async getSubcategoryBySlug(subcategorySlug) {
-      try {
-        return await Subcategories.find({slug: subcategorySlug}).exec();
-      } catch(error) {
-        throw error;
-      }
+   async getSubcategoryBySlug(subcategorySlug) {
+    try {
+      const result = await Subcategories.aggregate([
+        {
+          $match: { slug: subcategorySlug, is_active: true }
+        },
+        {
+          $lookup: {
+            from: "services", // Services collection
+            localField: "_id", // subcategory _id
+            foreignField: "subcategory_id", // service's subcategory_id field
+            as: "services" // This will contain all services for this subcategory
+          }
+        },
+        // Optional: Filter only active services
+        {
+          $addFields: {
+            services: {
+              $filter: {
+                input: "$services",
+                as: "service",
+                cond: { $eq: ["$$service.is_active", true] } // if you have is_active field
+              }
+            }
+          }
+        }
+      ]).exec();
+
+      return result.length > 0 ? result[0] : null;
+    } catch(error) {
+      console.error("Error fetching subcategory with services:", error);
+      throw error;
     }
+  }
 
   async addSubCategory(subCategoryData) {
     try {
