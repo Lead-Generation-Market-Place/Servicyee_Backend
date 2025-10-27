@@ -3,6 +3,7 @@ import Professional from "../models/ProfessionalModel.js";
 import professionalServices from "../models/professionalServicesModel.js";
 import services from "../models/servicesModel.js";
 import searches from "../models/searchModel.js";
+import locations from "../models/LocationModel.js";
 class FindServicePros {
   async getProfessionalsByService(serviceId) {
     try {
@@ -275,6 +276,35 @@ class FindServicePros {
       throw error;
     }
   }
+ async getServicesByZip(zipCode) {
+  try {
+    // First find locations that match the zipcode
+    const matchingLocations = await locations.find({zipcode:zipCode});
+    const locationIds = matchingLocations.map(loc => loc._id);
+    
+    // If no locations found, return empty array early
+    if (locationIds.length === 0) {
+      return [];
+    }
+    
+    // Then find services that have these location IDs in their location_ids array
+    const services = await professionalServices
+      .find({ 
+        location_ids: { 
+          $in: locationIds 
+        },
+        service_status: true // Only return active services
+      })
+      .populate('location_ids')
+      .populate('professional_id')
+      .populate('service_id')
+      .populate('question_ids'); // If you need questions populated too
+    
+    return services;
+  } catch(error) {
+    throw error;
+  }
+}
 }
 
 export default new FindServicePros();
