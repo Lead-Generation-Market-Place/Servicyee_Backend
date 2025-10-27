@@ -28,14 +28,20 @@ export const addServices = async (req, res, next) => {
 };
 
 export const assignServiceToProfessional = async (req, res, next) => {
-  try {
-
+  try {  console.log('Received data:', req.body);
     const assignedService = await servicesService.assignServiceToProfessional(req.body);
-    res.status(201).json({ data: assignedService });
+
+    return res.status(201).json({
+      assignedService 
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Failed to assign service."
+    });
   }
 };
+
 // Optional: get all assigned services of a professional
 export const getAssignedServicesForProfessional = async (req, res, next) => {
   try {
@@ -152,3 +158,130 @@ export const featuredServicesHandler = async (req, res) => {
         });
     }
 }
+
+
+
+export const fetchAllServicesOfAProfessional = async (req, res) => {
+  try {
+    const professionalId = req.params.id;
+
+    const services = await servicesService.getServicesAndSubcategoriesByProfessional(professionalId);
+
+    res.status(200).json({
+      success: true,
+      data: services,
+    });
+
+  } catch (error) {
+    console.error('Error fetching services of professional:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message,
+    });
+  }
+};
+
+
+export const updateProfessionalService = async (req, res, next) => {
+  try {
+    const { _id: proServiceId, serviceId, ...updateData } = req.body;
+
+    if (!proServiceId || !serviceId) {
+      return res.status(400).json({
+        success: false,
+        message: 'proServiceId (_id) and serviceId are required in the request body',
+      });
+    }
+
+    const updatedService = await servicesService.updateProfessionalServiceByProAndService(
+      proServiceId,
+      serviceId,
+      updateData
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedService,
+    });
+  } catch (error) {
+    console.error('Error updating professional service:', error.message);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to update professional service',
+    });
+  }
+};
+
+
+export const deleteProService = async (req, res) => {
+  try {
+    const proServiceId = req.params.id; 
+
+    const result = await servicesService.deleteProfessionalService(proServiceId);
+
+    res.status(200).json({
+      success: true,
+      message: "Professional service deleted successfully",
+      data: result,
+    });
+  } catch (error) {
+    // Differentiate between 400 and 500 errors if needed
+    const statusCode = error.message.includes("not found") || error.message.includes("Valid")
+      ? 400
+      : 500;
+
+    res.status(statusCode).json({
+      success: false,
+      message: error.message || "Failed to delete professional service",
+    });
+  }
+};
+
+
+export const addServicePricing = async (req, res) => {
+  try {
+    const { professional_id, service_id, ...pricingData } = req.body;
+
+    if (!professional_id || !service_id) {
+      return res.status(400).json({ message: "professional_id and service_id are required" });
+    }
+
+    const updatedPricing = await servicesService.addServicePricing(
+      professional_id,
+      service_id,
+      pricingData
+    );
+
+    res.status(200).json({
+      message: "Service pricing updated successfully",
+      data: updatedPricing,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+export const updateServicePricing = async (req, res) => {
+  try {
+    const { professional_id, service_id, ...updateData } = req.body;
+
+    if (!professional_id || !service_id) {
+      return res.status(400).json({ message: "professional_id and service_id are required" });
+    }
+
+    const updatedPricing = await servicesService.updateServicePricing(
+      professional_id,
+      service_id,
+      updateData
+    );
+
+    res.status(200).json({
+      message: "Service pricing updated successfully",
+      data: updatedPricing,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

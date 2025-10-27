@@ -9,6 +9,14 @@ class AnswerService {
       throw error;
     }
   }
+  
+  async createMultipleAnswers(answersArray) {
+  try {
+    return await AnswerModel.insertMany(answersArray);
+  } catch (error) {
+    throw error;
+  }
+}
 
   async getAllAnswers() {
     try {

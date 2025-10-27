@@ -13,7 +13,7 @@ const ServiceSchema = new mongoose.Schema({
   },
   subcategory_id: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'SubCategories',
+    ref: 'Subcategories',
     required: [true, 'Subcategory is required']
   },
   description: { 

@@ -22,17 +22,17 @@ const locationSchema = new Schema({
   mile_id: { 
     type: Schema.Types.ObjectId, 
     ref: "Mile",
-    required: false 
+  
   }, 
   minute_id: { 
     type: Schema.Types.ObjectId, 
     ref: "Minute",
-    required: false 
+  
   },
    vehicle_type_id: { 
     type: Schema.Types.ObjectId, 
     ref: "VehicleType",
-    required: false 
+   
   },
   coordinates: {
     type: {
