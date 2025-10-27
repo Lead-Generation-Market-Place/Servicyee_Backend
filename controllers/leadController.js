@@ -3,8 +3,7 @@ import { acceptLeadService, createLeadService } from "../services/leadService.js
 // =================================
 //      New Create Lead Controller
 // ==================================
-import { createLeadService } from "../services/leadServices.js";
-import User from "../models/user.js";
+import {User} from "../models/user.js";
 
 export const createLead = async (req, res) => {
   try {
@@ -111,28 +110,28 @@ export const createLead = async (req, res) => {
 //   }
 // };
 
-// export const acceptLead = async (req, res) => {
-//   try {
-//     const {leadId, professionalId } = req.body;
-//     if (!leadId || !professionalId) {
-//       return res.status(400).json({
-//         success:false,
-//         message:"Lead and professional are required"
-//       });
-//     }
+export const acceptLead = async (req, res) => {
+  try {
+    const {leadId, professionalId } = req.body;
+    if (!leadId || !professionalId) {
+      return res.status(400).json({
+        success:false,
+        message:"Lead and professional are required"
+      });
+    }
 
-//     const accepted = await acceptLeadService({leadId, professionalId});
-//     return res.status(200).json({
-//       success: true,
-//       message: "Lead accepted successfully",
-//       data: accepted
-//     });
+    const accepted = await acceptLeadService({leadId, professionalId});
+    return res.status(200).json({
+      success: true,
+      message: "Lead accepted successfully",
+      data: accepted
+    });
 
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       message: "Unable to accept lead",
-//       error:error?.message || "An unexpected error occured"
-//     });
-//   }
-// }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Unable to accept lead",
+      error:error?.message || "An unexpected error occured"
+    });
+  }
+}
