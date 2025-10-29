@@ -13,7 +13,8 @@ import {
     getAllMilesFromDB,addMinute,
     getAllMinutesFromDB,
     addVehicleType,
-    getAllVehicleTypesFromDb
+    getAllVehicleTypesFromDb,
+    getProCountByLocationHandler
 } from "../controllers/LocationController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 
@@ -29,6 +30,11 @@ router.post('/create', authenticateToken,createLocationHandler);
 router.post('/minute',authenticateToken,addMinute);
 router.post('/miles',authenticateToken,addMilesToDb);
 router.post('/vehicle_type',authenticateToken,addVehicleType);
+
+// professional count by location
+router.get("/professional-count",getProCountByLocationHandler);
+
+
 // insert and get user location 
 router.post('/user/:id/create',authenticateToken, insertUserLocationHandler);
 router.get('/user/:id', getUserLocationHandler);

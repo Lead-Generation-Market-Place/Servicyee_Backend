@@ -10,6 +10,7 @@ import {
   GetLocationByUserId,
   getLocationServiceByProfessionalId,
   getAllMiles,addMiles,
+  getProCountByLocation,
   addMinutes,getAllMinutes,addVehileTypes,getAllVehicleType
 } from "../services/LocationServices.js";
 
@@ -313,3 +314,26 @@ export async function getUserLocationHandler(req, res) {
     });
   }
 }
+
+//==============================================================
+// get pro count by location controller
+//==============================================================
+
+export const getProCountByLocationHandler = async (req, res) => {
+  try {
+    const data = await getProCountByLocation();
+
+    res.status(200).json({
+      success: true,
+      count: data.length,
+      locations: data
+    });
+  } catch (error) {
+    console.error("Error fetching professional count by location:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching professional count",
+      error: error.message
+    });
+  }
+};
