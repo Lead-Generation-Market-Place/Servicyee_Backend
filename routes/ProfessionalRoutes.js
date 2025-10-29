@@ -21,6 +21,7 @@ import createUploader from '../config/multer.js';
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 import { searchProfessionalsController } from "../controllers/SearchLog.js";
+import {  SendReviewEmailCustomer } from '../controllers/SendReviewEmailController.js';
 const router = express.Router();
 const upload = createUploader('professionals'); 
 
@@ -34,8 +35,10 @@ router.post('/services-answers', authenticateToken, createProfessionalStepEight)
 router.post('/servicesLocation', authenticateToken, createProfessionalStepNine);
 router.get('/questionsAnswers', authenticateToken, getServicesQuestionsPro);
 router.get('/profileReviews', authenticateToken, createProfessionalReview);
+router.post('/profileReviewsCustomer', authenticateToken, SendReviewEmailCustomer);
 
-// End of Professional Registration Route with account creation
+
+// End of Professional Registration Route with account cretion
 
 // CRUD Routes for Professionals Account Management
 router.get('/',  authenticateToken, getAllProfessionalsHandler);
