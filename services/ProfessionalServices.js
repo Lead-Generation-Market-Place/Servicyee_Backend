@@ -8,6 +8,7 @@ import questionModel from "../models/questionModel.js";
 import professionalServicesModel from "../models/professionalServicesModel.js";
 import Answer from "../models/answerModel.js";
 import LocationModel from "../models/LocationModel.js";
+import Review from "../models/ReviewModel.js";
 
 export function createProfessional(data) {
   const professional = new Professional(data);
@@ -430,7 +431,6 @@ export async function createProAccountStepNine(data) {
 
 // Create Professional Account - Profile Account - Reviews
 export async function createProfessionalAccountReview(professional_id) {
-
   if (!professional_id) throw new Error("Professional ID is required.");
 
   try {
@@ -451,11 +451,12 @@ export async function createProfessionalAccountReview(professional_id) {
         select: "question_name form_type options required order active",
       })
       .lean();
+
     const answers = answersData.map((a) => ({
       answer_id: a._id,
       professional_id: a.professional_id,
-      question: a.question_id, 
-      answer: a.answers,    
+      question: a.question_id,
+      answer: a.answers,
     }));
     const answeredQuestions = professionalServices.map((service) => ({
       ...service,
@@ -465,16 +466,25 @@ export async function createProfessionalAccountReview(professional_id) {
         );
         return {
           ...q,
-          answer: matchedAnswer ? matchedAnswer.answer : null, // include answer if available
+          answer: matchedAnswer ? matchedAnswer.answer : null,
         };
       }),
     }));
+
+    const reviews = await Review.find({ professional_id })
+      .populate({
+        path: "user_id",
+        model: "User",
+        select: "email username",
+      })
+      .lean();
     return {
       success: true,
       message: "Professional account review fetched successfully",
       professional,
       services: answeredQuestions,
       locations,
+      reviews,
     };
   } catch (error) {
     return {
