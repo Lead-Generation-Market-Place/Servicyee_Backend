@@ -278,8 +278,11 @@ class FindServicePros {
   }
  async getServicesByZip(zipCode) {
   try {
-    // First find locations that match the zipcode
-    const matchingLocations = await locations.find({zipcode:zipCode});
+    // First find locations that have the zipcode in their zipcodesWithinRadius array
+    const matchingLocations = await locations.find({
+      zipcodesWithinRadius: { $in: [zipCode] }
+    });
+    
     const locationIds = matchingLocations.map(loc => loc._id);
     
     // If no locations found, return empty array early
@@ -295,10 +298,9 @@ class FindServicePros {
         },
         service_status: true // Only return active services
       })
-      .populate('location_ids')
-      .populate('professional_id')
+      
       .populate('service_id')
-      .populate('question_ids'); // If you need questions populated too
+      .exec();
     
     return services;
   } catch(error) {
