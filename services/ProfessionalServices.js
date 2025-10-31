@@ -8,8 +8,6 @@ import questionModel from "../models/questionModel.js";
 import professionalServicesModel from "../models/professionalServicesModel.js";
 import Answer from "../models/answerModel.js";
 import LocationModel from "../models/LocationModel.js";
-import Review from "../models/ReviewModel.js";
-import zipcodeModel from "../models/zipcodeModel.js";
 
 export function createProfessional(data) {
   const professional = new Professional(data);
@@ -478,4 +476,18 @@ export async function createProfessionalAccountReview(professional_id) {
       error: error.message,
     };
   }
+
+
+}
+ //Noor Ahmad Bashery
+export async function getProfessionalProfileSummary(userId) {
+  const professional = await Professional.findOne({user_id: userId});
+    
+  
+    console.info("Professional Profile Summary:", professional);
+  if (!professional) {
+    throw new Error("Professional not found");
+  }
+
+  return professional;
 }
