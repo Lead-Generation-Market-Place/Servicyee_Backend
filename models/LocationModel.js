@@ -17,22 +17,22 @@ const locationSchema = new Schema({
   country: { type: String, required: true, default: "USA" },
   state: { type: String },
   city: { type: String, index: true },
-  zipcode: { type: String, index: true },
+    zipcode: { 
+    type: [String],   
+    index: true       
+  },
   address_line: { type: String },
   mile_id: { 
     type: Schema.Types.ObjectId, 
     ref: "Mile",
-  
   }, 
   minute_id: { 
     type: Schema.Types.ObjectId, 
     ref: "Minute",
-  
   },
    vehicle_type_id: { 
     type: Schema.Types.ObjectId, 
     ref: "VehicleType",
-   
   },
   coordinates: {
     type: {
@@ -41,12 +41,12 @@ const locationSchema = new Schema({
       default: "Point"
     },
     coordinates: {
-      type: [Number], // [longitude, latitude]
+      type: [Number], 
       default: [0,0]
 
     }
   },
-  serviceRadiusMiles: { type: Number, default: 0 } // optional
+  serviceRadiusMiles: { type: Number, default: 0 } 
 }, {
   timestamps: true,
   versionKey: false,
