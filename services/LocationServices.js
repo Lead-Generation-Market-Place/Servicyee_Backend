@@ -1,3 +1,4 @@
+import LocationModel from "../models/LocationModel.js";
 import Location from "../models/LocationModel.js";
 import milesModel from "../models/milesModel.js";
 import minute_model from "../models/minute_model.js";
@@ -134,3 +135,38 @@ export async function getUserLocationById(userId) {
     throw new Error(`Failed to get user location: ${error.message}`);
   }
 }
+
+//=======================================================
+// Get count of professionals grouped by city and state.
+//=======================================================
+export const getProCountByLocation = async () => {
+  const result = await Location.aggregate([
+    // Only count documents that belong to professionals
+    { $match: { type: "professional", professional_id: { $ne: null } } },
+
+    // Group by city and state
+    {
+      $group: {
+        _id: {
+          city: "$city",
+        },
+        professionalCount: { $sum: 1 }
+      }
+    },
+
+    // Reshape the output
+    {
+      $project: {
+        _id: 0,
+        city: "$_id.city",
+        state: "$_id.state",
+        professionalCount: 1
+      }
+    },
+
+    // Optional: sort by count descending
+    { $sort: { professionalCount: -1 } }
+  ]);
+
+  return result;
+};

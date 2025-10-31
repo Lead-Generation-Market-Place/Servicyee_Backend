@@ -1,5 +1,5 @@
 import Lead from "../models/leadModel.js";
-import Professional from "../models/ProfessionalModel.js";
+
 import ProfessionalLead from "../models/professionalLeadModel.js";
 import servicesModel from "../models/servicesModel.js";
 import professionalServicesModel from "../models/professionalServicesModel.js";
@@ -7,6 +7,7 @@ import professionalServicesModel from "../models/professionalServicesModel.js";
 // ================================================
 //            New Create lead service
 // ================================================
+
 export const createLeadService = async ({
   service_id,
   user_id,
@@ -21,7 +22,22 @@ export const createLeadService = async ({
   const service = await servicesModel.findById(service_id).select("service_name");
   if (!service) throw new Error("Invalid service_id");
 
-  // 2️⃣ Create Lead
+  // 2️⃣ Determine which professionals to assign
+  let professionals = [];
+
+  if (send_option === "top5") {
+    const topPros = await professionalServicesModel
+      .find({ service_id, service_availability: true })
+      .sort({ rating_avg: -1 })
+      .limit(5)
+      .select("professional_id");
+
+    professionals = topPros.map((p) => p.professional_id);
+  } else {
+    professionals = selectedProfessionals;
+  }
+
+  // 3️⃣ Create Lead (store professionals in it)
   const lead = await Lead.create({
     service_id,
     user_id,
@@ -31,40 +47,29 @@ export const createLeadService = async ({
     files,
     user_location,
     send_option,
+    professionals, // ✅ Correct key
   });
 
-  // 3️⃣ Determine which professionals to assign
-  let professionals = [];
-
-  if (send_option === "top5") {
-    professionals = await professionalServicesModel
-      .find({ service_id, service_availability: true })
-      .sort({ rating_avg: -1 })
-      .limit(5)
-      .select("_id");
-  } else {
-    professionals = selectedProfessionals.map((id) => ({ _id: id }));
-  }
-
+  // 4️⃣ If there are professionals, create assignment records
   if (!professionals.length) {
     console.warn("⚠️ No professionals found for this service.");
     return { lead, assigned: 0 };
   }
 
-  // 4️⃣ Assign to professionals
-  const assignments = professionals.map((pro) => ({
+  const assignments = professionals.map((proId) => ({
     lead_id: lead._id,
-    professional_id: pro._id,
+    professional_id: proId,
     status: "sent",
     read_by_pro: false,
     available: true,
-    expire_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    expire_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days expiry
   }));
 
   await ProfessionalLead.insertMany(assignments);
 
   return { lead, assigned: professionals.length };
 };
+
 
 // ================================================
 //          New Create Lead service ends

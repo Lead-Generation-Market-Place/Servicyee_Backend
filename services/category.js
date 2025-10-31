@@ -79,7 +79,7 @@
         $group: {
           _id: '$_id',
           name: { $first: '$name' },
-          status: { $first: '$status' },
+          is_active: { $first: '$is_active' },
           serviceCount: { $sum: { $size: '$services' } }
         }
       }
