@@ -32,7 +32,7 @@ const getStorage = (folderName) => multer.diskStorage({
     const timestamp = Date.now(); // Unique timestamp
     
     // Create filename: folderName_timestamp.extension
-    cb(null, `${folderName}_${timestamp}${ext}`);
+    cb(null, `${timestamp}${ext}`);
   }
 });
 
