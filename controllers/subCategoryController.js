@@ -161,7 +161,7 @@ export const deleteSubCategory = async (req, res, next) => {
 
 export const getAllSubCategoriesWithServicesCount = async (req, res, next) => {
   try {
-    const subCategories = await subCategoryService.getAllSubCategoriesWithServicesCount();
+    const subCategories = await subCategoryService.getAllSubcategoriesWithServicesCount();
     res.status(200).json({ data: subCategories });
   } catch (error) {
     next(error);
