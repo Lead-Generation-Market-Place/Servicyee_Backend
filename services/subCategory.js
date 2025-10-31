@@ -114,7 +114,7 @@ class SubCategoryService {
                 $expr: {
                   $and: [
                     { $eq: ['$subcategory_id', '$$subCatId'] },
-                    { $eq: ['$service_status', true] } // Only count active services
+                    { $eq: ['$is_active', true] } // Only count active services
                   ]
                 }
               }
@@ -126,7 +126,7 @@ class SubCategoryService {
       {
         $project: {
           name: 1,
-          status: 1,
+          is_active: 1,
           category_id: 1,
           servicesCount: { $size: '$services' }
         }

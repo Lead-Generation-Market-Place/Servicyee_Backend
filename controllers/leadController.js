@@ -1,12 +1,29 @@
 import { acceptLeadService, createLeadService } from "../services/leadService.js";
+import {User} from "../models/user.js";
+import { leadValidationSchema } from "../validators/leadValidator.js";
 
 // =================================
 //      New Create Lead Controller
 // ==================================
-import {User} from "../models/user.js";
+
 
 export const createLead = async (req, res) => {
   try {
+    // ✅ Validate incoming request
+    const { error, value } = leadValidationSchema.validate(req.body, {
+      abortEarly: false, // show all validation errors
+      stripUnknown: true, // remove unexpected fields
+    });
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: error.details.map((err) => err.message),
+      });
+    }
+
+    // Destructure validated data
     const {
       serviceId,
       responses,
@@ -15,7 +32,7 @@ export const createLead = async (req, res) => {
       sendOption,
       selectedProfessionals = [],
       professionalId,
-    } = req.body;
+    } = value;
 
     // ✅ 1. Check if user exists; otherwise create new one
     let user = await User.findOne({ email: userInfo.email });
@@ -35,7 +52,7 @@ export const createLead = async (req, res) => {
 
     // ✅ 3. Handle file uploads (if using multer or similar)
     const files = (req.files || []).map((file) => ({
-      url: `/uploads/${file.filename}`, // or your upload URL (Cloudinary, Supabase)
+      url: `/uploads/${file.filename}`,
       type: file.mimetype.startsWith("image") ? "image" : "file",
     }));
 
@@ -49,6 +66,7 @@ export const createLead = async (req, res) => {
       user_location: userLocation,
       send_option: sendOption,
       selectedProfessionals,
+      professionalId,
     });
 
     return res.status(201).json({
@@ -66,6 +84,7 @@ export const createLead = async (req, res) => {
     });
   }
 };
+
 
 // =================================================
 //             New create Lead ends

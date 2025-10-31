@@ -8,8 +8,6 @@ import questionModel from "../models/questionModel.js";
 import professionalServicesModel from "../models/professionalServicesModel.js";
 import Answer from "../models/answerModel.js";
 import LocationModel from "../models/LocationModel.js";
-import professionalLeadModel from "../models/professionalLeadModel.js";
-import { professionalSchema } from "../validators/professionalValidator.js";
 
 export function createProfessional(data) {
   const professional = new Professional(data);
@@ -343,7 +341,6 @@ export async function createProfessionalServicesAnswers(
 export async function createProAccountStepNine(data) {
   const session = await mongoose.startSession();
   session.startTransaction();
-
   try {
     const {
       professional_id,
@@ -352,12 +349,10 @@ export async function createProAccountStepNine(data) {
       lng,
       city,
       state,
-      zip,
       radiusMiles,
       country,
       address_line,
     } = data;
-
     if (!professional_id) throw new Error("Professional ID is required.");
     if (!service_id) throw new Error("Service ID is required.");
     const service = await ProfessionalService.findOne({
@@ -370,55 +365,44 @@ export async function createProAccountStepNine(data) {
         "Professional service not found for this professional ID and service ID."
       );
     }
+    let zipcodes = [];
+    if (radiusMiles && radiusMiles > 0) {
+      const radiusMeters = radiusMiles * 1609.34; // miles → meters
 
-    let savedLocation;
-
-    if (service.location_ids && service.location_ids.length > 0) {
-      const locationId = service.location_ids[0];
-
-      savedLocation = await Location.findByIdAndUpdate(
-        locationId,
-        {
-          professional_id,
-          country: country || "USA",
-          state: state || "",
-          city: city || "",
-          zipcode: zip || "",
-          address_line: address_line || "",
+      const nearbyZips = await zipcodeModel
+        .find({
           coordinates: {
-            type: "Point",
-            coordinates: [lng, lat],
+            $geoWithin: {
+              $centerSphere: [[lng, lat], radiusMeters / 6378137],
+            },
           },
-          serviceRadiusMiles: radiusMiles || 0,
-        },
-        { new: true, session }
-      );
-    } else {
-      const location = new Location({
-        type: "professional",
-        professional_id,
-        country: country || "USA",
-        state: state || "",
-        city: city || "",
-        zipcode: zip || "",
-        address_line: address_line || "",
-        coordinates: {
-          type: "Point",
-          coordinates: [lng, lat],
-        },
-        serviceRadiusMiles: radiusMiles || 0,
-      });
+        })
+        .session(session);
 
-      savedLocation = await location.save({ session });
-
-      service.location_ids.push(savedLocation._id);
-      await service.save({ session });
+      zipcodes = nearbyZips.map((z) => z.zip);
     }
-
+    await Location.deleteMany({
+      professional_id,
+      service_id,
+    }).session(session);
+    const locationDoc = {
+      type: "professional",
+      professional_id,
+      service_id,
+      country: country || "USA",
+      state: state || "",
+      city: city || "",
+      zipcode: zipcodes, 
+      address_line: address_line || "",
+      coordinates: { type: "Point", coordinates: [lng, lat] },
+      serviceRadiusMiles: radiusMiles || 0,
+    };
+    const savedLocation = await Location.create([locationDoc], { session });
+    service.location_ids = [savedLocation[0]._id];
+    await service.save({ session });
     await session.commitTransaction();
     session.endSession();
-
-    return savedLocation;
+    return savedLocation[0];
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -429,10 +413,7 @@ export async function createProAccountStepNine(data) {
 }
 
 
-
-// Create Professional Account - Profile Account - Reviews
 export async function createProfessionalAccountReview(professional_id) {
-
   if (!professional_id) throw new Error("Professional ID is required.");
 
   try {
@@ -453,11 +434,12 @@ export async function createProfessionalAccountReview(professional_id) {
         select: "question_name form_type options required order active",
       })
       .lean();
+
     const answers = answersData.map((a) => ({
       answer_id: a._id,
       professional_id: a.professional_id,
-      question: a.question_id, 
-      answer: a.answers,    
+      question: a.question_id,
+      answer: a.answers,
     }));
     const answeredQuestions = professionalServices.map((service) => ({
       ...service,
@@ -467,16 +449,25 @@ export async function createProfessionalAccountReview(professional_id) {
         );
         return {
           ...q,
-          answer: matchedAnswer ? matchedAnswer.answer : null, // include answer if available
+          answer: matchedAnswer ? matchedAnswer.answer : null,
         };
       }),
     }));
+
+    const reviews = await Review.find({ professional_id })
+      .populate({
+        path: "user_id",
+        model: "User",
+        select: "email username",
+      })
+      .lean();
     return {
       success: true,
       message: "Professional account review fetched successfully",
       professional,
       services: answeredQuestions,
       locations,
+      reviews,
     };
   } catch (error) {
     return {
