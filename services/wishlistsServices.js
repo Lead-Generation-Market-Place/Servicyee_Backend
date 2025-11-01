@@ -41,13 +41,8 @@ class WishListsService {
     try {
       const result = await wishlistsModel.find({ user_id: userId }).populate({
         path: "service_id",
-        select: "service_name service_status subcategory_id",
-        populate: [
-          {
-            path: "subcategory_id",
-            select: "name status",
-          },
-        ],
+        select: "name description image_url is_active is_featured",
+      
       });
       return result;
     } catch (error) {
