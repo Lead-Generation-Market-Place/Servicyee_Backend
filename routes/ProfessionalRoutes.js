@@ -15,7 +15,7 @@ import {
 	createProfessionalStepEight,
 	getServicesQuestionsPro,
 	createProfessionalStepNine,
-	createProfessionalReview
+	createProfessionalReview,getProfessionalProfile
 } from '../controllers/ProfessionalController.js';
 import createUploader from '../config/multer.js';  
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
@@ -25,6 +25,12 @@ import {  SendReviewEmailCustomer } from '../controllers/SendReviewEmailControll
 const router = express.Router();
 const upload = createUploader('professionals'); 
 
+//Noor Ahmad Bashery
+router.get(
+  "/profile-summary/:id",
+  authenticateToken,
+  getProfessionalProfile
+);
 
 // Professional Registration Route with account creation
 router.post('/register', createProfessionalAccount);
