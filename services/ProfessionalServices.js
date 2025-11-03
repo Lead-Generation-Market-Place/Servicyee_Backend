@@ -249,12 +249,18 @@ export async function getProServicesQuestions(professionalId) {
     const questions = await questionModel
       .find({ service_id: { $in: serviceIds } })
       .select("service_id question_name form_type options required order");
-    const servicesWithQuestions = serviceIds.map((sid) => ({
-      service_id: sid,
-      questions: questions
-        .filter((q) => q.service_id.toString() === sid.toString())
-        .sort((a, b) => a.order - b.order),
-    }));
+    const servicesWithQuestions = serviceIds
+      .map((sid) => {
+        const serviceQuestions = questions
+          .filter((q) => q.service_id.toString() === sid.toString())
+          .sort((a, b) => a.order - b.order);
+        return {
+          service_id: sid,
+          questions: serviceQuestions,
+        };
+      })
+      .filter(service => service.questions.length > 0); // Only keep services with questions
+
     return {
       success: true,
       services: servicesWithQuestions,
@@ -339,14 +345,14 @@ export async function createProfessionalServicesAnswers(
     );
   }
 }
+
 // End of Step 08
 export async function createProAccountStepNine(data) {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
     const {
-      professional_id,
-      service_id,
+      professional_id,  // Single professional ID
       lat,
       lng,
       city,
@@ -355,22 +361,24 @@ export async function createProAccountStepNine(data) {
       country,
       address_line,
     } = data;
+
     if (!professional_id) throw new Error("Professional ID is required.");
-    if (!service_id) throw new Error("Service ID is required.");
-    const service = await ProfessionalService.findOne({
-      professional_id,
-      service_id,
+
+    // Find ALL professional services for this professional
+    const services = await ProfessionalService.find({
+      professional_id: professional_id
     }).session(session);
 
-    if (!service) {
+    if (!services || services.length === 0) {
       throw new Error(
-        "Professional service not found for this professional ID and service ID."
+        "No professional services found for the provided professional ID."
       );
     }
+
+    // Calculate zipcodes within radius
     let zipcodes = [];
     if (radiusMiles && radiusMiles > 0) {
-      const radiusMeters = radiusMiles * 1609.34; // miles → meters
-
+      const radiusMeters = radiusMiles * 1609.34;
       const nearbyZips = await zipcodeModel
         .find({
           coordinates: {
@@ -383,37 +391,51 @@ export async function createProAccountStepNine(data) {
 
       zipcodes = nearbyZips.map((z) => z.zip);
     }
-    await Location.deleteMany({
-      professional_id,
-      service_id,
-    }).session(session);
-    const locationDoc = {
-      type: "professional",
-      professional_id,
-      service_id,
-      country: country || "USA",
-      state: state || "",
-      city: city || "",
-      zipcode: zipcodes, 
-      address_line: address_line || "",
-      coordinates: { type: "Point", coordinates: [lng, lat] },
-      serviceRadiusMiles: radiusMiles || 0,
-    };
-    const savedLocation = await Location.create([locationDoc], { session });
-    service.location_ids = [savedLocation[0]._id];
-    await service.save({ session });
+
+    const savedLocations = [];
+    for (const service of services) {
+      await Location.deleteMany({
+        professional_id: professional_id,
+        service_id: service.service_id,
+      }).session(session);
+      const locationDoc = {
+        type: "professional",
+        professional_id: professional_id,
+        service_id: service.service_id,  
+        country: country || "USA",
+        state: state || "",
+        city: city || "",
+        zipcode: zipcodes,
+        address_line: address_line || "",
+        coordinates: { type: "Point", coordinates: [lng, lat] },
+        serviceRadiusMiles: radiusMiles || 0,
+      };
+      const savedLocation = await Location.create([locationDoc], { session });
+      service.location_ids = [savedLocation[0]._id];
+      await service.save({ session });
+      savedLocations.push({
+        service_id: service.service_id,
+        service_name: service.service_name, 
+        location: savedLocation[0]
+      });
+    }
+
     await session.commitTransaction();
     session.endSession();
-    return savedLocation[0];
+    
+    return {
+      professional_id: professional_id,
+      total_services: services.length,
+      locations: savedLocations  // Array of locations with their service IDs
+    };
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     throw new Error(
-      error.message || "Failed to create or update professional location"
+      error.message || "Failed to create or update professional locations"
     );
   }
 }
-
 
 export async function createProfessionalAccountReview(professional_id) {
   if (!professional_id) throw new Error("Professional ID is required.");

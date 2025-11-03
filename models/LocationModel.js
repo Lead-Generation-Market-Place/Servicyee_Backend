@@ -22,10 +22,6 @@ const locationSchema = new Schema({
     index: true       
   },
   address_line: { type: String },
-  mile_id: { 
-    type: Schema.Types.ObjectId, 
-    ref: "Mile",
-  }, 
   minute_id: { 
     type: Schema.Types.ObjectId, 
     ref: "Minute",
