@@ -41,7 +41,6 @@ router.get('/progress', authenticateToken, getProfessionalByUserIdHandler);
 
 // CRUD Routes for Professionals Account Management
 router.get('/',  authenticateToken, getAllProfessionalsHandler);
-router.get('/pro', authenticateToken, getProfessionalByUserIdHandler);
 router.post('/',  authenticateToken, celebrate({ [Segments.BODY]: professionalSchema }), createProfessionalHandler);
 router.put('/:id', authenticateToken, celebrate({ [Segments.BODY]: UpdateprofessionalSchema }), updateProfessionalIntroductionById);
 router.put('/:id/introduction', 
