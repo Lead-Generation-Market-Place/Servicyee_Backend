@@ -36,8 +36,7 @@ router.post('/servicesLocation', authenticateToken, createProfessionalStepNine);
 router.get('/questionsAnswers', authenticateToken, getServicesQuestionsPro);
 router.get('/profileReviews', authenticateToken, createProfessionalReview);
 router.post('/profileReviewsCustomer', authenticateToken, SendReviewEmailCustomer);
-
-
+router.get('/progress', authenticateToken, getProfessionalByUserIdHandler);
 // End of Professional Registration Route with account cretion
 
 // CRUD Routes for Professionals Account Management
