@@ -106,6 +106,7 @@ export async function CreateProAccountStepOne(data) {
       user_id: user._id,
       business_name: data.username,
       website: data.website || "",
+      step: 1,
     });
     await professional.save({ session });
 
@@ -156,7 +157,7 @@ export async function CreateProAccountStepThree(id, { business_name }) {
   try {
     const professional = await Professional.findByIdAndUpdate(
       id,
-      { business_name: business_name.trim() },
+      { business_name: business_name.trim(), step: 3 },
       { new: true, runValidators: true }
     );
     if (!professional) {
@@ -182,6 +183,7 @@ export async function CreateProAccountStepFour(
       employees: employees !== undefined ? employees : undefined,
       founded_year: founded !== undefined ? founded : undefined,
       introduction: about !== undefined ? about : undefined,
+      step: 4,
     };
 
     if (profile) {
@@ -219,7 +221,7 @@ export async function createProAccountStepSeven(id, { schedule, timezone }) {
     );
     const professional = await Professional.findByIdAndUpdate(
       id,
-      { business_hours, timezone },
+      { business_hours, timezone, step: 7 },
       { new: true, runValidators: true }
     );
     if (!professional) {
@@ -257,7 +259,7 @@ export async function getProServicesQuestions(professionalId) {
           questions: serviceQuestions,
         };
       })
-      .filter(service => service.questions.length > 0); // Only keep services with questions
+      .filter((service) => service.questions.length > 0); // Only keep services with questions
 
     return {
       success: true,
@@ -327,6 +329,12 @@ export async function createProfessionalServicesAnswers(
     }
     await profService.save({ session });
 
+    const professional = await Professional.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(professionalId) }, 
+      { step: 8 }, // update
+      { new: true, runValidators: true, session } 
+    );
+
     await session.commitTransaction();
     session.endSession();
     const updatedAnswers = await Answer.find({
@@ -350,7 +358,7 @@ export async function createProAccountStepNine(data) {
   session.startTransaction();
   try {
     const {
-      professional_id,  // Single professional ID
+      professional_id, // Single professional ID
       lat,
       lng,
       city,
@@ -364,7 +372,7 @@ export async function createProAccountStepNine(data) {
 
     // Find ALL professional services for this professional
     const services = await ProfessionalService.find({
-      professional_id: professional_id
+      professional_id: professional_id,
     }).session(session);
 
     if (!services || services.length === 0) {
@@ -399,7 +407,7 @@ export async function createProAccountStepNine(data) {
       const locationDoc = {
         type: "professional",
         professional_id: professional_id,
-        service_id: service.service_id,  
+        service_id: service.service_id,
         country: country || "USA",
         state: state || "",
         city: city || "",
@@ -413,18 +421,23 @@ export async function createProAccountStepNine(data) {
       await service.save({ session });
       savedLocations.push({
         service_id: service.service_id,
-        service_name: service.service_name, 
-        location: savedLocation[0]
+        service_name: service.service_name,
+        location: savedLocation[0],
       });
     }
+        const professional = await Professional.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(professional_id) }, 
+      { step: 9 }, // update
+      { new: true, runValidators: true, session } 
+    );
 
     await session.commitTransaction();
     session.endSession();
-    
+
     return {
       professional_id: professional_id,
       total_services: services.length,
-      locations: savedLocations  // Array of locations with their service IDs
+      locations: savedLocations, // Array of locations with their service IDs
     };
   } catch (error) {
     await session.abortTransaction();
@@ -441,7 +454,9 @@ export async function createProfessionalAccountReview(professional_id) {
   try {
     const professional = await Professional.findById(professional_id).lean();
     if (!professional) throw new Error("Professional not found");
-    const professionalServices = await ProfessionalService.find({ professional_id })
+    const professionalServices = await ProfessionalService.find({
+      professional_id,
+    })
       .populate({
         path: "question_ids",
         model: "Question",

@@ -21,6 +21,7 @@ const ProfessionalSchema = new Schema(
     total_review: { type: Number, default: 0 },
     rating_avg: { type: Number, default: 0 },
     profile_image: { type: String, required: false },
+    step: {type:Number, required:true, default: 0 },
     payment_methods: {
       type: [String],
       default: [],
