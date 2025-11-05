@@ -4,7 +4,8 @@ import {
     getProfessionalsByServiceWithHighestRating,
     getProfessionalsDetailsByService,
     getProsAndCompaniesByServiceHighestRating,
-    getServicesByNameZip
+    getServicesByNameZip,
+    getServicesByZip
 } from '../controllers/findServiceProsController.js';
 
 const router=express.Router();
@@ -14,6 +15,7 @@ router.get('/details/:professionalId',getProfessionalsDetailsByService);
 router.get('/ratings/:serviceId',getProfessionalsByServiceWithHighestRating);
 router.get('/ratings/:businessType/:serviceId',getProsAndCompaniesByServiceHighestRating);
 router.post('/', getServicesByNameZip);
+router.get("/zip/:zipCode", getServicesByZip);
 
 
 

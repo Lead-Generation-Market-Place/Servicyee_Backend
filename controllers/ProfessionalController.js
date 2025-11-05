@@ -14,6 +14,7 @@ import {
   createProfessionalServicesAnswers,
   createProAccountStepNine,
   createProfessionalAccountReview,
+getProfessionalProfileSummary,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -166,7 +167,7 @@ export async function updateProfessionalInfo(req, res) {
 
     if (req.file) {
       const fullImageUrl = req.file.path;
-      updateData.profile_image = `${backendUrl}/${fullImageUrl}`;
+      updateData.profile_image = `${fullImageUrl}`;
     }
 
     const result = await updateProfessionalService(id, updateData);
@@ -249,9 +250,7 @@ export async function createProfessionalStepThree(req, res) {
 export async function createProfessionalStepFour(req, res) {
   const { id } = req.params;
   const { businessType, employees, founded, about } = req.body;
-  const profile = req.file
-    ? `/uploads/professionals/${req.file.filename}`
-    : null;
+  const profile = req.file ? req.file.filename : null;
   try {
     const professional = await CreateProAccountStepFour(id, {
       businessType,
@@ -445,3 +444,32 @@ export async function createProfessionalReview(req, res) {
 }
 
 
+//Noor Ahmad Bashery
+
+export async function getProfessionalProfile(req, res) {
+  try {
+    const userId = req.user?.id || req.params.id;
+    const professional = await getProfessionalProfileSummary(userId);
+
+    // ✅ use correct field name: profile_image
+    const profileWithUrl = professional.profile_image
+      ? professional.profile_image.startsWith("http")
+        ? professional.profile_image
+        : `${backendUrl}${professional.profile_image}`
+      : null;
+
+    res.status(200).json({
+ 
+
+        businessName: professional.business_name,
+        profile: profileWithUrl,
+    
+    });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(404).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}

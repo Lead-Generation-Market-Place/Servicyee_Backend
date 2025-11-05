@@ -176,3 +176,34 @@ export const getServicesByNameZip = async (req, res, next) => {
 };
 
 
+export const getServicesByZip = async (req, res, next) => {
+  try {
+    const {zipCode} = req.params;
+
+    if (!zipCode) {
+      return res.status(400).json({
+        success: false,
+        message: "zipCode are required",
+      });
+    }
+
+    const services = await findServicePros.getServicesByZip(zipCode);
+
+    if (!services || services.length === 0) {
+      return res.status(404).json({
+        success: true,
+        message: `No Services found for the zip code ${zipCode}`,
+        data: [],
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Services found successfully",
+      count: services.length,
+      data: services,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
