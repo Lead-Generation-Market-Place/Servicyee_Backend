@@ -1,26 +1,29 @@
-import professionalServicesModel from "../../models/professionalServicesModel.js";
+import ProfessionalService from "../../models/professionalServicesModel.js";
 import Professional from "../../models/ProfessionalModel.js";
-import LocationModel from "../../models/LocationModel.js";
+import Location from "../../models/LocationModel.js";
 import mongoose from "mongoose";
 
 export const getTopProfessionalsByServiceAndZip = async (service_id, zipcode) => {
   try {
     // 1️⃣ Find the single location for this zipcode
-    const location = await LocationModel.findOne({ zipcode }).select("_id");
+    console.log(`looking for service: ${service_id} and zipcode: ${ zipcode}`);
+    const location = await Location.findOne({ 
+      zipcode: zipcode,
+      type:"professional"
+    }).select("_id");
 
     if (!location) {
       return [];
     }
-
-    const locationId = new mongoose.Types.ObjectId(location._id);
-    console.log(`LocationId: ${locationId}`)
+    
     // 2️⃣ Find all professionals offering that service in this location
-    const results = await professionalServicesModel.aggregate([
+    const locationId = location._id.toString();
+    const results = await ProfessionalService.aggregate([
       {
         $match: {
           service_status: true,
           service_id: new mongoose.Types.ObjectId(service_id),
-          location_ids: locationId, // ✅ matches if locationId exists inside array
+          location_ids: locationId,  // ✅ matches if locationId exists inside array
         },
       },
       {
@@ -58,6 +61,7 @@ export const getTopProfessionalsByServiceAndZip = async (service_id, zipcode) =>
         },
       },
     ]);
+    console.log("this is the result: ", results);
 
     return results;
   } catch (error) {

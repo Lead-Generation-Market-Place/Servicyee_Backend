@@ -5,6 +5,8 @@ const UserSchema = new Schema({
   username: { type: String, required: true },
   phone: { type: String, required: true},
   password: { type: String, required: true },
+  is_phone_verified: {type: Boolean, default:false},
+  is_email_verified: {type: Boolean, default: false}
 });
 
 export const User = model("User", UserSchema);
