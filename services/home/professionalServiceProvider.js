@@ -61,7 +61,6 @@ export const getTopProfessionalsByServiceAndZip = async (service_id, zipcode) =>
         },
       },
     ]);
-    console.log("this is the result: ", results);
 
     return results;
   } catch (error) {
