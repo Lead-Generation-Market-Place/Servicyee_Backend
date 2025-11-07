@@ -1,6 +1,9 @@
 import { acceptLeadService, createLeadService } from "../services/leadService.js";
 import {User} from "../models/user.js";
 import { leadValidationSchema } from "../validators/leadValidator.js";
+import mongoose from 'mongoose';
+import servicesModel from "../models/servicesModel.js";
+import professionalLead from "../models/professionalLeadModel.js";
 
 // =================================
 //      New Create Lead Controller
@@ -11,60 +14,71 @@ export const createLead = async (req, res) => {
   console.log("=== LEAD CREATION STARTED ===");
   
   try {
-    console.log("📥 Raw Request Body: ", JSON.stringify(req.body, null, 2));
+  //   console.log("📥 Raw Request Body: ", JSON.stringify(req.body, null, 2));
     
-    // ✅ TEMPORARY: Use req.body directly instead of validated value
     const data = req.body;
     
-    // Destructure from req.body directly
     const {
-      serviceId, // Note: frontend sends serviceId, not service_id
+      serviceId,
       responses,
       userInfo,
       userLocation,
       sendOption,
       professionalId,
-      selectedProfessionals,
+      professionalIds,
     } = data;
 
-    console.log("🔍 Destructured Data:", {
-      serviceId,
-      responsesCount: Object.keys(responses || {}).length,
-      userInfo: { 
-        email: userInfo?.email, 
-        phone: userInfo?.phone,
-        hasDescription: !!userInfo?.description 
-      },
-      userLocation,
-      sendOption,
-      professionalId,
-      selectedProfessionalsCount: selectedProfessionals?.length || 0
-    });
+    // console.log("🔍 Destructured Data:", {
+    //   serviceId,
+    //   responsesCount: Object.keys(responses || {}).length,
+    //   userInfo: { 
+    //     email: userInfo?.email, 
+    //     phone: userInfo?.phone,
+    //     hasDescription: !!userInfo?.description 
+    //   },
+    //   userLocation,
+    //   sendOption,
+    //   professionalId,
+    //   professionalIds,
+    //   selectedProfessionalsCount: professionalIds?.length || 0
+    // });
 
     // ✅ 1. Check if user exists; otherwise create new one
-    console.log("👤 Checking user existence for:", userInfo.email);
+    // console.log("👤 Checking user existence for:", userInfo.email);
     let user = await User.findOne({ email: userInfo.email });
     
     if (!user) {
-      console.log("➕ Creating new user");
+      // console.log("➕ Creating new user");
       user = await User.create({
-        username: userInfo.email,
         email: userInfo.email,
+        username: userInfo.email,
+        password: "pass@123",
         phone: userInfo.phone,
-        password:userInfo.phone || "pass@123",
         description: userInfo.description,
       });
-      console.log("✅ User created with ID:", user._id);
+      console.log("✅ User created");
     } else {
       console.log("✅ Existing user found:", user._id);
     }
 
     // ✅ 2. Convert responses to answers array
-    const answers = Object.entries(responses).map(([question_id, answer]) => ({
-      question_id,
-      answer,
-    }));
-    console.log(`📝 Converted ${answers.length} responses to answers`);
+    const answers = Object.entries(responses).map(([question_id, answer]) => {
+      // Handle fallback questions
+      if (question_id === 'fallback') {
+        return {
+          question_id: null,
+          answer,
+          is_fallback: true
+        };
+      }
+      
+      return {
+        question_id,
+        answer,
+      };
+    });
+    
+    // console.log(`📝 Converted ${answers.length} responses to answers`);
 
     // ✅ 3. Handle file uploads
     const files = (req.files || []).map((file) => ({
@@ -74,32 +88,50 @@ export const createLead = async (req, res) => {
     }));
     console.log(`📁 Processed ${files.length} files`);
 
-    // ✅ 4. Call service layer - use serviceId (from frontend)
-    console.log("🚀 Calling createLeadService with:", {
-      service_id: serviceId, // Use serviceId here
-      user_id: user._id,
-      answers_count: answers.length,
-      files_count: files.length,
-      professionalId,
-      selectedProfessionals_count: selectedProfessionals?.length || 0
-    });
+    // ✅ 4. Generate title
+    let leadTitle = 'New Service Request';
+    
+    try {
+      const service = await servicesModel.findById(serviceId);
+      if (service) {
+        leadTitle = `Request for ${service.name}`;
+      }
+    } catch (error) {
+      console.log("⚠️ Could not fetch service for title");
+    }
+
+
+    // ✅ 5. Call service layer - ALL professional assignment logic is now in service
+    // console.log("🚀 Calling createLeadService with:", {
+    //   service_id: serviceId,
+    //   user_id: user._id,
+    //   title: leadTitle,
+    //   note: userInfo.description,
+    //   answers_count: answers.length,
+    //   files_count: files.length,
+    //   send_option: sendOption,
+    //   professionalId,
+    //   selectedProfessionals: professionalIds
+    // });
 
     const { lead, assigned } = await createLeadService({
-      service_id: serviceId, // Use serviceId
+      service_id: serviceId,
       user_id: user._id,
-      title: "New Lead",
+      title: leadTitle,
+      note: userInfo.description,
       answers,
       files,
       user_location: userLocation,
       send_option: sendOption,
-      selectedProfessionals,
-      professionalId,
+      selectedProfessionals: professionalIds, // This should contain top 5 + selected professional
+      professionalId: professionalId,
     });
 
-    console.log("🎉 Lead created successfully:", {
-      leadId: lead._id,
-      assignedCount: assigned?.length || 0
-    });
+    // console.log("🎉 Lead creation completed:", {
+    //   leadId: lead._id,
+    //   assignedCount: assigned,
+    //   sendOption: sendOption
+    // });
 
     return res.status(201).json({
       success: true,

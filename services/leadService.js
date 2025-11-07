@@ -11,14 +11,16 @@ import professionalServicesModel from "../models/professionalServicesModel.js";
 export const createLeadService = async ({
   service_id,
   user_id,
+  title,
   note,
   answers,
   files,
   user_location,
   send_option,
   selectedProfessionals = [],
+  professionalId,
 }) => {
-  // 1️⃣ Get service name
+  // 1️⃣ Get service name (for validation/logging, not for professional selection)
   const service = await servicesModel.findById(service_id).select("service_name");
   if (!service) throw new Error("Invalid service_id");
 
@@ -26,48 +28,70 @@ export const createLeadService = async ({
   let professionals = [];
 
   if (send_option === "top5") {
-    const topPros = await professionalServicesModel
-      .find({ service_id, service_availability: true })
-      .sort({ rating_avg: -1 })
-      .limit(5)
-      .select("professional_id");
-
-    professionals = topPros.map((p) => p.professional_id);
-  } else {
+    // Use the professionalIds passed from controller (top 5 + selected professional)
     professionals = selectedProfessionals;
+    // console.log(`🎯 Using pre-selected top 5 professionals: ${professionals.length} professionals`);
+    
+  } else if (send_option === "selected") {
+    // If specific professional is selected
+    if (professionalId) {
+      professionals = [professionalId];
+      // console.log(`🎯 Using selected professional: ${professionalId}`);
+    } else if (selectedProfessionals.length > 0) {
+      professionals = selectedProfessionals;
+      // console.log(`🎯 Using selected professionals: ${professionals.length} professionals`);
+    }
+  } else {
+    // Fallback to selected professionals
+    professionals = selectedProfessionals;
+    // console.log(`🎯 Using fallback professionals: ${professionals.length} professionals`);
   }
 
-  // 3️⃣ Create Lead (store professionals in it)
+  // 3️⃣ Create Lead
   const lead = await Lead.create({
     service_id,
     user_id,
-    title: service.service_name,
+    title,
     note,
     answers,
     files,
     user_location,
     send_option,
-    professionals, // ✅ Correct key
+    professionals,
   });
 
-  // 4️⃣ If there are professionals, create assignment records
-  if (!professionals.length) {
-    console.warn("⚠️ No professionals found for this service.");
-    return { lead, assigned: 0 };
+  // 4️⃣ Create ProfessionalLead assignments
+  let assignedCount = 0;
+  
+  if (professionals.length > 0) {
+    const assignments = professionals.map((proId) => ({
+      lead_id: lead._id,
+      professional_id: proId,
+      status: "sent",
+      read_by_pro: false,
+      available: true,
+      expire_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days expiry
+    }));
+
+    try {
+      await ProfessionalLead.insertMany(assignments, { ordered: false });
+      assignedCount = assignments.length;
+      console.log(`✅ Lead sent to ${assignedCount} professionals`);
+    } catch (err) {
+      if (err.code === 11000) {
+        console.warn("⚠️ Some duplicates skipped during ProfessionalLead creation");
+        // Count successful insertions despite duplicates
+        assignedCount = professionals.length;
+      } else {
+        console.error("❌ Error inserting ProfessionalLead entries:", err);
+        throw err;
+      }
+    }
+  } else {
+    console.warn("⚠️ No professionals assigned for this lead");
   }
 
-  const assignments = professionals.map((proId) => ({
-    lead_id: lead._id,
-    professional_id: proId,
-    status: "sent",
-    read_by_pro: false,
-    available: true,
-    expire_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days expiry
-  }));
-
-  await ProfessionalLead.insertMany(assignments);
-
-  return { lead, assigned: professionals.length };
+  return { lead, assigned: assignedCount };
 };
 
 
