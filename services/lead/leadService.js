@@ -1,8 +1,9 @@
-import Lead from "../models/leadModel.js";
+import Lead from "../../models/leadModel.js";
 
-import ProfessionalLead from "../models/professionalLeadModel.js";
-import servicesModel from "../models/servicesModel.js";
-import professionalServicesModel from "../models/professionalServicesModel.js";
+import ProfessionalLead from "../../models/professionalLeadModel.js";
+import servicesModel from "../../models/servicesModel.js";
+import mongoose from 'mongoose';
+import professionalServicesModel from "../../models/professionalServicesModel.js";
 
 // ================================================
 //            New Create lead service
@@ -164,4 +165,81 @@ export const acceptLeadService = async ({leadId, professionalId}) => {
   );
 
   return accepted;
+}
+
+
+// services/LeadServices.ts
+export const getProfessionalLeads = async (professionalId) => {
+  try {
+    const professionalLeads = await ProfessionalLead.aggregate([
+      {
+        $match: {
+          professional_id: new mongoose.Types.ObjectId(professionalId)
+        }
+      },
+      {
+        $lookup: {
+          from: 'leads',
+          localField: 'lead_id',
+          foreignField: '_id',
+          as: 'lead'
+        }
+      },
+      {
+        $unwind: '$lead'
+      },
+      {
+        $lookup: {
+          from: 'services',
+          localField: 'lead.service_id',
+          foreignField: '_id',
+          as: 'lead.service'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'lead.user_id',
+          foreignField: '_id',
+          as: 'lead.user'
+        }
+      },
+      {
+        $unwind: '$lead.service'
+      },
+      {
+        $unwind: '$lead.user'
+      },
+      {
+        $project: {
+          status: 1,
+          read_by_pro: 1,
+          available: 1,
+          expire_at: 1,
+          created_at: 1,
+          'lead._id': 1,
+          'lead.title': 1,
+          'lead.answers': 1,
+          'lead.note': 1,
+          'lead.files': 1,
+          'lead.user_location': 1,
+          'lead.send_option': 1,
+          'lead.created_at': 1,
+          'lead.service.name': 1,
+          'lead.service.category': 1,
+          'lead.user.name': 1,
+          'lead.user.email': 1,
+          'lead.user.phone': 1
+        }
+      },
+      {
+        $sort: { created_at: -1 }
+      }
+    ]);
+
+    return professionalLeads;
+  } catch (error) {
+    console.error('Error fetching professional leads:', error);
+    throw error;
+  }
 }

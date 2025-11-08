@@ -1,9 +1,8 @@
-import { acceptLeadService, createLeadService } from "../services/leadService.js";
-import {User} from "../models/user.js";
-import { leadValidationSchema } from "../validators/leadValidator.js";
+import { acceptLeadService, createLeadService, getProfessionalLeads } from "../../services/lead/leadService.js";
+import {User} from "../../models/user.js";
+import { leadValidationSchema } from "../../validators/leadValidator.js";
 import mongoose from 'mongoose';
-import servicesModel from "../models/servicesModel.js";
-import professionalLead from "../models/professionalLeadModel.js";
+import servicesModel from "../../models/servicesModel.js";
 
 // =================================
 //      New Create Lead Controller
@@ -221,5 +220,39 @@ export const acceptLead = async (req, res) => {
       message: "Unable to accept lead",
       error:error?.message || "An unexpected error occured"
     });
+  }
+}
+
+export const getLeadByProfessionalId = async (req, res) => {
+  try {
+    const professionalId = req.params.professionalId;
+    if (!professionalId) {
+      return res.status(400).json({
+        success:false,
+        message:"Professional ID is required"
+      });
+    }
+    console.log("Fetching leads for professional ID:", professionalId);
+    const professionalLeads = await getProfessionalLeads(professionalId);
+    if (!professionalLeads || professionalLeads.length === 0) {
+      return res.status(404).json({
+        success:false,
+        message:"No leads found for this professional"
+      });
+    } 
+    return res.status(200).json({
+      success:true,
+      message:"Leads fetched successfully",
+      data: professionalLeads
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Unable to fetch leads",
+      error:error?.message || "An unexpected error occured",
+      data: []
+    });
+
   }
 }
