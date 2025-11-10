@@ -8,6 +8,10 @@ import questionModel from "../models/questionModel.js";
 import professionalServicesModel from "../models/professionalServicesModel.js";
 import Answer from "../models/answerModel.js";
 import LocationModel from "../models/LocationModel.js";
+import FeaturedProject from "../models/featuredProjectModel.js";
+import File from "../models/fileModel.js";
+import fs from 'fs';
+import path from 'path';
 
 export function createProfessional(data) {
   const professional = new Professional(data);
@@ -512,4 +516,297 @@ export async function getProfessionalProfileSummary(userId) {
   }
 
   return professional;
+}
+
+
+// FeaturedProject Service Methods
+export async function createFeaturedProject(data) {
+  const { serviceId, cityname, projectTitle, approximate_total_price, duration, year, description, fileIds } = data;
+  
+  const featuredProject = new FeaturedProject({
+    serviceId,
+    cityname,
+    projectTitle,
+    approximate_total_price,
+    duration: {
+      type: duration.type,
+      value: duration.value
+    },
+    year,
+    description,
+    fileIds: fileIds || []
+  });
+  
+  return featuredProject.save();
+}
+
+export async function createFeaturedProjectWithFiles(data, files, userId, professionalId) {
+  const { serviceId, cityname, projectTitle, approximate_total_price, duration, year, description } = data;
+  
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    let fileIds = [];
+    
+    // If files are provided, save them first
+    if (files && files.length > 0) {
+      const fileDocs = files.map((file) => ({
+        userId,
+        professionalId,
+        relatedModel: "FeaturedProject",
+        relatedModelId: null, // Will be set after project creation
+        fileName: file.originalname,
+        filePath: file.path,
+        fileType: file.mimetype.startsWith('image/') ? 'photo' : 'video',
+        fileSize: file.size,
+        metaData: { mimetype: file.mimetype },
+      }));
+
+      const savedFiles = await File.insertMany(fileDocs, { session });
+      fileIds = savedFiles.map(file => file._id);
+    }
+
+    // Create the featured project with file IDs
+    const featuredProject = new FeaturedProject({
+      serviceId,
+      cityname,
+      projectTitle,
+      approximate_total_price,
+      duration: {
+        type: duration.type,
+        value: duration.value
+      },
+      year,
+      description,
+      fileIds
+    });
+
+    const savedProject = await featuredProject.save({ session });
+
+    // Update file documents with the actual featured project ID
+    if (fileIds.length > 0) {
+      await File.updateMany(
+        { _id: { $in: fileIds } },
+        { relatedModelId: savedProject._id },
+        { session }
+      );
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return await FeaturedProject.findById(savedProject._id).populate('fileIds');
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error.message || "Failed to create featured project with files");
+  }
+}
+
+export async function getFeaturedProjectById(id) {
+  return FeaturedProject.findById(id).populate('fileIds').exec();
+}
+
+export async function getFeaturedProjects(filters = {}) {
+  const query = { isActive: true, ...filters };
+  return FeaturedProject.find(query).populate('fileIds').exec();
+}
+
+export async function getFeaturedProjectsByService(serviceId) {
+  return FeaturedProject.find({ serviceId, isActive: true })
+    .populate('fileIds')
+    .exec();
+}
+
+export async function updateFeaturedProject(id, data) {
+  const updateData = { ...data };
+  if (data.duration) {
+    updateData.duration = {
+      type: data.duration.type,
+      value: data.duration.value
+    };
+  }
+  return FeaturedProject.findByIdAndUpdate(id, updateData, { new: true })
+    .populate('fileIds')
+    .exec();
+}
+
+export async function deleteFileFromServer(filePath) {
+  try {
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error deleting file from server:', error);
+    return false;
+  }
+}
+
+export async function deleteFileFromDatabase(fileId) {
+  try {
+    const deletedFile = await File.findByIdAndDelete(fileId).exec();
+    return deletedFile;
+  } catch (error) {
+    console.error('Error deleting file from database:', error);
+    throw error;
+  }
+}
+
+export async function deleteFilesByIds(fileIds) {
+  const deletedFiles = [];
+  const errors = [];
+  
+  for (const fileId of fileIds) {
+    try {
+      const file = await File.findById(fileId).exec();
+      if (file) {
+        // Delete from server
+        await deleteFileFromServer(file.filePath);
+        // Delete from database
+        await deleteFileFromDatabase(fileId);
+        deletedFiles.push(fileId);
+      }
+    } catch (error) {
+      errors.push({ fileId, error: error.message });
+    }
+  }
+  
+  return { deletedFiles, errors };
+}
+
+export async function updateFeaturedProjectWithFiles(id, data, files, userId, professionalId) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Get the current project to find old files
+    const currentProject = await FeaturedProject.findById(id).populate('fileIds').session(session);
+    if (!currentProject) {
+      throw new Error("Featured project not found");
+    }
+
+    let newFileIds = [];
+    let oldFileIdsToDelete = [];
+    
+    // If new files are provided, delete old files and save new ones
+    if (files && files.length > 0) {
+      // Collect old file IDs for deletion
+      oldFileIdsToDelete = currentProject.fileIds.map(file => file._id);
+      
+      const fileDocs = files.map((file) => ({
+        userId,
+        professionalId,
+        relatedModel: "FeaturedProject",
+        relatedModelId: id,
+        fileName: file.originalname,
+        filePath: file.path,
+        fileType: file.mimetype.startsWith('image/') ? 'photo' : 'video',
+        fileSize: file.size,
+        metaData: { mimetype: file.mimetype },
+      }));
+
+      const savedFiles = await File.insertMany(fileDocs, { session });
+      newFileIds = savedFiles.map(file => file._id);
+      
+      // Set fileIds to only new files (replacing old ones)
+      data.fileIds = newFileIds;
+    }
+
+    // Prepare update data
+    const updateData = { ...data };
+    if (data.duration) {
+      updateData.duration = {
+        type: data.duration.type,
+        value: data.duration.value
+      };
+    }
+
+    // Update the featured project
+    const updatedProject = await FeaturedProject.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, session }
+    ).populate('fileIds');
+
+    // Delete old files from server and database after successful update
+    if (oldFileIdsToDelete.length > 0) {
+      await deleteFilesByIds(oldFileIdsToDelete);
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return updatedProject;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error.message || "Failed to update featured project with files");
+  }
+}
+
+export async function deleteFeaturedProject(id) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Get the featured project with its files
+    const featuredProject = await FeaturedProject.findById(id).populate('fileIds').session(session);
+    if (!featuredProject) {
+      throw new Error("Featured project not found");
+    }
+
+    // Delete all associated files from server and database
+    if (featuredProject.fileIds && featuredProject.fileIds.length > 0) {
+      const fileIds = featuredProject.fileIds.map(file => file._id);
+      await deleteFilesByIds(fileIds);
+    }
+
+    // Delete the featured project
+    await FeaturedProject.findByIdAndDelete(id).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return { success: true, message: "Featured project and associated files deleted successfully" };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error.message || "Failed to delete featured project");
+  }
+}
+
+export async function addFilesToFeaturedProject(id, fileIds) {
+  return FeaturedProject.findByIdAndUpdate(
+    id,
+    { $push: { fileIds: { $each: fileIds } } },
+    { new: true }
+  ).populate('fileIds').exec();
+}
+
+export async function removeFilesFromFeaturedProject(id, fileIds) {
+  return FeaturedProject.findByIdAndUpdate(
+    id,
+    { $pull: { fileIds: { $in: fileIds } } },
+    { new: true }
+  ).populate('fileIds').exec();
+}
+
+export async function addProfessionalFile(professionalId, fileData) {
+  const file = new File({
+    professionalId,
+    ...fileData,
+  });
+  return file.save();
+}
+
+export async function getProfessionalFiles(professionalId, filters = {}) {
+  const query = { professionalId, ...filters };
+  return File.find(query).exec();
+}
+
+export async function deleteProfessionalFile(fileId) {
+  return File.findByIdAndDelete(fileId).exec();
 }

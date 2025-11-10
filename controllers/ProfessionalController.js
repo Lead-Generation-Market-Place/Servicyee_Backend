@@ -1,4 +1,5 @@
 import Professional from "../models/ProfessionalModel.js";
+import File from "../models/fileModel.js";
 import {
   createProfessional,
   getProfessionalByUserId,
@@ -14,7 +15,18 @@ import {
   createProfessionalServicesAnswers,
   createProAccountStepNine,
   createProfessionalAccountReview,
-getProfessionalProfileSummary,
+  getProfessionalProfileSummary,
+  createFeaturedProject,
+  createFeaturedProjectWithFiles,
+  getFeaturedProjectById,
+  getFeaturedProjects,
+  getFeaturedProjectsByService,
+  updateFeaturedProject,
+  updateFeaturedProjectWithFiles,
+  deleteFeaturedProject,
+  deleteFilesByIds,
+  addFilesToFeaturedProject,
+  removeFilesFromFeaturedProject,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -470,6 +482,255 @@ export async function getProfessionalProfile(req, res) {
     res.status(404).json({
       success: false,
       message: error.message,
+    });
+  }
+}
+
+// FeaturedProject Controller Methods
+
+export async function createFeaturedProjectHandler(req, res) {
+  try {
+    const data = req.body;
+    const files = req.files;
+    const userId = req.user?.id;
+    const professionalId = req.body.professionalId;
+
+    let featuredProject;
+    if (files && files.length > 0) {
+      // If files are uploaded, use the enhanced method
+      featuredProject = await createFeaturedProjectWithFiles(data, files, userId, professionalId);
+    } else {
+      // If no files, use the basic method
+      featuredProject = await createFeaturedProject(data);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "Featured project created successfully",
+      featuredProject,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error creating featured project",
+      error: error.message,
+    });
+  }
+}
+
+export async function getFeaturedProjectByIdHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const featuredProject = await getFeaturedProjectById(id);
+    if (!featuredProject) {
+      return res.status(404).json({
+        success: false,
+        message: "Featured project not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      featuredProject,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching featured project",
+      error: error.message,
+    });
+  }
+}
+
+export async function getFeaturedProjectsHandler(req, res) {
+  try {
+    const filters = req.query;
+    const featuredProjects = await getFeaturedProjects(filters);
+    res.status(200).json({
+      success: true,
+      featuredProjects,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching featured projects",
+      error: error.message,
+    });
+  }
+}
+
+export async function getFeaturedProjectsByServiceHandler(req, res) {
+  try {
+    const { serviceId } = req.params;
+    const featuredProjects = await getFeaturedProjectsByService(serviceId);
+    res.status(200).json({
+      success: true,
+      featuredProjects,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching featured projects by service",
+      error: error.message,
+    });
+  }
+}
+
+export async function updateFeaturedProjectHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const files = req.files;
+    const userId = req.user?.id;
+    const professionalId = req.body.professionalId;
+
+    let featuredProject;
+    if (files && files.length > 0) {
+      // If files are uploaded, use the enhanced method
+      featuredProject = await updateFeaturedProjectWithFiles(id, data, files, userId, professionalId);
+    } else {
+      // If no files, use the basic method
+      featuredProject = await updateFeaturedProject(id, data);
+    }
+
+    if (!featuredProject) {
+      return res.status(404).json({
+        success: false,
+        message: "Featured project not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Featured project updated successfully",
+      featuredProject,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating featured project",
+      error: error.message,
+    });
+  }
+}
+
+export async function deleteFeaturedProjectHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const featuredProject = await deleteFeaturedProject(id);
+    if (!featuredProject) {
+      return res.status(404).json({
+        success: false,
+        message: "Featured project not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Featured project deleted successfully",
+      featuredProject,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error deleting featured project",
+      error: error.message,
+    });
+  }
+}
+
+export async function addFilesToFeaturedProjectHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const { fileIds } = req.body;
+    if (!Array.isArray(fileIds) || fileIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "fileIds must be a non-empty array",
+      });
+    }
+    const featuredProject = await addFilesToFeaturedProject(id, fileIds);
+    if (!featuredProject) {
+      return res.status(404).json({
+        success: false,
+        message: "Featured project not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Files added to featured project successfully",
+      featuredProject,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error adding files to featured project",
+      error: error.message,
+    });
+  }
+}
+
+export async function removeFilesFromFeaturedProjectHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const { fileIds } = req.body;
+    if (!Array.isArray(fileIds) || fileIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "fileIds must be a non-empty array",
+      });
+    }
+    const featuredProject = await removeFilesFromFeaturedProject(id, fileIds);
+    if (!featuredProject) {
+      return res.status(404).json({
+        success: false,
+        message: "Featured project not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Files removed from featured project successfully",
+      featuredProject,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error removing files from featured project",
+      error: error.message,
+    });
+  }
+}
+
+export async function addProfessionalFiles(req, res) {
+  try {
+    const { userId, professionalId, relatedModel, relatedModelId, fileType } = req.body;
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: "No files uploaded" });
+    }
+
+    const fileDocs = req.files.map((file) => ({
+      userId,
+      professionalId,
+      relatedModel,
+      relatedModelId,
+      fileName: file.originalname,
+      filePath: file.path,
+      fileType,
+      fileSize: file.size,
+      metaData: { mimetype: file.mimetype },
+    }));
+
+    const savedFiles = await File.insertMany(fileDocs);
+
+    res.status(201).json({
+      success: true,
+      message: "Files uploaded successfully",
+      files: savedFiles,
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error uploading files",
+      error: error.message,
     });
   }
 }
