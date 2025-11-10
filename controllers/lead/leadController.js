@@ -237,7 +237,8 @@ export const getLeadByProfessionalId = async (req, res) => {
     if (!professionalLeads || professionalLeads.length === 0) {
       return res.status(404).json({
         success:false,
-        message:"No leads found for this professional"
+        message:"No leads found for this professional",
+        data: []
       });
     } 
     return res.status(200).json({
