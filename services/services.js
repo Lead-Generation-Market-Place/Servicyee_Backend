@@ -6,6 +6,9 @@ import mongoose from "mongoose";
 import questionModel from "../models/questionModel.js";
 import answer from "./answer.js";
 import LocationModel from "../models/LocationModel.js";
+import { response } from "express";
+import Professional from "../models/ProfessionalModel.js";
+import leadModel from "../models/leadModel.js";
 
 class ServicesService {
   // ✅ Get all services
@@ -464,3 +467,46 @@ async deleteProfessionalService(proServiceId) {
 }
 
 export default new ServicesService();
+
+
+
+// get Professional Services or All services of Professional 
+export async function getProfessionalServices(userId) {
+  try {
+    const professional = await Professional.findOne({ user_id: userId });
+    if (!professional) {
+      return { success: false, message: "Professional not found" };
+    }
+    const services = await ProfessionalServicesModel.find({
+      professional_id: professional._id,
+    })
+      .populate("location_ids")   
+      .populate("question_ids")  
+      .lean();  
+      
+          const servicesWithLeadCounts = await Promise.all(
+      services.map(async (service) => {
+        const totalLeads = await leadModel.countDocuments({
+          service_id: new mongoose.Types.ObjectId(service.service_id || service._id),
+        });
+
+        return {
+          ...service,
+          totalLeads,
+        };
+      })
+    );
+      
+    return {
+      success: true,
+      professional,
+      services: servicesWithLeadCounts,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Error retrieving professional services",
+      error: error.message,
+    };
+  }
+}

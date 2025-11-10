@@ -1,4 +1,4 @@
-import servicesService from '../services/services.js';
+import servicesService, { getProfessionalServices } from '../services/services.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -285,3 +285,38 @@ export const updateServicePricing = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+
+// get Professional Services of Active User 
+
+export async function GetProfessionalServices(req, res)
+{
+ try {
+    const userId = req.user?._id || req.user?.id || req.params.id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+    const services = await getProfessionalServices(userId);
+    if (!services) {
+      return res.status(404).json({
+        success: false,
+        message: "Professional services not found for this user",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Professional services retrieved successfully",
+      services: services,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching professional services",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
