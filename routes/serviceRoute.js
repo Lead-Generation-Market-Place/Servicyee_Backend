@@ -11,12 +11,14 @@ import {
   getProfessionalCount
   , toggleServiceStatus,
   featuredServicesHandler,fetchAllServicesOfAProfessional,
-  updateProfessionalService,deleteProService,addServicePricing,updateServicePricing
+  updateProfessionalService,deleteProService,addServicePricing,updateServicePricing,
+  GetProfessionalServices
 } from '../controllers/serviceController.js';
 
 
 import  fileupload  from "../config/multer.js";
 import { uploadFile } from '../controllers/ProfessionalController.js';
+import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -26,6 +28,13 @@ router.put('/toggle-service-status', toggleServiceStatus);
 router.get('/auth/:id', getServicesOFAuthenticatedUser);
 router.get('/pro/:id', fetchAllServicesOfAProfessional);
 router.post('/asp', assignServiceToProfessional);
+
+
+
+// services Management Routes
+router.get('/services-management/:id', authenticateToken, GetProfessionalServices)
+
+// end of services Management Routes
 
 // ✅ General routes
 router.get('/', getServices);
