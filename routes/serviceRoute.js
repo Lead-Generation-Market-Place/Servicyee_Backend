@@ -12,7 +12,8 @@ import {
   , toggleServiceStatus,
   featuredServicesHandler,fetchAllServicesOfAProfessional,
   updateProfessionalService,deleteProService,addServicePricing,updateServicePricing,
-  GetProfessionalServices
+  GetProfessionalServices,
+  updateProfessionalServiceStatus
 } from '../controllers/serviceController.js';
 
 
@@ -33,6 +34,8 @@ router.post('/asp', assignServiceToProfessional);
 
 // services Management Routes
 router.get('/services-management/:id', authenticateToken, GetProfessionalServices)
+router.put('/service_status', authenticateToken, updateProfessionalServiceStatus)
+
 
 // end of services Management Routes
 
