@@ -515,19 +515,20 @@ export async function updateServiceStatusServices(professional_id, service_id, s
       { service_status },
       { new: true, runValidators: true }
     );
+
     if (!service) {
       return {
         success: false,
         message: "No matching service found to update",
       };
     }
-
     return {
       success: true,
       message: "Service status updated successfully",
       data: service,
     };
   } catch (error) {
+    console.error("Error in updateServiceStatusServices:", error);
     return {
       success: false,
       message: "Error updating professional service status",

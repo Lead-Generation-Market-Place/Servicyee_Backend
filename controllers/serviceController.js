@@ -325,25 +325,34 @@ export async function GetProfessionalServices(req, res)
 export const updateProfessionalServiceStatus = async (req, res) => {
   try {
     const { professional_id, service_id, service_status } = req.body;
+
     if (!professional_id || !service_id) {
       return res.status(400).json({
         success: false,
         message: "professional_id and service_id are required.",
       });
     }
-    const service = await updateServiceStatusServices(professional_id, service_id, service_status);
+
+    const service = await updateServiceStatusServices(
+      professional_id,
+      service_id,
+      service_status
+    );
+
     if (!service || !service.success) {
       return res.status(404).json({
         success: false,
         message: "No matching service found to update.",
       });
     }
+
     return res.status(200).json({
       success: true,
       message: "Service status updated successfully.",
-      data: service.data || service, // depends on your updateServiceStatusServices return
+      data: service.data,
     });
   } catch (error) {
+    console.error("Error updating professional service status:", error);
     return res.status(500).json({
       success: false,
       message: "Server error while updating service status.",
@@ -351,3 +360,4 @@ export const updateProfessionalServiceStatus = async (req, res) => {
     });
   }
 };
+
