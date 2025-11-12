@@ -15,7 +15,7 @@ import {
 	createProfessionalStepEight,
 	getServicesQuestionsPro,
 	createProfessionalStepNine,
-	createProfessionalReview
+	createProfessionalGetSteps
 } from '../controllers/ProfessionalController.js';
 import createUploader from '../config/multer.js';  
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
@@ -35,7 +35,7 @@ router.put('/availability/:id', authenticateToken, createProfessionalStepSeven);
 router.post('/services-answers', authenticateToken, createProfessionalStepEight);
 router.post('/servicesLocation', authenticateToken, createProfessionalStepNine);
 router.get('/questionsAnswers', authenticateToken, getServicesQuestionsPro);
-router.get('/profileReviews', authenticateToken, createProfessionalReview);
+router.get('/professional_steps', authenticateToken, createProfessionalGetSteps);
 router.post('/profileReviewsCustomer', authenticateToken, SendReviewEmailCustomer);
 router.get('/progress', authenticateToken, getProfessionalByUserIdHandler);
 // End of Professional Registration Route with account cretion
