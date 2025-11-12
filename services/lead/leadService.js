@@ -227,7 +227,7 @@ export const getProfessionalLeads = async (professionalId) => {
           'lead.created_at': 1,
           'lead.service.name': 1,
           'lead.service.category': 1,
-          'lead.user.name': 1,
+          'lead.user.username': 1,
           'lead.user.email': 1,
           'lead.user.phone': 1
         }
@@ -243,3 +243,25 @@ export const getProfessionalLeads = async (professionalId) => {
     throw error;
   }
 }
+
+export const getLeadByIdService = async (leadId) => {
+  try {
+    // Find main lead info
+    const lead = await Lead.findById(leadId).populate("user_id");
+
+    if (!lead) throw new Error("Lead not found");
+
+    // Find all professional leads related to this lead
+    const professionalLeads = await ProfessionalLead.find({ lead_id: leadId })
+     
+      .populate("lead_id"); // optional if you want the lead info here too
+
+    return {
+      ...lead.toObject(),
+      professionalLeads,
+    };
+  } catch (error) {
+    console.error("Error fetching lead:", error);
+    throw error;
+  }
+};

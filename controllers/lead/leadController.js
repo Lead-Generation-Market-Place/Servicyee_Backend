@@ -1,4 +1,4 @@
-import { acceptLeadService, createLeadService, getProfessionalLeads } from "../../services/lead/leadService.js";
+import { acceptLeadService, createLeadService, getProfessionalLeads, getLeadByIdService } from "../../services/lead/leadService.js";
 import {User} from "../../models/user.js";
 import { leadValidationSchema } from "../../validators/leadValidator.js";
 import mongoose from 'mongoose';
@@ -255,5 +255,31 @@ export const getLeadByProfessionalId = async (req, res) => {
       data: []
     });
 
+  }
+}
+
+
+export const getLeadById = async (req, res) => {
+  try {
+    const leadId = req.params.leadId;
+    if (!leadId) {
+      return res.status(400).json({
+        success:false,
+        message:"Lead ID is required"
+      });
+    }
+    const response = await getLeadByIdService(leadId);
+    return res.status(200).json({
+      success:true,
+      message:"Lead fetched successfully",
+      data: response
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Unable to fetch lead",
+      data: null,
+      error:error?.message || "An unexpected error occured",
+    });
   }
 }
