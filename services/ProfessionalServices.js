@@ -10,6 +10,8 @@ import Answer from "../models/answerModel.js";
 import LocationModel from "../models/LocationModel.js";
 import FeaturedProject from "../models/featuredProjectModel.js";
 import File from "../models/fileModel.js";
+import Faq from "../models/faqModel.js";
+import FaqQuestion from "../models/faqquestionsModel.js";
 import fs from 'fs';
 import path from 'path';
 
@@ -508,13 +510,10 @@ export async function createProfessionalAccountReview(professional_id) {
  //Noor Ahmad Bashery
 export async function getProfessionalProfileSummary(userId) {
   const professional = await Professional.findOne({user_id: userId});
-    
-  
     console.info("Professional Profile Summary:", professional);
   if (!professional) {
     throw new Error("Professional not found");
   }
-
   return professional;
 }
 
@@ -809,4 +808,47 @@ export async function getProfessionalFiles(professionalId, filters = {}) {
 
 export async function deleteProfessionalFile(fileId) {
   return File.findByIdAndDelete(fileId).exec();
+}
+
+// Simple FAQ Service Methods (Only What You Need)
+
+export async function addQuestion(questionText) {
+  const faqQuestion = new FaqQuestion({
+    question: questionText.trim()
+  });
+  return faqQuestion.save();
+}
+
+export async function getAllQuestions() {
+  return FaqQuestion.find().sort({ createdAt: -1 }).lean();
+}
+
+export async function addAnswer(questionId, professionalId, answerText) {
+  const faq = new Faq({
+    question_id: questionId,
+    professional_id: professionalId,
+    answer: answerText.trim()
+  });
+  return faq.save();
+}
+
+export async function getFaqsByProfessional(professionalId) {
+  // Get all questions with their answers for this professional
+  const questions = await FaqQuestion.find().sort({ createdAt: -1 }).lean();
+  
+  const answers = await Faq.find({ 
+    professional_id: professionalId 
+  }).lean();
+  
+  // Map answers to questions
+  const questionsWithAnswers = questions.map(question => {
+    const answer = answers.find(a => a.question_id.toString() === question._id.toString());
+    return {
+      ...question,
+      answer: answer ? answer.answer : null,
+      faq_id: answer ? answer._id : null
+    };
+  });
+  
+  return questionsWithAnswers;
 }

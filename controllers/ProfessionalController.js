@@ -27,6 +27,11 @@ import {
   deleteFilesByIds,
   addFilesToFeaturedProject,
   removeFilesFromFeaturedProject,
+  // Simple FAQ Service Imports
+
+  getAllQuestions,
+  getFaqsByProfessional,
+
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -46,7 +51,7 @@ export async function createProfessionalHandler(req, res) {
 
 export async function getProfessionalByUserIdHandler(req, res) {
   try {
-    const user_id = req.user.id; // Get authenticated user id from JWT middleware
+    const user_id = req.user.id;
 
     const professional = await getProfessionalByUserId(user_id);
     if (!professional)
@@ -108,7 +113,6 @@ export async function uploadFile(req, res) {
         .status(400)
         .json({ success: false, message: "No file uploaded" });
     }
-    // You can save file info to DB or just return the file path
     res.status(200).json({
       success: true,
       message: "File uploaded successfully",
@@ -231,7 +235,6 @@ export async function createProfessionalAccount(req, res) {
     });
   }
 }
-// End of Professional Account creation
 
 // Create Professional Account Step 03
 export async function createProfessionalStepThree(req, res) {
@@ -390,7 +393,6 @@ export async function createProfessionalStepEight(req, res) {
   }
 }
 
-
 // Create Professional Step 09 
 export async function createProfessionalStepNine(req, res) {
   const data = req.body;
@@ -455,7 +457,6 @@ export async function createProfessionalReview(req, res) {
   }
 }
 
-
 //Noor Ahmad Bashery
 
 export async function getProfessionalProfile(req, res) {
@@ -463,7 +464,6 @@ export async function getProfessionalProfile(req, res) {
     const userId = req.user?.id || req.params.id;
     const professional = await getProfessionalProfileSummary(userId);
 
-    // ✅ use correct field name: profile_image
     const profileWithUrl = professional.profile_image
       ? professional.profile_image.startsWith("http")
         ? professional.profile_image
@@ -471,11 +471,8 @@ export async function getProfessionalProfile(req, res) {
       : null;
 
     res.status(200).json({
- 
-
-        businessName: professional.business_name,
-        profile: profileWithUrl,
-    
+      businessName: professional.business_name,
+      profile: profileWithUrl,
     });
   } catch (error) {
     console.error("Error fetching profile:", error);
@@ -497,10 +494,8 @@ export async function createFeaturedProjectHandler(req, res) {
 
     let featuredProject;
     if (files && files.length > 0) {
-      // If files are uploaded, use the enhanced method
       featuredProject = await createFeaturedProjectWithFiles(data, files, userId, professionalId);
     } else {
-      // If no files, use the basic method
       featuredProject = await createFeaturedProject(data);
     }
 
@@ -585,10 +580,8 @@ export async function updateFeaturedProjectHandler(req, res) {
 
     let featuredProject;
     if (files && files.length > 0) {
-      // If files are uploaded, use the enhanced method
       featuredProject = await updateFeaturedProjectWithFiles(id, data, files, userId, professionalId);
     } else {
-      // If no files, use the basic method
       featuredProject = await updateFeaturedProject(id, data);
     }
 
@@ -730,6 +723,132 @@ export async function addProfessionalFiles(req, res) {
     res.status(500).json({
       success: false,
       message: "Error uploading files",
+      error: error.message,
+    });
+  }
+}
+
+// Simple FAQ Controller Methods
+
+export async function createFaqQuestionHandler(req, res) {
+  try {
+    const { question } = req.body;
+    
+    if (!question || question.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Question is required"
+      });
+    }
+
+    const faqQuestion = await createFaqQuestion(question.trim());
+
+    res.status(201).json({
+      success: true,
+      message: "FAQ question created successfully",
+      faq: faqQuestion,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error creating FAQ question",
+      error: error.message,
+    });
+  }
+}
+
+export async function getAllQuestionsHandler(req, res) {
+  try {
+    const questions = await getAllQuestions();
+    
+    res.status(200).json({
+      success: true,
+      questions,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching questions",
+      error: error.message,
+    });
+  }
+}
+
+export async function getFaqsByProfessionalHandler(req, res) {
+  try {
+    const { professionalId } = req.params;
+
+    const faqs = await getFaqsByProfessional(professionalId);
+    
+    res.status(200).json({
+      success: true,
+      faqs,
+      total: faqs.length
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching FAQs",
+      error: error.message,
+    });
+  }
+}
+
+export async function updateFaqAnswerHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const { answer } = req.body;
+
+    if (!answer || answer.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Answer is required"
+      });
+    }
+
+    const updatedFaq = await updateFaqAnswer(id, answer.trim());
+
+    if (!updatedFaq) {
+      return res.status(404).json({
+        success: false,
+        message: "FAQ not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "FAQ answer updated successfully",
+      faq: updatedFaq,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating FAQ answer",
+      error: error.message,
+    });
+  }
+}
+
+export async function deleteFaqHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const deletedFaq = await deleteFaq(id);
+
+    if (!deletedFaq) {
+      return res.status(404).json({
+        success: false,
+        message: "FAQ not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "FAQ deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error deleting FAQ",
       error: error.message,
     });
   }

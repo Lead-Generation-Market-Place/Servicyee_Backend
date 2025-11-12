@@ -27,6 +27,12 @@ import {
 	addFilesToFeaturedProjectHandler,
 	removeFilesFromFeaturedProjectHandler
 } from '../controllers/ProfessionalController.js';
+import {
+	addQuestionHandler,
+	getAllQuestionsHandler,
+	addAnswerHandler,
+	getFaqsByProfessionalHandler
+} from '../controllers/FAQController.js';
 import createUploader from '../config/multer.js';
 import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
@@ -90,5 +96,11 @@ router.delete('/featured-projects/:id/files', authenticateToken, removeFilesFrom
 
 // Search Log Routes
 router.get('/search', searchProfessionalsController);
+
+// Simple FAQ Routes (Just What You Need)
+router.post('/faq/questions', authenticateToken, addQuestionHandler);
+router.get('/faq/questions', authenticateToken, getAllQuestionsHandler);
+router.post('/faq/answers', authenticateToken, addAnswerHandler);
+router.get('/faq/:professionalId/faqs', authenticateToken, getFaqsByProfessionalHandler);
 
 export default router;
