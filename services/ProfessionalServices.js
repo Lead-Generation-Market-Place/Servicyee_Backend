@@ -356,9 +356,11 @@ export async function createProfessionalServicesAnswers(
 export async function createProAccountStepNine(data) {
   const session = await mongoose.startSession();
   session.startTransaction();
+
   try {
     const {
-      professional_id, // Single professional ID
+      professional_id,
+      service_id,
       lat,
       lng,
       city,
@@ -368,20 +370,9 @@ export async function createProAccountStepNine(data) {
       address_line,
     } = data;
 
-    if (!professional_id) throw new Error("Professional ID is required.");
-
-    // Find ALL professional services for this professional
-    const services = await ProfessionalService.find({
-      professional_id: professional_id,
-    }).session(session);
-
-    if (!services || services.length === 0) {
-      throw new Error(
-        "No professional services found for the provided professional ID."
-      );
+    if (!professional_id || !service_id) {
+      throw new Error("professional_id and service_id are required.");
     }
-
-    // Calculate zipcodes within radius
     let zipcodes = [];
     if (radiusMiles && radiusMiles > 0) {
       const radiusMeters = radiusMiles * 1609.34;
@@ -394,59 +385,66 @@ export async function createProAccountStepNine(data) {
           },
         })
         .session(session);
-
       zipcodes = nearbyZips.map((z) => z.zip);
     }
 
-    const savedLocations = [];
-    for (const service of services) {
-      await Location.deleteMany({
-        professional_id: professional_id,
-        service_id: service.service_id,
-      }).session(session);
-      const locationDoc = {
-        type: "professional",
-        professional_id: professional_id,
-        service_id: service.service_id,
-        country: country || "USA",
-        state: state || "",
-        city: city || "",
-        zipcode: zipcodes,
-        address_line: address_line || "",
-        coordinates: { type: "Point", coordinates: [lng, lat] },
-        serviceRadiusMiles: radiusMiles || 0,
-      };
-      const savedLocation = await Location.create([locationDoc], { session });
-      service.location_ids = [savedLocation[0]._id];
-      await service.save({ session });
-      savedLocations.push({
-        service_id: service.service_id,
-        service_name: service.service_name,
-        location: savedLocation[0],
-      });
+    const locationData = {
+      type: "professional",
+      professional_id,
+      service_id,
+      country: country || "USA",
+      state: state || "",
+      city: city || "",
+      zipcode: zipcodes,
+      address_line: address_line || "",
+      coordinates: { type: "Point", coordinates: [lng, lat] },
+      serviceRadiusMiles: radiusMiles || 0,
+    };
+
+    const existingLocation = await Location.findOne({
+      professional_id,
+      service_id,
+    }).session(session);
+
+    let locationDoc;
+
+    if (existingLocation) {
+      Object.assign(existingLocation, locationData);
+      locationDoc = await existingLocation.save({ session });
+    } else {
+      const [newLocation] = await Location.create([locationData], { session });
+      locationDoc = newLocation;
     }
-        const professional = await Professional.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(professional_id) }, 
-      { step: 9 }, // update
-      { new: true, runValidators: true, session } 
+    const service = await ProfessionalService.findOneAndUpdate(
+      { professional_id, service_id },
+      { location_ids: [locationDoc._id] },
+      { new: true, session }
+    );
+    await Professional.findOneAndUpdate(
+      { _id: professional_id },
+      { step: 9 },
+      { session }
     );
 
     await session.commitTransaction();
     session.endSession();
 
     return {
-      professional_id: professional_id,
-      total_services: services.length,
-      locations: savedLocations, // Array of locations with their service IDs
+      success: true,
+      message: "Location saved successfully.",
+      location: locationDoc,
+      service,
     };
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    throw new Error(
-      error.message || "Failed to create or update professional locations"
-    );
+    throw new Error(error.message || "Failed to save location");
   }
 }
+
+
+
+
 
 export async function createProfessionalAccountReview(professional_id) {
   if (!professional_id) throw new Error("Professional ID is required.");

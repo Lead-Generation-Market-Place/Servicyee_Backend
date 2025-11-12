@@ -515,7 +515,6 @@ export async function updateServiceStatusServices(professional_id, service_id, s
       { service_status },
       { new: true, runValidators: true }
     );
-
     if (!service) {
       return {
         success: false,
@@ -528,7 +527,6 @@ export async function updateServiceStatusServices(professional_id, service_id, s
       data: service,
     };
   } catch (error) {
-    console.error("Error in updateServiceStatusServices:", error);
     return {
       success: false,
       message: "Error updating professional service status",
