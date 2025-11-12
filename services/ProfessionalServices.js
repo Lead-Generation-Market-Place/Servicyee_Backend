@@ -448,7 +448,7 @@ export async function createProAccountStepNine(data) {
 
 
 
-export async function createProfessionalAccountReview(professional_id) {
+export async function createProfessionalReview(professional_id) {
   if (!professional_id) throw new Error("Professional ID is required.");
 
   try {
