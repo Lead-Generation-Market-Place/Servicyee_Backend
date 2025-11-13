@@ -398,45 +398,52 @@ class ServicesService {
     return deleted;
   }
 
-  async addServicePricing(professionalId, serviceId, pricingData) {
-    // Validate IDs
-    if (!mongoose.Types.ObjectId.isValid(professionalId)) {
-      throw new Error("Valid professionalId is required");
+// Adde service pricing for professional service
+ async  addServicePricing(professional_id, service_id, pricingData) {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(professional_id)) {
+      throw new Error("A valid professional_id is required.");
     }
-    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-      throw new Error("Valid serviceId is required");
+    if (!mongoose.Types.ObjectId.isValid(service_id)) {
+      throw new Error("A valid service_id is required.");
     }
-
-    // Find the professional-service record
-    const professionalService = await ProfessionalServicesModel.findOne({
-      professional_id: professionalId,
-      service_id: serviceId,
-    });
-
-    if (!professionalService) {
-      throw new Error(
-        "Professional service not found for the given professional and service IDs"
-      );
+    const updatedService = await professionalServicesModel.findOneAndUpdate(
+      { professional_id, service_id }, 
+      { $set: pricingData },        
+      { new: true, runValidators: true } 
+    );
+    if (!updatedService) {
+      return {
+        success: false,
+        message: "No matching professional service found to update.",
+      };
     }
-
-    // Update only the specified fields
-    const allowedFields = [
-      "maximum_price",
-      "minimum_price",
-      "description",
-      "pricing_type",
-      "completed_tasks",
-    ];
-
-    for (const field of allowedFields) {
-      if (pricingData[field] !== undefined) {
-        professionalService[field] = pricingData[field];
-      }
-    }
-
-    // Save updated record
-    return await professionalService.save();
+    return {
+      success: true,
+      message: "Service pricing added successfully.",
+      data: updatedService,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Error updating service pricing.",
+      error: error?.message || "An unexpected error occurred.",
+    };
   }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   async updateServicePricing(professionalId, serviceId, updateData) {
     if (!mongoose.Types.ObjectId.isValid(professionalId)) {
