@@ -435,12 +435,6 @@ export const getServiceQuestionsByServiceId = async (req, res) => {
       });
     }
     const questions = await fetchServiceQuestionsByServiceId(service_id);
-    if (!questions || questions.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No questions found for this service.",
-      });
-    }
     return res.status(200).json({
       success: true,
       message: "Service questions retrieved successfully.",
