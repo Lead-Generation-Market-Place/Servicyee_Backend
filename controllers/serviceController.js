@@ -1,5 +1,6 @@
 import servicesService, {
   CreateNewServiceProfessional,
+  fetchServiceQuestionsByServiceId,
   getProfessionalServices,
   updateServiceStatusServices,
 } from "../services/services.js";
@@ -421,3 +422,35 @@ export async function CreateService(req, res) {
     });
   }
 }
+
+
+//  Get Service Questions by Service ID
+export const getServiceQuestionsByServiceId = async (req, res) => {
+  const service_id = req.params.id;
+  try {
+    if (!service_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Service ID is required.",
+      });
+    }
+    const questions = await fetchServiceQuestionsByServiceId(service_id);
+    if (!questions || questions.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No questions found for this service.",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Service questions retrieved successfully.",
+      data: questions,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error retrieving service questions.",
+      error: error?.message || "An unexpected error occurred.",
+    });
+  }
+};

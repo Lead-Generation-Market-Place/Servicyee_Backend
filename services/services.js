@@ -3,13 +3,13 @@ import ServiceModel from "../models/servicesModel.js";
 import ProfessionalServicesModel from "../models/professionalServicesModel.js";
 import answerModel from "../models/answerModel.js";
 import mongoose from "mongoose";
-import questionModel from "../models/questionModel.js";
 import answer from "./answer.js";
 import LocationModel from "../models/LocationModel.js";
 import { response } from "express";
 import Professional from "../models/ProfessionalModel.js";
 import leadModel from "../models/leadModel.js";
 import professionalServicesModel from "../models/professionalServicesModel.js";
+import questionModel from "../models/questionModel.js";
 
 class ServicesService {
   // ✅ Get all services
@@ -398,52 +398,39 @@ class ServicesService {
     return deleted;
   }
 
-// Adde service pricing for professional service
- async  addServicePricing(professional_id, service_id, pricingData) {
-  try {
-    if (!mongoose.Types.ObjectId.isValid(professional_id)) {
-      throw new Error("A valid professional_id is required.");
-    }
-    if (!mongoose.Types.ObjectId.isValid(service_id)) {
-      throw new Error("A valid service_id is required.");
-    }
-    const updatedService = await professionalServicesModel.findOneAndUpdate(
-      { professional_id, service_id }, 
-      { $set: pricingData },        
-      { new: true, runValidators: true } 
-    );
-    if (!updatedService) {
+  // Adde service pricing for professional service
+  async addServicePricing(professional_id, service_id, pricingData) {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(professional_id)) {
+        throw new Error("A valid professional_id is required.");
+      }
+      if (!mongoose.Types.ObjectId.isValid(service_id)) {
+        throw new Error("A valid service_id is required.");
+      }
+      const updatedService = await professionalServicesModel.findOneAndUpdate(
+        { professional_id, service_id },
+        { $set: pricingData },
+        { new: true, runValidators: true }
+      );
+      if (!updatedService) {
+        return {
+          success: false,
+          message: "No matching professional service found to update.",
+        };
+      }
+      return {
+        success: true,
+        message: "Service pricing added successfully.",
+        data: updatedService,
+      };
+    } catch (error) {
       return {
         success: false,
-        message: "No matching professional service found to update.",
+        message: "Error updating service pricing.",
+        error: error?.message || "An unexpected error occurred.",
       };
     }
-    return {
-      success: true,
-      message: "Service pricing added successfully.",
-      data: updatedService,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: "Error updating service pricing.",
-      error: error?.message || "An unexpected error occurred.",
-    };
   }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   async updateServicePricing(professionalId, serviceId, updateData) {
     if (!mongoose.Types.ObjectId.isValid(professionalId)) {
@@ -573,3 +560,22 @@ export async function CreateNewServiceProfessional(data) {
     );
   }
 }
+
+/**
+ * Fetch all questions for a given service ID
+ * @param {string} serviceId
+ * @returns {Promise<Array>} Array of questions
+ */
+export const fetchServiceQuestionsByServiceId = async (serviceId) => {
+  try {
+    if (!serviceId) {
+      throw new Error("Service ID is required.");
+    }
+    const questions = await questionModel
+      .find({ service_id: serviceId })
+      .sort({ created_at: 1 });
+    return questions;
+  } catch (error) {
+    throw new Error(error?.message || "Failed to fetch service questions.");
+  }
+};
