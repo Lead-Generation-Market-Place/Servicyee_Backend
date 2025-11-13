@@ -13,7 +13,8 @@ import {
   featuredServicesHandler,fetchAllServicesOfAProfessional,
   updateProfessionalService,deleteProService,addServicePricing,updateServicePricing,
   GetProfessionalServices,
-  updateProfessionalServiceStatus
+  updateProfessionalServiceStatus,
+  CreateService
 } from '../controllers/serviceController.js';
 
 
@@ -38,6 +39,7 @@ router.post('/asp', assignServiceToProfessional);
 router.get('/services-management', authenticateToken, GetProfessionalServices)
 router.put('/service_status', authenticateToken, updateProfessionalServiceStatus)
 router.get('/list', authenticateToken, getServices);
+router.post('/create_service', authenticateToken, CreateService);
 // end of services Management Routes
 
 router.get('/', getServices);

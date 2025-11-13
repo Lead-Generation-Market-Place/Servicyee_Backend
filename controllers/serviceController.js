@@ -1,4 +1,4 @@
-import servicesService, { getProfessionalServices, updateServiceStatusServices } from '../services/services.js';
+import servicesService, { CreateNewServiceProfessional, getProfessionalServices, updateServiceStatusServices } from '../services/services.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -361,3 +361,35 @@ export const updateProfessionalServiceStatus = async (req, res) => {
   }
 };
 
+
+// Create New Service - Professional
+export async function CreateService(req, res) {
+  const { service_name, professional_id, service_id } = req.body;
+  try {
+    if (!service_name || !professional_id || !service_id) {
+      return res.status(400).json({
+        success: false,
+        message: "service_name, professional_id, and service_id are required.",
+      });
+    }
+    const professional = await CreateNewServiceProfessional({
+      service_name,
+      professional_id,
+      service_id,
+    });
+    return res.status(201).json({
+      success: true,
+      message: "New service created successfully.",
+      professional,
+    });
+  } catch (error) {
+    if (error.message === "Professional not found.") {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Error creating new service.",
+      error: error?.message || "An unexpected error occurred.",
+    });
+  }
+}

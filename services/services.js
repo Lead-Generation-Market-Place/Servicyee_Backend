@@ -508,7 +508,12 @@ export async function getProfessionalServices(userId) {
   }
 }
 
-export async function updateServiceStatusServices(professional_id, service_id, service_status) {
+// Update Professional Service Status
+export async function updateServiceStatusServices(
+  professional_id,
+  service_id,
+  service_status
+) {
   try {
     const service = await professionalServicesModel.findOneAndUpdate(
       { professional_id, service_id },
@@ -532,5 +537,32 @@ export async function updateServiceStatusServices(professional_id, service_id, s
       message: "Error updating professional service status",
       error: error.message,
     };
+  }
+}
+
+// Create New Service - Professional
+export async function CreateNewServiceProfessional(data) {
+  const { professional_id, service_id, service_name } = data;
+  try {
+    if (!professional_id || !service_id || !service_name) {
+      throw new Error("All fields are required.");
+    }
+    const existingService = await professionalServicesModel.findOne({
+      professional_id,
+      service_id,
+    });
+    if (existingService) {
+      throw new Error("This service already exists for this professional.");
+    }
+    const professional = await professionalServicesModel.create({
+      professional_id,
+      service_id,
+      service_name,
+    });
+    return professional;
+  } catch (error) {
+    throw new Error(
+      error?.message || "Failed to create new professional service."
+    );
   }
 }
