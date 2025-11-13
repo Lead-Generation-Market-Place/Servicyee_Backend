@@ -19,6 +19,7 @@ import {
   updateProfessionalServiceStatus,
   CreateService,
   getServiceQuestionsByServiceId,
+  SubmitAnswersServiceQuestions,
 } from "../controllers/serviceController.js";
 
 import fileupload from "../config/multer.js";
@@ -47,6 +48,8 @@ router.get("/list", authenticateToken, getServices);
 router.post("/create_service", authenticateToken, CreateService);
 router.put("/pricing", authenticateToken, addServicePricing);
 router.get("/service_questions/:id", authenticateToken, getServiceQuestionsByServiceId);
+router.put("/answers_submit", authenticateToken, SubmitAnswersServiceQuestions);
+
 
 // end of services Management Routes
 

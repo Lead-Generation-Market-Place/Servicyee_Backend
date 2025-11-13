@@ -2,6 +2,7 @@ import servicesService, {
   CreateNewServiceProfessional,
   fetchServiceQuestionsByServiceId,
   getProfessionalServices,
+  submitServiceAnswers,
   updateServiceStatusServices,
 } from "../services/services.js";
 import path from "path";
@@ -289,11 +290,12 @@ export const addServicePricing = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error?.message || "An unexpected error occurred while updating service pricing.",
+      message:
+        error?.message ||
+        "An unexpected error occurred while updating service pricing.",
     });
   }
 };
-
 
 export const updateServicePricing = async (req, res) => {
   try {
@@ -423,7 +425,6 @@ export async function CreateService(req, res) {
   }
 }
 
-
 //  Get Service Questions by Service ID
 export const getServiceQuestionsByServiceId = async (req, res) => {
   const service_id = req.params.id;
@@ -444,6 +445,62 @@ export const getServiceQuestionsByServiceId = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Error retrieving service questions.",
+      error: error?.message || "An unexpected error occurred.",
+    });
+  }
+};
+
+
+// Submit Answers to Service Questions for a Professional service
+export const SubmitAnswersServiceQuestions = async (req, res) => {
+  try {
+    const answers = req.body;
+    if (!Array.isArray(answers) || answers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Answers payload must be a non-empty array.",
+      });
+    }
+    const { professional_id, service_id } = answers[0];
+    if (!professional_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Professional ID is required in the answers payload.",
+      });
+    }
+
+    if (!service_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Service ID is required in the answers payload.",
+      });
+    }
+    for (const answer of answers) {
+      const { question_id, answer: ans } = answer;
+      if (!question_id) {
+        return res.status(400).json({
+          success: false,
+          message: "Question ID is required in each answer.",
+        });
+      }
+      if (ans === undefined || ans === null || (Array.isArray(ans) && ans.length === 0)) {
+        return res.status(400).json({
+          success: false,
+          message: `Answer for question_id ${question_id} is missing.`,
+        });
+      }
+    }
+    const inserted = await submitServiceAnswers(answers, professional_id, service_id);
+    return res.status(201).json({
+      success: true,
+      message: "Answers submitted successfully.",
+      data: inserted,
+    });
+  } catch (error) {
+    console.error("SubmitAnswersServiceQuestions error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to submit answers.",
       error: error?.message || "An unexpected error occurred.",
     });
   }

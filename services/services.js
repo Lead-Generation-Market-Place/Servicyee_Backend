@@ -579,3 +579,44 @@ export const fetchServiceQuestionsByServiceId = async (serviceId) => {
     throw new Error(error?.message || "Failed to fetch service questions.");
   }
 };
+
+
+
+// Submit service answers for a professional and service
+export const submitServiceAnswers = async (answers, professional_id, service_id) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const professionalService = await ProfessionalServicesModel.findOne({
+      professional_id: professional_id,
+      service_id: service_id,
+    }).session(session);
+    console.log("Professional Service Found:", professionalService);
+    if (!professionalService) {
+      throw new Error(
+        "Professional service not found for this professional and service ID."
+      );
+    }
+    const questionIds = answers.map((a) => new mongoose.Types.ObjectId(a.question_id));
+    professionalService.question_ids = questionIds;
+    await professionalService.save({ session });
+    const answerDocs = answers.map((a) => ({
+      professional_id: professional_id,
+      service_id: service_id,
+      question_id: new mongoose.Types.ObjectId(a.question_id),
+      answers: a.answer, 
+    }));
+    await answerModel.insertMany(answerDocs, { session });
+    await session.commitTransaction();
+    session.endSession();
+    return {
+      success: true,
+      message: "Service answers submitted successfully.",
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error?.message || "Failed to submit service answers.");
+  }
+};
