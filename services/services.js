@@ -10,6 +10,7 @@ import Professional from "../models/ProfessionalModel.js";
 import leadModel from "../models/leadModel.js";
 import professionalServicesModel from "../models/professionalServicesModel.js";
 import questionModel from "../models/questionModel.js";
+import zipcodeModel from "../models/zipcodeModel.js";
 
 class ServicesService {
   // ✅ Get all services
@@ -327,7 +328,6 @@ class ServicesService {
 
       return enrichedServices;
     } catch (err) {
-      console.error("Error fetching services for professional:", err);
       throw new Error("Unable to retrieve professional services");
     }
   }
@@ -346,7 +346,6 @@ class ServicesService {
     if (!mongoose.Types.ObjectId.isValid(newServiceId)) {
       throw new Error("Valid serviceId is required");
     }
-    console.log(proServiceId, newServiceId);
     // Assign new service_id to updateData
     updateData.service_id = newServiceId;
 
@@ -594,7 +593,6 @@ export const submitServiceAnswers = async (
       professional_id: professional_id,
       service_id: service_id,
     }).session(session);
-    console.log("Professional Service Found:", professionalService);
     if (!professionalService) {
       throw new Error(
         "Professional service not found for this professional and service ID."
@@ -637,6 +635,7 @@ export const createServiceLocationServices = async (payload) => {
       lng,
       city,
       state,
+      radius_miles,
       radiusMiles,
       country,
       address_line,
@@ -645,19 +644,19 @@ export const createServiceLocationServices = async (payload) => {
     if (!professional_id || !service_id) {
       throw new Error("professional_id and service_id are required.");
     }
+    const radius = radius_miles || radiusMiles;
     let zipcodes = [];
-    if (radiusMiles && radiusMiles > 0) {
-      const radiusMeters = radiusMiles * 1609.34;
+    if (radius && radius > 0) {
+      const radiusRadians = radius / 3958.8;
       const nearbyZips = await zipcodeModel
         .find({
           coordinates: {
             $geoWithin: {
-              $centerSphere: [[lng, lat], radiusMeters / 6378137],
+              $centerSphere: [[lng, lat], radiusRadians],
             },
           },
         })
         .session(session);
-
       zipcodes = nearbyZips.map((z) => z.zip);
     }
     const locationData = {
@@ -670,9 +669,11 @@ export const createServiceLocationServices = async (payload) => {
       zipcode: zipcodes,
       address_line: address_line || "",
       coordinates: { type: "Point", coordinates: [lng, lat] },
-      serviceRadiusMiles: radiusMiles || 0,
+      serviceRadiusMiles: radius || 0,
     };
-    const [locationDoc] = await LocationModel.create([locationData], { session });
+    const [locationDoc] = await LocationModel.create([locationData], {
+      session,
+    });
     const service = await ProfessionalServicesModel.findOneAndUpdate(
       { professional_id, service_id },
       { $addToSet: { location_ids: locationDoc._id } },
@@ -682,7 +683,7 @@ export const createServiceLocationServices = async (payload) => {
     session.endSession();
     return {
       success: true,
-      message: " Service Location Saved successfully.",
+      message: "Service Location Saved successfully.",
       location: locationDoc,
       service,
     };
