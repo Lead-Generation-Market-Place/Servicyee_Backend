@@ -580,10 +580,12 @@ export const fetchServiceQuestionsByServiceId = async (serviceId) => {
   }
 };
 
-
-
 // Submit service answers for a professional and service
-export const submitServiceAnswers = async (answers, professional_id, service_id) => {
+export const submitServiceAnswers = async (
+  answers,
+  professional_id,
+  service_id
+) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -598,14 +600,16 @@ export const submitServiceAnswers = async (answers, professional_id, service_id)
         "Professional service not found for this professional and service ID."
       );
     }
-    const questionIds = answers.map((a) => new mongoose.Types.ObjectId(a.question_id));
+    const questionIds = answers.map(
+      (a) => new mongoose.Types.ObjectId(a.question_id)
+    );
     professionalService.question_ids = questionIds;
     await professionalService.save({ session });
     const answerDocs = answers.map((a) => ({
       professional_id: professional_id,
       service_id: service_id,
       question_id: new mongoose.Types.ObjectId(a.question_id),
-      answers: a.answer, 
+      answers: a.answer,
     }));
     await answerModel.insertMany(answerDocs, { session });
     await session.commitTransaction();
@@ -618,5 +622,73 @@ export const submitServiceAnswers = async (answers, professional_id, service_id)
     await session.abortTransaction();
     session.endSession();
     throw new Error(error?.message || "Failed to submit service answers.");
+  }
+};
+
+// Create Service Location for Professional Service
+export const createServiceLocationServices = async (payload) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const {
+      professional_id,
+      service_id,
+      lat,
+      lng,
+      city,
+      state,
+      radiusMiles,
+      country,
+      address_line,
+    } = payload;
+
+    if (!professional_id || !service_id) {
+      throw new Error("professional_id and service_id are required.");
+    }
+    let zipcodes = [];
+    if (radiusMiles && radiusMiles > 0) {
+      const radiusMeters = radiusMiles * 1609.34;
+      const nearbyZips = await zipcodeModel
+        .find({
+          coordinates: {
+            $geoWithin: {
+              $centerSphere: [[lng, lat], radiusMeters / 6378137],
+            },
+          },
+        })
+        .session(session);
+
+      zipcodes = nearbyZips.map((z) => z.zip);
+    }
+    const locationData = {
+      type: "professional",
+      professional_id,
+      service_id,
+      country: country || "USA",
+      state: state || "",
+      city: city || "",
+      zipcode: zipcodes,
+      address_line: address_line || "",
+      coordinates: { type: "Point", coordinates: [lng, lat] },
+      serviceRadiusMiles: radiusMiles || 0,
+    };
+    const [locationDoc] = await LocationModel.create([locationData], { session });
+    const service = await ProfessionalServicesModel.findOneAndUpdate(
+      { professional_id, service_id },
+      { $addToSet: { location_ids: locationDoc._id } },
+      { new: true, session }
+    );
+    await session.commitTransaction();
+    session.endSession();
+    return {
+      success: true,
+      message: " Service Location Saved successfully.",
+      location: locationDoc,
+      service,
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error.message || "Failed to save location");
   }
 };

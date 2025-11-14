@@ -14,12 +14,12 @@ import {
   updateProfessionalService,
   deleteProService,
   addServicePricing,
-  updateServicePricing,
   GetProfessionalServices,
   updateProfessionalServiceStatus,
   CreateService,
   getServiceQuestionsByServiceId,
   SubmitAnswersServiceQuestions,
+  createServiceLocationController,
 } from "../controllers/serviceController.js";
 
 import fileupload from "../config/multer.js";
@@ -47,16 +47,19 @@ router.put(
 router.get("/list", authenticateToken, getServices);
 router.post("/create_service", authenticateToken, CreateService);
 router.put("/pricing", authenticateToken, addServicePricing);
-router.get("/service_questions/:id", authenticateToken, getServiceQuestionsByServiceId);
+router.get(
+  "/service_questions/:id",
+  authenticateToken,
+  getServiceQuestionsByServiceId
+);
 router.put("/answers_submit", authenticateToken, SubmitAnswersServiceQuestions);
-
+router.put("/service_location", authenticateToken, createServiceLocationController);
 
 // end of services Management Routes
 
 router.get("/", getServices);
 router.post("/", fileupload("service").single("image_url"), addServices);
 router.put("/pricing", addServicePricing);
-
 
 //featured services
 router.get("/featured", featuredServicesHandler);

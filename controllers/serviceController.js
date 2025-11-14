@@ -1,5 +1,6 @@
 import servicesService, {
   CreateNewServiceProfessional,
+  createServiceLocationServices,
   fetchServiceQuestionsByServiceId,
   getProfessionalServices,
   submitServiceAnswers,
@@ -505,3 +506,32 @@ export const SubmitAnswersServiceQuestions = async (req, res) => {
     });
   }
 };
+
+
+
+// Create Service Location for Professional Service
+export async function createServiceLocationController(req, res) {
+  const payload = req.body;
+  try {
+    const result = await createServiceLocationServices(payload);
+    return res.status(200).json({
+      success: true,
+      message: "Service location added successfully.",
+      data: result,
+    });
+
+  } catch (error) {
+    console.error("Service Location Error:", error);
+    if (error.message === "Professional not found.") {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update service location.",
+      error: error?.message ?? "Unexpected server error.",
+    });
+  }
+}
