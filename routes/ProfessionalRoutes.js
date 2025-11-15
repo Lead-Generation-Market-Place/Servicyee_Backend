@@ -25,7 +25,14 @@ import {
 	updateFeaturedProjectHandler,
 	deleteFeaturedProjectHandler,
 	addFilesToFeaturedProjectHandler,
-	removeFilesFromFeaturedProjectHandler
+	removeFilesFromFeaturedProjectHandler,
+	getLicenseTypesHandler,
+	getCitiesHandler,
+	saveProfessionalLicenseHandler,
+	getAllProfessionalLicensesHandler,
+	getProfessionalLicenseByIdHandler,
+	updateProfessionalLicenseHandler,
+	deleteProfessionalLicenseHandler
 } from '../controllers/ProfessionalController.js';
 import {
 	addQuestionHandler,
@@ -102,5 +109,16 @@ router.post('/faq/questions', authenticateToken, addQuestionHandler);
 router.get('/faq/questions', authenticateToken, getAllQuestionsHandler);
 router.post('/faq/answers', authenticateToken, addAnswerHandler);
 router.get('/faq/:professionalId/faqs', authenticateToken, getFaqsByProfessionalHandler);
+
+// Dropdown Data Routes
+router.get('/license-types', getLicenseTypesHandler);
+router.get('/cities', getCitiesHandler);
+
+// Professional License Routes
+router.post('/licenses', authenticateToken, saveProfessionalLicenseHandler);
+router.get('/licenses/:professional_id', authenticateToken, getAllProfessionalLicensesHandler);
+router.get('/licenses/:professional_id/:license_id', authenticateToken, getProfessionalLicenseByIdHandler);
+router.put('/licenses/:professional_id/:license_id', authenticateToken, updateProfessionalLicenseHandler);
+router.delete('/licenses/:professional_id/:license_id', authenticateToken, deleteProfessionalLicenseHandler);
 
 export default router;

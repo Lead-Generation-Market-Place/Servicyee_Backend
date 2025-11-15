@@ -12,6 +12,8 @@ import FeaturedProject from "../models/featuredProjectModel.js";
 import File from "../models/fileModel.js";
 import Faq from "../models/faqModel.js";
 import FaqQuestion from "../models/faqquestionsModel.js";
+import Zipcode from "../models/zipcodeModel.js";
+import ProfessionalLicense from "../models/ProfessionalLicenseModel.js";
 import fs from 'fs';
 import path from 'path';
 
@@ -851,4 +853,279 @@ export async function getFaqsByProfessional(professionalId) {
   });
   
   return questionsWithAnswers;
+}
+
+// Methods for dropdown data (License Types and Cities)
+
+export async function getAllLicenseTypes() {
+  try {
+    const LicenseType = mongoose.model('LicenseType');
+    return await LicenseType.find().select('_id name').sort({ name: 1 });
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch license types');
+  }
+}
+
+export async function getAllCities() {
+  try {
+    const states = await Zipcode.aggregate([
+      {
+        $group: {
+          _id: '$state_name',
+          id: { $first: '$_id' }
+        }
+      },
+      {
+        $project: {
+          _id: '$id',
+          state_name: '$_id'
+        }
+      },
+      {
+        $sort: { state_name: 1 }
+      }
+    ]);
+    
+    return states;
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch cities');
+  }
+}
+
+// Helper function to convert state_name to zipcode_id
+export async function getZipcodeIdByStateName(state_name) {
+  const zipcodeDoc = await Zipcode.findOne({ state_name });
+  if (!zipcodeDoc) {
+    throw new Error(`No zipcode found for state: ${state_name}`);
+  }
+  return zipcodeDoc._id;
+}
+
+// Helper function to get state_name from frontend "city" field
+export function convertCityToStateName(city) {
+  // Handle the case where frontend sends "city" but means state_name
+  if (typeof city === 'string' && city.length > 2) {
+    return city; // Assume it's a state name if it's longer than 2 chars
+  }
+  return city; // Return as-is if it's already a state name or code
+}
+
+// Helper function to extract state_name from either city or state_name field
+export function getStateNameFromRequest(data) {
+  // Frontend can send either "city" or "state_name" field
+  return data.city || data.state_name;
+}
+
+// Professional License Methods
+export async function saveProfessionalLicense(data) {
+  console.log('Service function called with data:', data);
+  
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    if (!data) {
+      throw new Error('Data parameter is required');
+    }
+    
+    const {
+      professional_id,
+      license_type_id,
+      zipcode_id,
+      license_owner_name,
+      license_expiration,
+      link_to_licensing_agency,
+      status = "pending"
+    } = data;
+
+    let finalZipcodeId = zipcode_id;
+    
+    // If zipcode_id is not provided but state_name or city is provided, get zipcode_id
+    if (!zipcode_id) {
+      const stateName = getStateNameFromRequest(data);
+      if (stateName) {
+        finalZipcodeId = await getZipcodeIdByStateName(stateName);
+      }
+    }
+
+    // Validate required fields according to schema
+    if (!professional_id || !license_type_id || !finalZipcodeId || !license_owner_name || !license_expiration) {
+      throw new Error('professional_id, license_type_id, zipcode_id, license_owner_name, and license_expiration are required');
+    }
+
+    // Validate status enum values
+    const validStatuses = ["pending", "active", "approved"];
+    if (status && !validStatuses.includes(status)) {
+      throw new Error('status must be one of: pending, active, approved');
+    }
+
+    // Create the professional license
+    const professionalLicense = new ProfessionalLicense({
+      professional_id,
+      license_type_id,
+      zipcode_id: finalZipcodeId,
+      license_owner_name,
+      license_expiration: new Date(license_expiration),
+      link_to_licensing_agency,
+      status
+    });
+
+    const savedLicense = await professionalLicense.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return savedLicense;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error.message || 'Failed to save professional license');
+  }
+}
+
+// Get all professional licenses
+export async function getAllProfessionalLicenses(professional_id) {
+  try {
+    const licenses = await ProfessionalLicense.find({
+      professional_id: new mongoose.Types.ObjectId(professional_id)
+    })
+    .populate({
+      path: 'zipcode_id',
+      select: 'city state_name zip'
+    })
+    .populate({
+      path: 'license_type_id',
+      select: 'name'
+    })
+    .lean();
+    
+    return licenses;
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch professional licenses');
+  }
+}
+
+// Get specific professional license
+export async function getProfessionalLicenseById(professional_id, license_id) {
+  try {
+    const license = await ProfessionalLicense.findOne({
+      _id: new mongoose.Types.ObjectId(license_id),
+      professional_id: new mongoose.Types.ObjectId(professional_id)
+    })
+    .populate({
+      path: 'zipcode_id',
+      select: 'state_name'
+    })
+    .populate({
+      path: 'license_type_id',
+      select: 'name'
+    })
+    .lean();
+    
+    if (!license) {
+      throw new Error('Professional license not found');
+    }
+    
+    return license;
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch professional license');
+  }
+}
+// Update professional license
+export async function updateProfessionalLicense(professional_id, license_id, updateData) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const {
+      license_type_id,
+      zipcode_id,
+      license_owner_name,
+      license_expiration,
+      link_to_licensing_agency,
+      status
+    } = updateData;
+
+    let finalZipcodeId = zipcode_id;
+    
+    // If zipcode_id is not provided but state_name or city is provided, get zipcode_id
+    if (!zipcode_id) {
+      const stateName = getStateNameFromRequest(updateData);
+      if (stateName) {
+        finalZipcodeId = await getZipcodeIdByStateName(stateName);
+      }
+    }
+
+    // Prepare update object with schema field names
+    const updateObj = {};
+    if (license_type_id) updateObj.license_type_id = license_type_id;
+    if (finalZipcodeId) updateObj.zipcode_id = finalZipcodeId;
+    if (license_owner_name) updateObj.license_owner_name = license_owner_name;
+    if (license_expiration) updateObj.license_expiration = new Date(license_expiration);
+    if (link_to_licensing_agency !== undefined) updateObj.link_to_licensing_agency = link_to_licensing_agency;
+    if (status !== undefined) {
+      // Validate status enum values
+      const validStatuses = ["pending", "active", "approved"];
+      if (status && !validStatuses.includes(status)) {
+        throw new Error('status must be one of: pending, active, approved');
+      }
+      updateObj.status = status;
+    }
+
+    const updatedLicense = await ProfessionalLicense.findOneAndUpdate(
+      {
+        _id: new mongoose.Types.ObjectId(license_id),
+        professional_id: new mongoose.Types.ObjectId(professional_id)
+      },
+      updateObj,
+      { new: true, runValidators: true, session }
+    )
+    .populate({
+      path: 'zipcode_id',
+      select: 'city state_name zip'
+    })
+    .populate({
+      path: 'license_type_id',
+      select: 'name'
+    });
+
+    if (!updatedLicense) {
+      throw new Error('Professional license not found');
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return updatedLicense;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error.message || 'Failed to update professional license');
+  }
+}
+
+// Delete professional license
+export async function deleteProfessionalLicense(professional_id, license_id) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const deletedLicense = await ProfessionalLicense.findOneAndDelete({
+      _id: new mongoose.Types.ObjectId(license_id),
+      professional_id: new mongoose.Types.ObjectId(professional_id)
+    }).session(session);
+
+    if (!deletedLicense) {
+      throw new Error('Professional license not found');
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return deletedLicense;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error.message || 'Failed to delete professional license');
+  }
 }

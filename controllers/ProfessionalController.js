@@ -31,6 +31,13 @@ import {
 
   getAllQuestions,
   getFaqsByProfessional,
+  getAllLicenseTypes,
+  getAllCities,
+  saveProfessionalLicense,
+  getAllProfessionalLicenses,
+  getProfessionalLicenseById,
+  updateProfessionalLicense,
+  deleteProfessionalLicense,
 
 } from "../services/ProfessionalServices.js";
 const backendUrl =
@@ -829,10 +836,184 @@ export async function updateFaqAnswerHandler(req, res) {
   }
 }
 
+// Get all license types for dropdown
+export async function getLicenseTypesHandler(req, res) {
+  try {
+    const licenseTypes = await getAllLicenseTypes();
+    res.status(200).json({
+      success: true,
+      data: licenseTypes,
+      count: licenseTypes.length
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching license types",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Get all cities for dropdown
+export async function getCitiesHandler(req, res) {
+  try {
+    const cities = await getAllCities();
+    res.status(200).json({
+      success: true,
+      data: cities,
+      count: cities.length
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching cities",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Save professional license
+export async function saveProfessionalLicenseHandler(req, res) {
+  try {
+
+    const licenseData = req.body;
+
+    
+    if (!licenseData) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body is required"
+      });
+    }
+    
+    const savedLicense = await saveProfessionalLicense(licenseData);
+    res.status(201).json({
+      success: true,
+      message: "Professional license saved successfully",
+      data: savedLicense
+    });
+  } catch (error) {
+    console.error('Error in saveProfessionalLicenseHandler:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error saving professional license",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Get all professional licenses
+export async function getAllProfessionalLicensesHandler(req, res) {
+  try {
+    const { professional_id } = req.params;
+    
+    if (!professional_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Professional ID is required"
+      });
+    }
+    
+    const licenses = await getAllProfessionalLicenses(professional_id);
+    res.status(200).json({
+      success: true,
+      data: licenses,
+      count: licenses.length
+    });
+  } catch (error) {
+    console.error('Error in getAllProfessionalLicensesHandler:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching professional licenses",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+// Get specific professional license by ID
+export async function getProfessionalLicenseByIdHandler(req, res) {
+  try {
+    const { professional_id, license_id } = req.params;
+    
+    if (!professional_id || !license_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Professional ID and License ID are required"
+      });
+    }
+    
+    const license = await getProfessionalLicenseById(professional_id, license_id);
+    res.status(200).json({
+      success: true,
+      data: license
+    });
+  } catch (error) {
+    console.error('Error in getProfessionalLicenseByIdHandler:', error);
+    res.status(500).json({
+  error})}
+}
+// Update specific professional license
+export async function updateProfessionalLicenseHandler(req, res) {
+  try {
+    const { professional_id, license_id } = req.params;
+    const updateData = req.body;
+    
+    if (!professional_id || !license_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Professional ID and License ID are required"
+      });
+    }
+    
+    const updatedLicense = await updateProfessionalLicense(professional_id, license_id, updateData);
+    res.status(200).json({
+      success: true,
+      message: "Professional license updated successfully",
+      data: updatedLicense
+    });
+  } catch (error) {
+    console.error('Error in updateProfessionalLicenseHandler:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating professional license",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Delete specific professional license
+export async function deleteProfessionalLicenseHandler(req, res) {
+  try {
+    const { professional_id, license_id } = req.params;
+    
+    if (!professional_id || !license_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Professional ID and License ID are required"
+      });
+    }
+    
+    const deletedLicense = await deleteProfessionalLicense(professional_id, license_id);
+    res.status(200).json({
+      success: true,
+      message: "Professional license deleted successfully",
+      data: deletedLicense
+    });
+  } catch (error) {
+    console.error('Error in deleteProfessionalLicenseHandler:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting professional license",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+
+
 export async function deleteFaqHandler(req, res) {
   try {
     const { id } = req.params;
-    const deletedFaq = await deleteFaq(id);
+    const deletedFaq = await deletedFaq(id);
 
     if (!deletedFaq) {
       return res.status(404).json({

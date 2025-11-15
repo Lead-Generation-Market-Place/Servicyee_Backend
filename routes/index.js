@@ -16,6 +16,7 @@ import ReviewsRoutes from "./ReviewsRoutes.js";
 import promotionRoutes from "./promotionRoute.js";
 import popularServicesRoute from './popularServicesRoute.js';
 import professionalServiceProviderRoute from './professionalServiceProviderRoute.js';
+import licenseTypeRoute from './licenseTypeRoute.js';
 // Organized by feature
 const apiRoutes = [
   // Authentication & Users
@@ -158,6 +159,15 @@ const apiRoutes = [
     developer: "durrani",
     domain: "promotions",
     description: "Promotion discount related",
+  },
+
+  // License Types
+  {
+    path: "/license-types",
+    router: licenseTypeRoute,
+    developer: "system",
+    domain: "licenses",
+    description: "Simple license type management with name field only",
   },
 ];
 
