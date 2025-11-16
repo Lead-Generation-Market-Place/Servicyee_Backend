@@ -44,6 +44,10 @@ const ProfessionalLicenseSchema = new Schema(
   }
 );
 
+
+
+
+
 // Indexes for better query performance
 ProfessionalLicenseSchema.index({ professional_id: 1 });
 ProfessionalLicenseSchema.index({ license_type_id: 1 });
