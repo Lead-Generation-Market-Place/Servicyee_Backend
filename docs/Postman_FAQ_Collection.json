@@ -1,0 +1,500 @@
+{
+	"info": {
+		"_postman_id": "faq-system-collection",
+		"name": "Servicyee FAQ System API",
+		"description": "Complete FAQ management system for Servicyee professionals",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api"
+		},
+		{
+			"key": "professional_id",
+			"value": "507f1f77bcf86cd799439011"
+		},
+		{
+			"key": "auth_token",
+			"value": "your_jwt_token_here"
+		},
+		{
+			"key": "faq_id",
+			"value": ""
+		}
+	],
+	"item": [
+		{
+			"name": "FAQ CRUD Operations",
+			"item": [
+				{
+					"name": "Create FAQ",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"question\": \"What services do you offer?\",\n  \"answer\": \"We offer comprehensive home repair services including plumbing, electrical work, HVAC maintenance, painting, and general handyman services.\",\n  \"category\": \"Services\",\n  \"priority\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/professionals/{{professional_id}}/faqs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"{{professional_id}}",
+								"faqs"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const faqData = pm.response.json();",
+									"    pm.collectionVariables.set('faq_id', faqData.faq._id);",
+									"    console.log('FAQ created successfully:', faqData);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get FAQs by Professional",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/professionals/{{professional_id}}/faqs?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"{{professional_id}}",
+								"faqs"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "category",
+									"value": "Services",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get FAQ by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/professionals/faqs/{{faq_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"faqs",
+								"{{faq_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update FAQ",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"question\": \"What home repair services do you offer?\",\n  \"answer\": \"We offer comprehensive home repair services including plumbing, electrical work, HVAC maintenance, painting, general handyman services, roofing, and landscaping.\",\n  \"category\": \"Services\",\n  \"priority\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/professionals/faqs/{{faq_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"faqs",
+								"{{faq_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete FAQ",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/professionals/faqs/{{faq_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"faqs",
+								"{{faq_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "FAQ Search & Discovery",
+			"item": [
+				{
+					"name": "Search FAQs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/professionals/{{professional_id}}/faqs/search?query=services&page=1&limit=5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"{{professional_id}}",
+								"faqs",
+								"search"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": "services"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Popular FAQs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/professionals/{{professional_id}}/faqs/popular?limit=5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"{{professional_id}}",
+								"faqs",
+								"popular"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Recent FAQs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/professionals/{{professional_id}}/faqs/recent?limit=5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"{{professional_id}}",
+								"faqs",
+								"recent"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get FAQ Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/professionals/{{professional_id}}/faqs/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"{{professional_id}}",
+								"faqs",
+								"categories"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get FAQ Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/professionals/{{professional_id}}/faqs/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"{{professional_id}}",
+								"faqs",
+								"stats"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "FAQ User Interaction",
+			"item": [
+				{
+					"name": "Increment View Count",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/professionals/faqs/{{faq_id}}/view",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"faqs",
+								"{{faq_id}}",
+								"view"
+							]
+						}
+					}
+				},
+				{
+					"name": "Mark FAQ as Helpful",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"is_helpful\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/professionals/faqs/{{faq_id}}/helpful",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"faqs",
+								"{{faq_id}}",
+								"helpful"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"console.log('FAQ helpful feedback recorded');"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Mark FAQ as Not Helpful",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"is_helpful\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/professionals/faqs/{{faq_id}}/helpful",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"faqs",
+								"{{faq_id}}",
+								"helpful"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Bulk Operations",
+			"item": [
+				{
+					"name": "Create Multiple FAQs",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"faqs\": [\n    {\n      \"question\": \"What are your working hours?\",\n      \"answer\": \"We work Monday to Friday from 8 AM to 6 PM, and Saturday from 9 AM to 4 PM. Emergency services are available 24/7.\",\n      \"category\": \"Schedule\",\n      \"priority\": 1\n    },\n    {\n      \"question\": \"Do you provide free estimates?\",\n      \"answer\": \"Yes, we provide free estimates for most services. Emergency calls may have a small diagnostic fee which is applied to the final service cost.\",\n      \"category\": \"Pricing\",\n      \"priority\": 2\n    },\n    {\n      \"question\": \"What payment methods do you accept?\",\n      \"answer\": \"We accept cash, all major credit cards, debit cards, and bank transfers. We can also arrange payment plans for larger projects.\",\n      \"category\": \"Payment\",\n      \"priority\": 3\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/professionals/faqs/bulk",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"faqs",
+								"bulk"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Multiple FAQs",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"faq_ids\": [\"faq_id_1\", \"faq_id_2\", \"faq_id_3\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/professionals/faqs/bulk",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"faqs",
+								"bulk"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Complete FAQ Workflow",
+			"item": [
+				{
+					"name": "Complete FAQ Test Workflow",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/professionals/{{professional_id}}/faqs/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"professionals",
+								"{{professional_id}}",
+								"faqs",
+								"stats"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"console.log('=== FAQ System Test Complete ===');",
+									"console.log('All FAQ endpoints have been tested');",
+									"Check response body for FAQ statistics and data'"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

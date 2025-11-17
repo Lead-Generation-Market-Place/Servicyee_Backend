@@ -1,5 +1,9 @@
+
 import servicesService, { getProfessionalServices } from '../services/services.js';
 import { updateService, updateServiceStatus, updateFeaturedService } from '../services/services.js';
+
+import  { updateServiceStatusServices } from '../services/services.js';
+
 import path from 'path';
 import fs from 'fs';
 import { error } from 'console';
@@ -299,6 +303,7 @@ export async function GetProfessionalServices(req, res)
   }
 }
 
+
 // ===========================================================
 //                    Manage Services
 // ===========================================================
@@ -347,6 +352,7 @@ export const updateServiceStatusHandler = async (req, res) => {
         success: false,
         error: true,
         message: 'Service not found',
+
       });
     }
 
@@ -403,3 +409,41 @@ export const updateFeaturedServiceHandler = async (req, res) => {
     });
   }
 };
+
+
+
+
+export const updateProfessionalServiceStatus = async (req, res) => {
+  try {
+    const { professional_id, service_id, service_status } = req.body;
+
+    if (!professional_id || !service_id) {
+      return res.status(400).json({
+        success: false,
+        message: "professional_id and service_id are required.",
+      });
+    }
+
+    const service = await updateServiceStatusServices(
+      professional_id,
+      service_id,
+      service_status
+    );
+
+    if (!service || !service.success) {
+      return res.status(404).json({
+        success: false,
+        message: "No matching service found to update.",
+      message: "Service status updated successfully.",
+      data: service.data,
+    });
+  } catch (error) {
+    console.error("Error updating professional service status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating service status.",
+      error: error.message,
+    });
+  }
+};
+

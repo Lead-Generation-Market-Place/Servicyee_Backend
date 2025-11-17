@@ -17,12 +17,17 @@ import {
   updateServiceStatusHandler,
   updateFeaturedServiceHandler,
   updateServiceHandler
+
+  updateProfessionalServiceStatus
+
 } from '../controllers/serviceController.js';
 
 
 import  fileupload  from "../config/multer.js";
 import { uploadFile } from '../controllers/ProfessionalController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
+import { getCategories } from '../controllers/categoryController.js';
+import { getSubCategories } from '../controllers/subCategoryController.js';
 
 const router = express.Router();
 
@@ -36,19 +41,17 @@ router.post('/asp', assignServiceToProfessional);
 
 
 // services Management Routes
-router.get('/services-management/:id', authenticateToken, GetProfessionalServices)
-
+router.get('/services-management', authenticateToken, GetProfessionalServices)
+router.put('/service_status', authenticateToken, updateProfessionalServiceStatus)
+router.get('/list', authenticateToken, getServices);
 // end of services Management Routes
 
-// ✅ General routes
 router.get('/', getServices);
 router.post('/', fileupload('service').single('image_url'),
  addServices);
- router.post('/pricing', addServicePricing);
-
+router.post('/pricing', addServicePricing);
  //featured services
 router.get('/featured', featuredServicesHandler);
-
 
 router.get('/:id', getServiceById);
 router.put('/pricing/update', updateProfessionalService);

@@ -9,6 +9,7 @@ import LocationModel from "../models/LocationModel.js";
 import { response } from "express";
 import Professional from "../models/ProfessionalModel.js";
 import leadModel from "../models/leadModel.js";
+import professionalServicesModel from "../models/professionalServicesModel.js";
 
 class ServicesService {
   // ✅ Get all services
@@ -26,7 +27,7 @@ class ServicesService {
 
     const existingService = await ServiceModel.findOne({
       slug: slug.trim(),
-      subcategory_id
+      subcategory_id,
     });
 
     if (existingService) {
@@ -38,33 +39,32 @@ class ServicesService {
   }
 
   // ✅ Assign service to a professional (only with professional_id and service_id)
-async assignServiceToProfessional(data) {
-  const { professional_id, service_id } = data;
+  async assignServiceToProfessional(data) {
+    const { professional_id, service_id } = data;
 
-  if (!professional_id || !service_id) {
-    throw new Error("Both professional_id and service_id are required.");
+    if (!professional_id || !service_id) {
+      throw new Error("Both professional_id and service_id are required.");
+    }
+
+    const existing = await ProfessionalServicesModel.findOne({
+      professional_id,
+      service_id,
+    });
+
+    if (existing) {
+      throw new Error("You already saved this service.");
+    }
+
+    const newAssignment = new ProfessionalServicesModel({
+      professional_id,
+      service_id,
+    });
+
+    const savedAssignment = await newAssignment.save();
+
+    // ✅ Return just the ID (or entire object if needed)
+    return { _id: savedAssignment._id };
   }
-
-  const existing = await ProfessionalServicesModel.findOne({
-    professional_id,
-    service_id
-  });
-
-  if (existing) {
-    throw new Error("You already saved this service.");
-  }
-
-  const newAssignment = new ProfessionalServicesModel({
-    professional_id,
-    service_id
-  });
-
-  const savedAssignment = await newAssignment.save();
-
-  // ✅ Return just the ID (or entire object if needed)
-  return { _id: savedAssignment._id };
-}
-
 
   // ✅ Get assigned services for a professional
   async getAssignedServicesForProfessional(professional_id) {
@@ -81,7 +81,7 @@ async assignServiceToProfessional(data) {
   // ✅ Update service
   async updateService(serviceId, updateData) {
     return await ServiceModel.findByIdAndUpdate(serviceId, updateData, {
-      new: true
+      new: true,
     });
   }
 
@@ -102,44 +102,44 @@ async assignServiceToProfessional(data) {
         {
           $match: {
             service_status: true,
-            service_availability: true
-          }
+            service_availability: true,
+          },
         },
         {
           $group: {
             _id: "$location_id",
-            professionalCount: { $addToSet: "$professional_id" }
-          }
+            professionalCount: { $addToSet: "$professional_id" },
+          },
         },
         {
           $project: {
             location_id: "$_id",
-            professionalCount: { $size: "$professionalCount" }
-          }
+            professionalCount: { $size: "$professionalCount" },
+          },
         },
         {
           $lookup: {
             from: "locations",
             localField: "location_id",
             foreignField: "_id",
-            as: "location"
-          }
+            as: "location",
+          },
         },
         { $unwind: "$location" },
         {
           $group: {
             _id: "$location.state",
-            totalProfessionals: { $sum: "$professionalCount" }
-          }
+            totalProfessionals: { $sum: "$professionalCount" },
+          },
         },
         {
           $project: {
             state: "$_id",
             totalProfessionals: 1,
-            _id: 0
-          }
+            _id: 0,
+          },
         },
-        { $sort: { totalProfessionals: -1 } }
+        { $sort: { totalProfessionals: -1 } },
       ]);
 
       return result.length === 0
@@ -164,180 +164,193 @@ async assignServiceToProfessional(data) {
     return await service.save();
   }
 
-async getServicesAndSubcategoriesByProfessional(professionalId) {
-  if (!professionalId || !mongoose.Types.ObjectId.isValid(professionalId)) {
-    throw new Error('A valid Professional ID is required');
-  }
+  async getServicesAndSubcategoriesByProfessional(professionalId) {
+    if (!professionalId || !mongoose.Types.ObjectId.isValid(professionalId)) {
+      throw new Error("A valid Professional ID is required");
+    }
 
-  try {
-    const services = await ProfessionalServicesModel.find({
-      professional_id: professionalId,
-      service_status: true
-    })
-      .populate({
-        path: 'service_id',
-        select: 'name slug description image_url is_active is_featured subcategory_id createdAt updatedAt',
-        populate: {
-          path: 'subcategory_id',
-          model: 'Subcategories',
-          select: 'name slug category_id'
-        }
+    try {
+      const services = await ProfessionalServicesModel.find({
+        professional_id: professionalId,
+        service_status: true,
       })
-      .populate({
-        path: 'location_ids',
-        model: 'Location',
-        select: '-__v -createdAt -updatedAt',
-        populate: [
-          {
-            path: 'mile_id',
-            model: 'Mile',
-            select: '_id mile'
+        .populate({
+          path: "service_id",
+          select:
+            "name slug description image_url is_active is_featured subcategory_id createdAt updatedAt",
+          populate: {
+            path: "subcategory_id",
+            model: "Subcategories",
+            select: "name slug category_id",
           },
-          {
-            path: 'minute_id',
-            model: 'Minute',
-            select: '_id minute'
-          },
-          {
-            path: 'vehicle_type_id',
-            model: 'VehicleType',
-            select: '_id vehicle_type'
-          }
-        ]
-      })
-      .lean();
-
-    if (!services.length) return [];
-
-    const enrichedServices = await Promise.all(
-      services.map(async (ps) => {
-        const service = ps.service_id || {};
-        const subcategory = service.subcategory_id || {};
-
-        // Fetch questions related to the service
-        const questions = await questionModel.find({
-          service_id: service._id,
-          active: true
         })
-          .select('_id question_name form_type options required order')
-          .sort({ order: 1 })
-          .lean();
-
-        // Fetch answers by professional for the related questions
-        const questionIds = questions.map(q => q._id);
-        const answers = await answerModel.find({
-          professional_id: professionalId,
-          question_id: { $in: questionIds }
+        .populate({
+          path: "location_ids",
+          model: "Location",
+          select: "-__v -createdAt -updatedAt",
+          populate: [
+            {
+              path: "mile_id",
+              model: "Mile",
+              select: "_id mile",
+            },
+            {
+              path: "minute_id",
+              model: "Minute",
+              select: "_id minute",
+            },
+            {
+              path: "vehicle_type_id",
+              model: "VehicleType",
+              select: "_id vehicle_type",
+            },
+          ],
         })
-          .select('question_id answers')
-          .lean();
+        .lean();
 
-        // Map answers by question_id
-        const answerMap = {};
-        answers.forEach(ans => {
-          answerMap[ans.question_id.toString()] = ans.answers;
-        });
+      if (!services.length) return [];
 
-        // Attach answers to questions and create question-answer entities
-        const questionAnswerEntities = questions.map(q => ({
-          _id: q._id,
-          question_name: q.question_name,
-          form_type: q.form_type,
-          options: q.options || [],
-          required: q.required || false,
-          order: q.order || 0,
-          answer: answerMap[q._id.toString()] || null
-        }));
+      const enrichedServices = await Promise.all(
+        services.map(async (ps) => {
+          const service = ps.service_id || {};
+          const subcategory = service.subcategory_id || {};
 
-        // Transform location data properly
-        const transformedLocations = (ps.location_ids || []).map(location => {
-          // Handle coordinates
-          let coordinates = { type: 'Point', coordinates: [0, 0] };
-          if (location.coordinates && location.coordinates.coordinates) {
-            coordinates = {
-              type: location.coordinates.type || 'Point',
-              coordinates: location.coordinates.coordinates
-            };
-          }
+          // Fetch questions related to the service
+          const questions = await questionModel
+            .find({
+              service_id: service._id,
+              active: true,
+            })
+            .select("_id question_name form_type options required order")
+            .sort({ order: 1 })
+            .lean();
+
+          // Fetch answers by professional for the related questions
+          const questionIds = questions.map((q) => q._id);
+          const answers = await answerModel
+            .find({
+              professional_id: professionalId,
+              question_id: { $in: questionIds },
+            })
+            .select("question_id answers")
+            .lean();
+
+          // Map answers by question_id
+          const answerMap = {};
+          answers.forEach((ans) => {
+            answerMap[ans.question_id.toString()] = ans.answers;
+          });
+
+          // Attach answers to questions and create question-answer entities
+          const questionAnswerEntities = questions.map((q) => ({
+            _id: q._id,
+            question_name: q.question_name,
+            form_type: q.form_type,
+            options: q.options || [],
+            required: q.required || false,
+            order: q.order || 0,
+            answer: answerMap[q._id.toString()] || null,
+          }));
+
+          // Transform location data properly
+          const transformedLocations = (ps.location_ids || []).map(
+            (location) => {
+              // Handle coordinates
+              let coordinates = { type: "Point", coordinates: [0, 0] };
+              if (location.coordinates && location.coordinates.coordinates) {
+                coordinates = {
+                  type: location.coordinates.type || "Point",
+                  coordinates: location.coordinates.coordinates,
+                };
+              }
+
+              return {
+                _id: location._id?.toString(),
+                type: location.type || "service",
+                professional_id: location.professional_id?.toString(),
+                service_id: location.service_id?.toString(),
+                country: location.country || "",
+                state: location.state || "",
+                city: location.city || "",
+                zipcode: location.zipcode || "",
+                address_line: location.address_line || "",
+                // Handle populated objects properly
+                mile_id: location.mile_id?._id?.toString() || "",
+                mile: location.mile_id?.mile || location.mile || 0,
+                minute_id: location.minute_id?._id?.toString() || "",
+                minute: location.minute_id?.minute || location.minute || 0,
+                vehicle_type_id:
+                  location.vehicle_type_id?._id?.toString() || "",
+                vehicle_type:
+                  location.vehicle_type_id?.vehicle_type ||
+                  location.vehicle_type ||
+                  "",
+                coordinates: coordinates,
+              };
+            }
+          );
 
           return {
-            _id: location._id?.toString(),
-            type: location.type || 'service',
-            professional_id: location.professional_id?.toString(),
-            service_id: location.service_id?.toString(),
-            country: location.country || '',
-            state: location.state || '',
-            city: location.city || '',
-            zipcode: location.zipcode || '',
-            address_line: location.address_line || '',
-            // Handle populated objects properly
-            mile_id: location.mile_id?._id?.toString() || '',
-            mile: location.mile_id?.mile || location.mile || 0,
-            minute_id: location.minute_id?._id?.toString() || '',
-            minute: location.minute_id?.minute || location.minute || 0,
-            vehicle_type_id: location.vehicle_type_id?._id?.toString() || '',
-            vehicle_type: location.vehicle_type_id?.vehicle_type || location.vehicle_type || '',
-            coordinates: coordinates
+            professionalServiceId: ps._id.toString(),
+            service: {
+              _id: service._id?.toString() || null,
+              name: service.name || "",
+              slug: service.slug || "",
+              description: service.description || "",
+              image_url: service.image_url || "",
+              is_active: service.is_active ?? true,
+              is_featured: service.is_featured ?? false,
+              createdAt: service.createdAt,
+              updatedAt: service.updatedAt,
+            },
+            subcategory: {
+              _id: subcategory._id?.toString() || null,
+              name: subcategory.name || "",
+              slug: subcategory.slug || "",
+              category_id: subcategory.category_id?.toString() || null,
+            },
+            professionalServiceDetails: {
+              locations: transformedLocations,
+              maximum_price: ps.maximum_price ?? null,
+              minimum_price: ps.minimum_price ?? null,
+              pricing_type: ps.pricing_type || "fixed",
+              service_status: ps.service_status ?? true,
+              description: ps.description || "",
+              completed_tasks: ps.completed_tasks ?? 0,
+            },
+            questions: questionAnswerEntities,
+            createdAt: ps.createdAt,
+            updatedAt: ps.updatedAt,
           };
-        });
+        })
+      );
 
-        return {
-          professionalServiceId: ps._id.toString(),
-          service: {
-            _id: service._id?.toString() || null,
-            name: service.name || '',
-            slug: service.slug || '',
-            description: service.description || '',
-            image_url: service.image_url || '',
-            is_active: service.is_active ?? true,
-            is_featured: service.is_featured ?? false,
-            createdAt: service.createdAt,
-            updatedAt: service.updatedAt,
-          },
-          subcategory: {
-            _id: subcategory._id?.toString() || null,
-            name: subcategory.name || '',
-            slug: subcategory.slug || '',
-            category_id: subcategory.category_id?.toString() || null
-          },
-          professionalServiceDetails: {
-            locations: transformedLocations,
-            maximum_price: ps.maximum_price ?? null,
-            minimum_price: ps.minimum_price ?? null,
-            pricing_type: ps.pricing_type || 'fixed',
-            service_status: ps.service_status ?? true,
-            description: ps.description || '',
-            completed_tasks: ps.completed_tasks ?? 0,
-          },
-          questions: questionAnswerEntities,
-          createdAt: ps.createdAt,
-          updatedAt: ps.updatedAt,
-        };
-      })
-    );
-
-    return enrichedServices;
-  } catch (err) {
-    console.error('Error fetching services for professional:', err);
-    throw new Error('Unable to retrieve professional services');
+      return enrichedServices;
+    } catch (err) {
+      console.error("Error fetching services for professional:", err);
+      throw new Error("Unable to retrieve professional services");
+    }
   }
-}
 
-
-  async updateProfessionalServiceByProAndService(proServiceId, newServiceId, updateData) {
+  async updateProfessionalServiceByProAndService(
+    proServiceId,
+    newServiceId,
+    updateData
+  ) {
     if (!mongoose.Types.ObjectId.isValid(proServiceId)) {
-      throw new Error("Valid proServiceId (_id of ProfessionalService) is required");
+      throw new Error(
+        "Valid proServiceId (_id of ProfessionalService) is required"
+      );
     }
 
     if (!mongoose.Types.ObjectId.isValid(newServiceId)) {
       throw new Error("Valid serviceId is required");
     }
-        console.log(proServiceId,newServiceId)
+    console.log(proServiceId, newServiceId);
     // Assign new service_id to updateData
     updateData.service_id = newServiceId;
 
     const updated = await ProfessionalServicesModel.findByIdAndUpdate(
-    
       proServiceId,
       updateData,
       { new: true }
@@ -350,39 +363,40 @@ async getServicesAndSubcategoriesByProfessional(professionalId) {
     return updated;
   }
 
-async deleteProfessionalService(proServiceId) {
-  if (!mongoose.Types.ObjectId.isValid(proServiceId)) {
-    throw new Error("Valid proServiceId is required");
+  async deleteProfessionalService(proServiceId) {
+    if (!mongoose.Types.ObjectId.isValid(proServiceId)) {
+      throw new Error("Valid proServiceId is required");
+    }
+
+    // 1️⃣ Find the professional service
+    const proService = await ProfessionalServicesModel.findById(proServiceId);
+    if (!proService) {
+      throw new Error("Professional service not found with the given ID");
+    }
+
+    const { professional_id, location_ids, question_ids } = proService;
+
+    // 2️⃣ Delete all related answers
+    await answerModel.deleteMany({
+      professional_id,
+      question_id: { $in: question_ids || [] },
+    });
+
+    // 3️⃣ Delete all related locations
+    if (Array.isArray(location_ids) && location_ids.length > 0) {
+      await LocationModel.deleteMany({ _id: { $in: location_ids } });
+    }
+
+    const deleted = await ProfessionalServicesModel.findByIdAndDelete(
+      proServiceId
+    );
+
+    if (!deleted) {
+      throw new Error("Professional service not found with the given ID");
+    }
+
+    return deleted;
   }
-
-
-  // 1️⃣ Find the professional service
-  const proService = await ProfessionalServicesModel.findById(proServiceId);
-  if (!proService) {
-    throw new Error("Professional service not found with the given ID");
-  }
-
-  const { professional_id, location_ids, question_ids } = proService;
-
-  // 2️⃣ Delete all related answers
-  await answerModel.deleteMany({
-    professional_id,
-    question_id: { $in: question_ids || [] },
-  });
-
-  // 3️⃣ Delete all related locations
-  if (Array.isArray(location_ids) && location_ids.length > 0) {
-    await LocationModel.deleteMany({ _id: { $in: location_ids } });
-  }
-
-  const deleted = await ProfessionalServicesModel.findByIdAndDelete(proServiceId);
-
-  if (!deleted) {
-    throw new Error("Professional service not found with the given ID");
-  }
-
-  return deleted;
-}
 
   async addServicePricing(professionalId, serviceId, pricingData) {
     // Validate IDs
@@ -400,7 +414,9 @@ async deleteProfessionalService(proServiceId) {
     });
 
     if (!professionalService) {
-      throw new Error("Professional service not found for the given professional and service IDs");
+      throw new Error(
+        "Professional service not found for the given professional and service IDs"
+      );
     }
 
     // Update only the specified fields
@@ -422,9 +438,7 @@ async deleteProfessionalService(proServiceId) {
     return await professionalService.save();
   }
 
-
-
-   async updateServicePricing(professionalId, serviceId, updateData) {
+  async updateServicePricing(professionalId, serviceId, updateData) {
     if (!mongoose.Types.ObjectId.isValid(professionalId)) {
       throw new Error("Valid professionalId is required");
     }
@@ -438,7 +452,9 @@ async deleteProfessionalService(proServiceId) {
     });
 
     if (!professionalService) {
-      throw new Error("Professional service not found for the given professional and service IDs");
+      throw new Error(
+        "Professional service not found for the given professional and service IDs"
+      );
     }
 
     const allowedFields = [
@@ -468,9 +484,7 @@ async deleteProfessionalService(proServiceId) {
 
 export default new ServicesService();
 
-
-
-// get Professional Services or All services of Professional 
+// get Professional Services or All services of Professional
 export async function getProfessionalServices(userId) {
   try {
     const professional = await Professional.findOne({ user_id: userId });
@@ -479,28 +493,11 @@ export async function getProfessionalServices(userId) {
     }
     const services = await ProfessionalServicesModel.find({
       professional_id: professional._id,
-    })
-      .populate("location_ids")   
-      .populate("question_ids")  
-      .lean();  
-      
-          const servicesWithLeadCounts = await Promise.all(
-      services.map(async (service) => {
-        const totalLeads = await leadModel.countDocuments({
-          service_id: new mongoose.Types.ObjectId(service.service_id || service._id),
-        });
-
-        return {
-          ...service,
-          totalLeads,
-        };
-      })
-    );
-      
+    }).lean();
     return {
       success: true,
       professional,
-      services: servicesWithLeadCounts,
+      services: services,
     };
   } catch (error) {
     return {
@@ -510,6 +507,7 @@ export async function getProfessionalServices(userId) {
     };
   }
 }
+
 
 // =================================================
 //           Manage Services
@@ -550,3 +548,31 @@ export async function updateFeaturedService(serviceId, isFeatured) {
       new: true
     });
   }
+
+export async function updateServiceStatusServices(professional_id, service_id, service_status) {
+  try {
+    const service = await professionalServicesModel.findOneAndUpdate(
+      { professional_id, service_id },
+      { service_status },
+      { new: true, runValidators: true }
+    );
+    if (!service) {
+      return {
+        success: false,
+        message: "No matching service found to update",
+      };
+    }
+    return {
+      success: true,
+      message: "Service status updated successfully",
+      data: service,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Error updating professional service status",
+      error: error.message,
+    };
+  }
+}
+
