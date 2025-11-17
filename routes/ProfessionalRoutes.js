@@ -33,6 +33,7 @@ import {
 	getProfessionalLicenseByIdHandler,
 	updateProfessionalLicenseHandler,
 	deleteProfessionalLicenseHandler
+	createProfessionalGetSteps
 } from '../controllers/ProfessionalController.js';
 import {
 	addQuestionHandler,
@@ -49,12 +50,7 @@ const router = express.Router();
 const upload = createUploader('professionals');
 const featuredProjectUpload = createUploader('featuredProjects');
 
-//Noor Ahmad Bashery
-router.get(
-  "/profile-summary/:id",
-  authenticateToken,
-  getProfessionalProfile
-);
+
 
 // Professional Registration Route with account creation
 router.post('/register', createProfessionalAccount);
@@ -64,10 +60,9 @@ router.put('/availability/:id', authenticateToken, createProfessionalStepSeven);
 router.post('/services-answers', authenticateToken, createProfessionalStepEight);
 router.post('/servicesLocation', authenticateToken, createProfessionalStepNine);
 router.get('/questionsAnswers', authenticateToken, getServicesQuestionsPro);
-router.get('/profileReviews', authenticateToken, createProfessionalReview);
+router.get('/professional_steps', authenticateToken, createProfessionalGetSteps);
 router.post('/profileReviewsCustomer', authenticateToken, SendReviewEmailCustomer);
-
-
+router.get('/progress', authenticateToken, getProfessionalByUserIdHandler);
 // End of Professional Registration Route with account cretion
 router.post(
   "/files",
@@ -77,7 +72,6 @@ router.post(
 );
 // CRUD Routes for Professionals Account Management
 router.get('/',  authenticateToken, getAllProfessionalsHandler);
-router.get('/pro', authenticateToken, getProfessionalByUserIdHandler);
 router.post('/',  authenticateToken, celebrate({ [Segments.BODY]: professionalSchema }), createProfessionalHandler);
 router.put('/:id', authenticateToken, celebrate({ [Segments.BODY]: UpdateprofessionalSchema }), updateProfessionalIntroductionById);
 router.put('/:id/introduction', 

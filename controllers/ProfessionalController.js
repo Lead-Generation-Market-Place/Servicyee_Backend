@@ -39,6 +39,7 @@ import {
   updateProfessionalLicense,
   deleteProfessionalLicense,
 
+  createProfessionalReview,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -424,7 +425,7 @@ export async function createProfessionalStepNine(req, res) {
 }
 
 // Create Professional Account - Review Account 
-export async function createProfessionalReview(req, res) {
+export async function createProfessionalGetSteps(req, res) {
   try {
     const userId = req.user?._id || req.user?.id;
     if (!userId) {
@@ -440,14 +441,9 @@ export async function createProfessionalReview(req, res) {
         message: "Professional account not found for this user",
       });
     }
-    const reviewData = await createProfessionalAccountReview(professional._id);
-    if (!reviewData?.success) {
-      return res.status(400).json({
-        success: false,
-        message: reviewData.message || "Unable to fetch professional review",
-        error: reviewData.error,
-      });
-    }
+    const professional_id = professional._id || professional.id;
+    console.log("Professional ID:", professional_id);
+    const reviewData = await createProfessionalReview(professional_id);
     return res.status(200).json({
       success: true,
       message: "Professional account - Get details successfully",

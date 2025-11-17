@@ -1,4 +1,4 @@
-import servicesService from '../services/services.js';
+import servicesService, { getProfessionalServices, updateServiceStatusServices } from '../services/services.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -285,3 +285,79 @@ export const updateServicePricing = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+
+// get Professional Services of Active User 
+
+export async function GetProfessionalServices(req, res)
+{
+ try {
+    const userId = req.user?._id || req.user?.id || req.params.id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+    const services = await getProfessionalServices(userId);
+    if (!services) {
+      return res.status(404).json({
+        success: false,
+        message: "Professional services not found for this user",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Professional services retrieved successfully",
+      services: services,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching professional services",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+
+export const updateProfessionalServiceStatus = async (req, res) => {
+  try {
+    const { professional_id, service_id, service_status } = req.body;
+
+    if (!professional_id || !service_id) {
+      return res.status(400).json({
+        success: false,
+        message: "professional_id and service_id are required.",
+      });
+    }
+
+    const service = await updateServiceStatusServices(
+      professional_id,
+      service_id,
+      service_status
+    );
+
+    if (!service || !service.success) {
+      return res.status(404).json({
+        success: false,
+        message: "No matching service found to update.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Service status updated successfully.",
+      data: service.data,
+    });
+  } catch (error) {
+    console.error("Error updating professional service status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating service status.",
+      error: error.message,
+    });
+  }
+};
+
