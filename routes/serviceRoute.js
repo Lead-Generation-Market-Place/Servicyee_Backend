@@ -24,6 +24,7 @@ import {
   updateServiceStatusHandler,
   updateFeaturedServiceHandler,
   updateServiceHandler,
+  updateServiceController,
 } from "../controllers/serviceController.js";
 
 import fileupload from "../config/multer.js";
@@ -72,7 +73,7 @@ router.get("/featured", featuredServicesHandler);
 // ✅ Dynamic route must be LAST
 router.get("/:id", getServiceById);
 router.put("/pricing/update", updateProfessionalService);
-router.put("/:id", fileupload("service").single("image_url"), updateService);
+router.put("/:id", fileupload("service").single("image_url"), updateServiceController);
 router.get('/', getServices);
 router.post('/', fileupload('service').single('image_url'),
  addServices);
