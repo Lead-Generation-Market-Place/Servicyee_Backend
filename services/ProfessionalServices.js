@@ -10,6 +10,7 @@ import Answer from "../models/answerModel.js";
 import LocationModel from "../models/LocationModel.js";
 import Review from "../models/ReviewModel.js";
 import zipcodeModel from "../models/zipcodeModel.js";
+import servicesModel from "../models/servicesModel.js";
 
 export function createProfessional(data) {
   const professional = new Professional(data);
@@ -90,52 +91,72 @@ export async function CreateProAccountStepOne(data) {
   session.startTransaction();
 
   try {
-    const existingUser = await User.findOne({
-      email: data.email,
-    }).session(session);
-    if (existingUser) throw new Error("User already exists in this email");
-
+    const existingUser = await User.findOne({ email: data.email }).session(session);
+    if (existingUser) throw new Error("User already exists with this email");
     const hashedPassword = await bcrypt.hash(data.password.trim(), 12);
-    const user = new User({
-      username: data.firstName + data.lastName,
-      email: data.email,
-      phone: data.phone,
-      password: hashedPassword,
-    });
-    await user.save({ session });
-
-    const professional = new Professional({
-      user_id: user._id,
-      business_name: data.username,
-      website: data.website || "",
-      step: 1,
-    });
-    await professional.save({ session });
-
-    await Location.create({
-      type: "professional",
-      professional_id: professional._id,
-      country: data.country,
-      address_line: data.streetAddress,
-      city: data.city,
-      state: data.region,
-      zipcode: data.postalCode,
-    });
+    const user = await User.create(
+      [
+        {
+          username: data.firstName + data.lastName,
+          email: data.email,
+          phone: data.phone,
+          password: hashedPassword,
+        },
+      ],
+      { session }
+    );
+    const newUser = user[0];
+    const professional = await Professional.create(
+      [
+        {
+          user_id: newUser._id,
+          business_name: data.username,
+          website: data.website || "",
+          step: 1,
+        },
+      ],
+      { session }
+    );
+    const newProfessional = professional[0];
+    await Location.create(
+      [
+        {
+          type: "professional",
+          professional_id: newProfessional._id,
+          country: data.country,
+          address_line: data.streetAddress,
+          city: data.city,
+          state: data.region,
+          zipcode: data.postalCode,
+        },
+      ],
+      { session }
+    );
     const serviceObjectIds = data.services_id
       .filter((id) => mongoose.Types.ObjectId.isValid(id))
       .map((id) => new mongoose.Types.ObjectId(id));
-
+    const services = await servicesModel
+      .find({ _id: { $in: serviceObjectIds } })
+      .select("_id name")
+      .lean()
+      .session(session);
+    const serviceNameMap = {};
+    services.forEach((s) => {
+      serviceNameMap[s._id.toString()] = s.name;
+    });
     const professionalServices = serviceObjectIds.map((serviceId) => ({
-      professional_id: professional._id,
+      professional_id: newProfessional._id,
       service_id: serviceId,
+      service_name: serviceNameMap[serviceId.toString()] || "",
     }));
-
+    console.log("the service data is", professionalServices)
     await ProfessionalService.insertMany(professionalServices, { session });
     await session.commitTransaction();
     session.endSession();
-    const GetProfessional = await Professional.findById(professional._id)
+    const GetProfessional = await Professional.findById(newProfessional._id)
       .populate("user_id")
       .lean();
+
     return { professional: GetProfessional };
   } catch (error) {
     await session.abortTransaction();
@@ -143,6 +164,7 @@ export async function CreateProAccountStepOne(data) {
     throw new Error(error.message || "Failed to create professional account");
   }
 }
+
 // End of Professional Account Step 01
 
 // Create Professional Account Step 03
