@@ -437,6 +437,7 @@ export const updateProfessionalServiceStatus = async (req, res) => {
       message: "Service status updated successfully.",
       data: service.data,
     });
+    }
   } catch (error) {
     console.error("Error updating professional service status:", error);
     return res.status(500).json({

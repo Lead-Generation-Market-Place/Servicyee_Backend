@@ -16,9 +16,8 @@ import {
 
   updateServiceStatusHandler,
   updateFeaturedServiceHandler,
-  updateServiceHandler
-
-  updateProfessionalServiceStatus
+  updateServiceHandler,
+updateProfessionalServiceStatus
 
 } from '../controllers/serviceController.js';
 
