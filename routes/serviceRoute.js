@@ -2,17 +2,21 @@ import express from 'express';
 import {
   getServices,
   addServices,
-  updateService,
+  // updateService,
   deleteService,
   getServiceById,
 
   getServicesOFAuthenticatedUser,
   assignServiceToProfessional,
-  getProfessionalCount
-  , toggleServiceStatus,
+  getProfessionalCount,
+  toggleServiceStatus,
   featuredServicesHandler,fetchAllServicesOfAProfessional,
   updateProfessionalService,deleteProService,addServicePricing,updateServicePricing,
-  GetProfessionalServices
+  GetProfessionalServices,
+
+  updateServiceStatusHandler,
+  updateFeaturedServiceHandler,
+  updateServiceHandler
 } from '../controllers/serviceController.js';
 
 
@@ -45,10 +49,19 @@ router.post('/', fileupload('service').single('image_url'),
  //featured services
 router.get('/featured', featuredServicesHandler);
 
-// ✅ Dynamic route must be LAST
+
 router.get('/:id', getServiceById);
 router.put('/pricing/update', updateProfessionalService);
-router.put('/:id', fileupload('service').single('image_url'), updateService);
+
+// ******************************************
+//       Manage Services
+// ******************************************
+router.put('/:id', fileupload('service').single('image_url'), updateServiceHandler);
+router.put('/:id/status', updateServiceStatusHandler);
+router.put('/:id/featured', updateFeaturedServiceHandler);
+
+
+
 // Use this pattern: /professional-service/:professionalId/:serviceId
 router.put('/professional-service/update', updateProfessionalService);
 

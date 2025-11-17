@@ -79,13 +79,26 @@ export const createLead = async (req, res) => {
     
     // console.log(`📝 Converted ${answers.length} responses to answers`);
 
-    // ✅ 3. Handle file uploads
-    const files = (req.files || []).map((file) => ({
-      url: `/uploads/${file.filename}`,
-      type: file.mimetype.startsWith("image") ? "image" : "file",
-      originalName: file.originalname,
-    }));
-    console.log(`📁 Processed ${files.length} files`);
+    const files = [];
+
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        files.push({
+          url: `/uploads/${file.filename}`,
+          type: file.mimetype.startsWith("image") ? "image" : "file",
+          originalName: file.originalname,
+        });
+      });
+    } else if (req.file) {
+      files.push({
+        url: `/uploads/${req.file.filename}`,
+        type: req.file.mimetype.startsWith("image") ? "image" : "file",
+        originalName: req.file.originalname,
+      });
+    }
+
+    console.log(`📁 Uploaded ${files.length} file(s)`);
+
 
     // ✅ 4. Generate title
     let leadTitle = 'New Service Request';

@@ -79,6 +79,11 @@
         $group: {
           _id: '$_id',
           name: { $first: '$name' },
+          description: { $first: '$description' },
+          slug: { $first: '$slug' },
+          category_image_url: { $first: '$category_image_url' },
+          created_at: { $first: '$created_at' },
+          updated_at: { $first: '$updated_at' },
           is_active: { $first: '$is_active' },
           serviceCount: { $sum: { $size: '$services' } }
         }
@@ -91,3 +96,22 @@
   }
 
   export default new CategoryService();
+
+  // ============================================
+  //             Manage Categories
+  // ============================================
+  
+ export const updateCategoryStatus = async (categoryId, isActive) => {
+  try {
+    const updatedCategory = await CategoryModel.findByIdAndUpdate(
+      categoryId,
+      { is_active: isActive },
+      { new: true }
+    );
+
+    return updatedCategory;
+  } catch (error) {
+    throw error;
+  }
+};
+

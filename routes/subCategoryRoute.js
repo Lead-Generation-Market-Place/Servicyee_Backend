@@ -6,7 +6,8 @@ import {
   deleteSubCategory,
   getAllSubCategoriesWithServicesCount,
   getSubCategoryById,
-  getSubcategoryBySlugHandler
+  getSubcategoryBySlugHandler,
+  updateSubcategoryStatusHandler
 } from '../controllers/subCategoryController.js';
 
 
@@ -21,5 +22,10 @@ router.get('/:slug', getSubcategoryBySlugHandler);
 router.put('/:id', fileupload('SubCategory').single("subcategory_image_url"), updateSubCategory);
 router.get('/:id', getSubCategoryById);
 router.delete('/:id', deleteSubCategory);
+
+// ==========================================
+//            Manage Subcategories
+// ==========================================
+router.put('/:id/status', updateSubcategoryStatusHandler);
 
 export default router;

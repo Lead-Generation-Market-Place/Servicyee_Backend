@@ -167,3 +167,44 @@ export const getAllSubCategoriesWithServicesCount = async (req, res, next) => {
     next(error);
   }
 }
+
+// =============================================
+//            Manage Subcategory
+// =============================================
+
+export const updateSubcategoryStatusHandler = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+
+    if (typeof is_active !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: 'is_active must be a boolean value.'
+      });
+    }
+
+    const updatedSubcategory = await subcategoryService.updateSubcategoryStatus(
+      id,
+      is_active
+    );
+
+    if (!updatedSubcategory) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: 'Subcategory not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      error: false,
+      message: 'Subcategory status updated successfully',
+      data: updatedSubcategory
+    });
+  } catch (error) {
+    next(error);
+  }
+};

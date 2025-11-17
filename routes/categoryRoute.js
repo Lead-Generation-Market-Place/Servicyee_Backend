@@ -5,7 +5,8 @@ import {
   updateCategory, 
   deleteCategory ,
   getCategoryById,
-  getAllWithServiceCount
+  getAllWithServiceCount,
+  updateCategoryStatusHandler
 } from '../controllers/categoryController.js';
 
 import { createCategorySchema, updateCategorySchema } from '../validators/category.validators.js';
@@ -19,6 +20,11 @@ router.post('/', fileupload('category').single('category_image_url'), addCategor
 router.get('/:id', getCategoryById);
 router.put('/:id', fileupload('category').single('category_image_url'), updateCategory);
 router.delete('/:id', deleteCategory);
+
+// ==========================================
+//            Manage Categories
+// ==========================================
+router.put('/:id/status', updateCategoryStatusHandler);
 
 
 export default router;
