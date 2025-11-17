@@ -502,11 +502,6 @@ export async function getProfessionalServices(userId) {
 }
 
 // Update Professional Service Status
-export async function updateServiceStatusServices(
-  professional_id,
-  service_id,
-  service_status
-) {
 
 // =================================================
 //           Manage Services
@@ -517,7 +512,7 @@ export async function updateServiceStatus(serviceId, newStatus) {
     const updated = await ServiceModel.findByIdAndUpdate(
       serviceId,
       { is_active: newStatus },
-      { new: true } 
+      { new: true }
     );
 
     return updated;
@@ -525,7 +520,6 @@ export async function updateServiceStatus(serviceId, newStatus) {
     throw error;
   }
 }
-
 
 export async function updateFeaturedService(serviceId, isFeatured) {
   try {
@@ -541,14 +535,17 @@ export async function updateFeaturedService(serviceId, isFeatured) {
   }
 }
 
+export async function updateService(serviceId, updateData) {
+  return await ServiceModel.findByIdAndUpdate(serviceId, updateData, {
+    new: true,
+  });
+}
 
-   export async function updateService(serviceId, updateData) {
-    return await ServiceModel.findByIdAndUpdate(serviceId, updateData, {
-      new: true
-    });
-  }
-
-export async function updateServiceStatusServices(professional_id, service_id, service_status) {
+export async function updateServiceStatusServices(
+  professional_id,
+  service_id,
+  service_status
+) {
   try {
     const service = await professionalServicesModel.findOneAndUpdate(
       { professional_id, service_id },
@@ -736,10 +733,11 @@ export const createServiceLocationServices = async (payload) => {
   }
 };
 
-
 // Deleting Service of professional
-export const deleteProfessionalService = async ({professional_id, service_id}) => {
-  
+export const deleteProfessionalService = async ({
+  professional_id,
+  service_id,
+}) => {
   try {
     if (!professional_id || !service_id) {
       throw new Error("Professional ID and Service ID are required.");
@@ -758,12 +756,9 @@ export const deleteProfessionalService = async ({professional_id, service_id}) =
     return {
       success: true,
       message: "Service deleted successfully",
-      data: deletedService
+      data: deletedService,
     };
   } catch (error) {
-    throw new Error(
-      error?.message || "Failed to delete professional service."
-    );
+    throw new Error(error?.message || "Failed to delete professional service.");
   }
 };
-

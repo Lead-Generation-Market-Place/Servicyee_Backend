@@ -82,7 +82,7 @@ export const getServiceById = async (req, res, next) => {
   }
 };
 
-export const updateService = async (req, res, next) => {
+export const updateServiceController  = async (req, res, next) => {
   try {
     const updatedServiceDaata = req.body;
     const serviceId = req.params.id;
