@@ -43,11 +43,9 @@ router.get('/list', authenticateToken, getServices);
 router.get('/', getServices);
 router.post('/', fileupload('service').single('image_url'),
  addServices);
- router.post('/pricing', addServicePricing);
-
+router.post('/pricing', addServicePricing);
  //featured services
 router.get('/featured', featuredServicesHandler);
-
 // ✅ Dynamic route must be LAST
 router.get('/:id', getServiceById);
 router.put('/pricing/update', updateProfessionalService);
