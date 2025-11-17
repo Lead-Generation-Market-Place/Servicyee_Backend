@@ -3,13 +3,14 @@ import ServiceModel from "../models/servicesModel.js";
 import ProfessionalServicesModel from "../models/professionalServicesModel.js";
 import answerModel from "../models/answerModel.js";
 import mongoose from "mongoose";
-import questionModel from "../models/questionModel.js";
 import answer from "./answer.js";
 import LocationModel from "../models/LocationModel.js";
 import { response } from "express";
 import Professional from "../models/ProfessionalModel.js";
 import leadModel from "../models/leadModel.js";
 import professionalServicesModel from "../models/professionalServicesModel.js";
+import questionModel from "../models/questionModel.js";
+import zipcodeModel from "../models/zipcodeModel.js";
 
 class ServicesService {
   // ✅ Get all services
@@ -327,7 +328,6 @@ class ServicesService {
 
       return enrichedServices;
     } catch (err) {
-      console.error("Error fetching services for professional:", err);
       throw new Error("Unable to retrieve professional services");
     }
   }
@@ -346,7 +346,6 @@ class ServicesService {
     if (!mongoose.Types.ObjectId.isValid(newServiceId)) {
       throw new Error("Valid serviceId is required");
     }
-    console.log(proServiceId, newServiceId);
     // Assign new service_id to updateData
     updateData.service_id = newServiceId;
 
@@ -398,44 +397,38 @@ class ServicesService {
     return deleted;
   }
 
-  async addServicePricing(professionalId, serviceId, pricingData) {
-    // Validate IDs
-    if (!mongoose.Types.ObjectId.isValid(professionalId)) {
-      throw new Error("Valid professionalId is required");
-    }
-    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-      throw new Error("Valid serviceId is required");
-    }
-
-    // Find the professional-service record
-    const professionalService = await ProfessionalServicesModel.findOne({
-      professional_id: professionalId,
-      service_id: serviceId,
-    });
-
-    if (!professionalService) {
-      throw new Error(
-        "Professional service not found for the given professional and service IDs"
-      );
-    }
-
-    // Update only the specified fields
-    const allowedFields = [
-      "maximum_price",
-      "minimum_price",
-      "description",
-      "pricing_type",
-      "completed_tasks",
-    ];
-
-    for (const field of allowedFields) {
-      if (pricingData[field] !== undefined) {
-        professionalService[field] = pricingData[field];
+  // Adde service pricing for professional service
+  async addServicePricing(professional_id, service_id, pricingData) {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(professional_id)) {
+        throw new Error("A valid professional_id is required.");
       }
+      if (!mongoose.Types.ObjectId.isValid(service_id)) {
+        throw new Error("A valid service_id is required.");
+      }
+      const updatedService = await professionalServicesModel.findOneAndUpdate(
+        { professional_id, service_id },
+        { $set: pricingData },
+        { new: true, runValidators: true }
+      );
+      if (!updatedService) {
+        return {
+          success: false,
+          message: "No matching professional service found to update.",
+        };
+      }
+      return {
+        success: true,
+        message: "Service pricing added successfully.",
+        data: updatedService,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Error updating service pricing.",
+        error: error?.message || "An unexpected error occurred.",
+      };
     }
-
-    // Save updated record
-    return await professionalService.save();
   }
 
   async updateServicePricing(professionalId, serviceId, updateData) {
@@ -508,6 +501,12 @@ export async function getProfessionalServices(userId) {
   }
 }
 
+// Update Professional Service Status
+export async function updateServiceStatusServices(
+  professional_id,
+  service_id,
+  service_status
+) {
 
 // =================================================
 //           Manage Services
@@ -575,4 +574,196 @@ export async function updateServiceStatusServices(professional_id, service_id, s
     };
   }
 }
+
+// Create New Service - Professional
+export async function CreateNewServiceProfessional(data) {
+  const { professional_id, service_id, service_name } = data;
+  try {
+    if (!professional_id || !service_id || !service_name) {
+      throw new Error("All fields are required.");
+    }
+    const existingService = await professionalServicesModel.findOne({
+      professional_id,
+      service_id,
+    });
+    if (existingService) {
+      throw new Error("This service already exists for this professional.");
+    }
+    const professional = await professionalServicesModel.create({
+      professional_id,
+      service_id,
+      service_name,
+    });
+    return professional;
+  } catch (error) {
+    throw new Error(
+      error?.message || "Failed to create new professional service."
+    );
+  }
+}
+
+/**
+ * Fetch all questions for a given service ID
+ * @param {string} serviceId
+ * @returns {Promise<Array>} Array of questions
+ */
+export const fetchServiceQuestionsByServiceId = async (serviceId) => {
+  try {
+    if (!serviceId) {
+      throw new Error("Service ID is required.");
+    }
+    const questions = await questionModel
+      .find({ service_id: serviceId })
+      .sort({ created_at: 1 });
+    return questions;
+  } catch (error) {
+    throw new Error(error?.message || "Failed to fetch service questions.");
+  }
+};
+
+// Submit service answers for a professional and service
+export const submitServiceAnswers = async (
+  answers,
+  professional_id,
+  service_id
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const professionalService = await ProfessionalServicesModel.findOne({
+      professional_id: professional_id,
+      service_id: service_id,
+    }).session(session);
+    if (!professionalService) {
+      throw new Error(
+        "Professional service not found for this professional and service ID."
+      );
+    }
+    const questionIds = answers.map(
+      (a) => new mongoose.Types.ObjectId(a.question_id)
+    );
+    professionalService.question_ids = questionIds;
+    await professionalService.save({ session });
+    const answerDocs = answers.map((a) => ({
+      professional_id: professional_id,
+      service_id: service_id,
+      question_id: new mongoose.Types.ObjectId(a.question_id),
+      answers: a.answer,
+    }));
+    await answerModel.insertMany(answerDocs, { session });
+    await session.commitTransaction();
+    session.endSession();
+    return {
+      success: true,
+      message: "Service answers submitted successfully.",
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error?.message || "Failed to submit service answers.");
+  }
+};
+
+// Create Service Location for Professional Service
+export const createServiceLocationServices = async (payload) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const {
+      professional_id,
+      service_id,
+      lat,
+      lng,
+      city,
+      state,
+      radius_miles,
+      radiusMiles,
+      country,
+      address_line,
+    } = payload;
+
+    if (!professional_id || !service_id) {
+      throw new Error("professional_id and service_id are required.");
+    }
+    const radius = radius_miles || radiusMiles;
+    let zipcodes = [];
+    if (radius && radius > 0) {
+      const radiusRadians = radius / 3958.8;
+      const nearbyZips = await zipcodeModel
+        .find({
+          coordinates: {
+            $geoWithin: {
+              $centerSphere: [[lng, lat], radiusRadians],
+            },
+          },
+        })
+        .session(session);
+      zipcodes = nearbyZips.map((z) => z.zip);
+    }
+    const locationData = {
+      type: "professional",
+      professional_id,
+      service_id,
+      country: country || "USA",
+      state: state || "",
+      city: city || "",
+      zipcode: zipcodes,
+      address_line: address_line || "",
+      coordinates: { type: "Point", coordinates: [lng, lat] },
+      serviceRadiusMiles: radius || 0,
+    };
+    const [locationDoc] = await LocationModel.create([locationData], {
+      session,
+    });
+    const service = await ProfessionalServicesModel.findOneAndUpdate(
+      { professional_id, service_id },
+      { $addToSet: { location_ids: locationDoc._id } },
+      { new: true, session }
+    );
+    await session.commitTransaction();
+    session.endSession();
+    return {
+      success: true,
+      message: "Service Location Saved successfully.",
+      location: locationDoc,
+      service,
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error.message || "Failed to save location");
+  }
+};
+
+
+// Deleting Service of professional
+export const deleteProfessionalService = async ({professional_id, service_id}) => {
+  
+  try {
+    if (!professional_id || !service_id) {
+      throw new Error("Professional ID and Service ID are required.");
+    }
+    const existingService = await professionalServicesModel.findOne({
+      professional_id,
+      service_id,
+    });
+    if (!existingService) {
+      throw new Error("Service not found for this professional.");
+    }
+    const deletedService = await professionalServicesModel.findOneAndDelete({
+      professional_id,
+      service_id,
+    });
+    return {
+      success: true,
+      message: "Service deleted successfully",
+      data: deletedService
+    };
+  } catch (error) {
+    throw new Error(
+      error?.message || "Failed to delete professional service."
+    );
+  }
+};
 
