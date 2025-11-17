@@ -2,7 +2,6 @@ import express from "express";
 import {
   getServices,
   addServices,
-  // updateService,
   deleteService,
   getServiceById,
   getServicesOFAuthenticatedUser,
@@ -14,6 +13,7 @@ import {
   updateProfessionalService,
   deleteProService,
   addServicePricing,
+  updateServicePricing,
   GetProfessionalServices,
   updateProfessionalServiceStatus,
   CreateService,
@@ -21,18 +21,10 @@ import {
   SubmitAnswersServiceQuestions,
   createServiceLocationController,
   deleteSerivceById,
-} from "../controllers/serviceController.js";
-  featuredServicesHandler,fetchAllServicesOfAProfessional,
-  updateProfessionalService,deleteProService,addServicePricing,updateServicePricing,
-  GetProfessionalServices,
-
   updateServiceStatusHandler,
   updateFeaturedServiceHandler,
   updateServiceHandler,
-updateProfessionalServiceStatus
-
-} from '../controllers/serviceController.js';
-
+} from "../controllers/serviceController.js";
 
 import fileupload from "../config/multer.js";
 import { uploadFile } from "../controllers/ProfessionalController.js";
