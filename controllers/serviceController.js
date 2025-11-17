@@ -1,22 +1,20 @@
+// Core modules
+import path from "path";
+import fs from "fs";
+
 import servicesService, {
+  getProfessionalServices,
   CreateNewServiceProfessional,
   createServiceLocationServices,
   deleteProfessionalService,
   fetchServiceQuestionsByServiceId,
-  getProfessionalServices,
   submitServiceAnswers,
   updateServiceStatusServices,
-} from "../services/services.js";
-import path from "path";
-import fs from "fs";
+  updateService,
+  updateServiceStatus,
+  updateFeaturedService,
+} from '../services/services.js';
 
-import servicesService, { getProfessionalServices } from '../services/services.js';
-import { updateService, updateServiceStatus, updateFeaturedService } from '../services/services.js';
-
-import  { updateServiceStatusServices } from '../services/services.js';
-
-import path from 'path';
-import fs from 'fs';
 import { error } from 'console';
 
 export const getServices = async (req, res, next) => {
