@@ -2,7 +2,7 @@ import express from "express";
 import {
   getServices,
   addServices,
-  updateService,
+  // updateService,
   deleteService,
   getServiceById,
   getServicesOFAuthenticatedUser,
@@ -22,6 +22,17 @@ import {
   createServiceLocationController,
   deleteSerivceById,
 } from "../controllers/serviceController.js";
+  featuredServicesHandler,fetchAllServicesOfAProfessional,
+  updateProfessionalService,deleteProService,addServicePricing,updateServicePricing,
+  GetProfessionalServices,
+
+  updateServiceStatusHandler,
+  updateFeaturedServiceHandler,
+  updateServiceHandler,
+updateProfessionalServiceStatus
+
+} from '../controllers/serviceController.js';
+
 
 import fileupload from "../config/multer.js";
 import { uploadFile } from "../controllers/ProfessionalController.js";
@@ -70,6 +81,25 @@ router.get("/featured", featuredServicesHandler);
 router.get("/:id", getServiceById);
 router.put("/pricing/update", updateProfessionalService);
 router.put("/:id", fileupload("service").single("image_url"), updateService);
+router.get('/', getServices);
+router.post('/', fileupload('service').single('image_url'),
+ addServices);
+router.post('/pricing', addServicePricing);
+ //featured services
+router.get('/featured', featuredServicesHandler);
+
+router.get('/:id', getServiceById);
+router.put('/pricing/update', updateProfessionalService);
+
+// ******************************************
+//       Manage Services
+// ******************************************
+router.put('/:id', fileupload('service').single('image_url'), updateServiceHandler);
+router.put('/:id/status', updateServiceStatusHandler);
+router.put('/:id/featured', updateFeaturedServiceHandler);
+
+
+
 // Use this pattern: /professional-service/:professionalId/:serviceId
 router.put("/professional-service/update", updateProfessionalService);
 

@@ -1,4 +1,4 @@
-import { acceptLeadService, createLeadService, getProfessionalLeads } from "../../services/lead/leadService.js";
+import { acceptLeadService, createLeadService, getProfessionalLeads, getLeadByIdService } from "../../services/lead/leadService.js";
 import {User} from "../../models/user.js";
 import { leadValidationSchema } from "../../validators/leadValidator.js";
 import mongoose from 'mongoose';
@@ -79,13 +79,26 @@ export const createLead = async (req, res) => {
     
     // console.log(`📝 Converted ${answers.length} responses to answers`);
 
-    // ✅ 3. Handle file uploads
-    const files = (req.files || []).map((file) => ({
-      url: `/uploads/${file.filename}`,
-      type: file.mimetype.startsWith("image") ? "image" : "file",
-      originalName: file.originalname,
-    }));
-    console.log(`📁 Processed ${files.length} files`);
+    const files = [];
+
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        files.push({
+          url: `/uploads/${file.filename}`,
+          type: file.mimetype.startsWith("image") ? "image" : "file",
+          originalName: file.originalname,
+        });
+      });
+    } else if (req.file) {
+      files.push({
+        url: `/uploads/${req.file.filename}`,
+        type: req.file.mimetype.startsWith("image") ? "image" : "file",
+        originalName: req.file.originalname,
+      });
+    }
+
+    console.log(`📁 Uploaded ${files.length} file(s)`);
+
 
     // ✅ 4. Generate title
     let leadTitle = 'New Service Request';
@@ -255,5 +268,31 @@ export const getLeadByProfessionalId = async (req, res) => {
       data: []
     });
 
+  }
+}
+
+
+export const getLeadById = async (req, res) => {
+  try {
+    const leadId = req.params.leadId;
+    if (!leadId) {
+      return res.status(400).json({
+        success:false,
+        message:"Lead ID is required"
+      });
+    }
+    const response = await getLeadByIdService(leadId);
+    return res.status(200).json({
+      success:true,
+      message:"Lead fetched successfully",
+      data: response
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Unable to fetch lead",
+      data: null,
+      error:error?.message || "An unexpected error occured",
+    });
   }
 }

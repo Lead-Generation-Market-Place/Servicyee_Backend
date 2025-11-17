@@ -1,0 +1,180 @@
+# FAQ System cURL Commands for Testing
+
+# Configuration Variables (Replace with your actual values)
+BASE_URL="http://localhost:3000/api"
+AUTH_TOKEN="your_jwt_token_here"
+PROFESSIONAL_ID="507f1f77bcf86cd799439011"
+FAQ_ID=""
+
+# Headers
+HEADERS="-H 'Content-Type: application/json' -H 'Authorization: Bearer $AUTH_TOKEN'"
+
+echo "=== FAQ System API Testing with cURL ==="
+
+# 1. CREATE FAQ
+echo "1. Creating FAQ..."
+curl -X POST $HEADERS \
+  -d '{
+    "question": "What services do you offer?",
+    "answer": "We offer comprehensive home repair services including plumbing, electrical work, HVAC maintenance, painting, and general handyman services.",
+    "category": "Services",
+    "priority": 1
+  }' \
+  "$BASE_URL/professionals/$PROFESSIONAL_ID/faqs"
+
+echo -e "\n\n"
+
+# 2. CREATE MULTIPLE FAQs (BULK)
+echo "2. Creating multiple FAQs..."
+curl -X POST $HEADERS \
+  -d '{
+    "faqs": [
+      {
+        "question": "What are your working hours?",
+        "answer": "We work Monday to Friday from 8 AM to 6 PM, and Saturday from 9 AM to 4 PM.",
+        "category": "Schedule",
+        "priority": 1
+      },
+      {
+        "question": "Do you provide free estimates?",
+        "answer": "Yes, we provide free estimates for most services.",
+        "category": "Pricing",
+        "priority": 2
+      },
+      {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept cash, all major credit cards, debit cards, and bank transfers.",
+        "category": "Payment",
+        "priority": 3
+      }
+    ]
+  }' \
+  "$BASE_URL/professionals/faqs/bulk"
+
+echo -e "\n\n"
+
+# 3. GET ALL FAQs
+echo "3. Getting all FAQs..."
+curl -X GET $HEADERS \
+  "$BASE_URL/professionals/$PROFESSIONAL_ID/faqs?page=1&limit=10"
+
+echo -e "\n\n"
+
+# 4. SEARCH FAQs
+echo "4. Searching FAQs..."
+curl -X GET $HEADERS \
+  "$BASE_URL/professionals/$PROFESSIONAL_ID/faqs/search?query=services&page=1&limit=5"
+
+echo -e "\n\n"
+
+# 5. GET POPULAR FAQs
+echo "5. Getting popular FAQs..."
+curl -X GET $HEADERS \
+  "$BASE_URL/professionals/$PROFESSIONAL_ID/faqs/popular?limit=5"
+
+echo -e "\n\n"
+
+# 6. GET RECENT FAQs
+echo "6. Getting recent FAQs..."
+curl -X GET $HEADERS \
+  "$BASE_URL/professionals/$PROFESSIONAL_ID/faqs/recent?limit=5"
+
+echo -e "\n\n"
+
+# 7. GET FAQ CATEGORIES
+echo "7. Getting FAQ categories..."
+curl -X GET $HEADERS \
+  "$BASE_URL/professionals/$PROFESSIONAL_ID/faqs/categories"
+
+echo -e "\n\n"
+
+# 8. GET FAQ STATISTICS
+echo "8. Getting FAQ statistics..."
+curl -X GET $HEADERS \
+  "$BASE_URL/professionals/$PROFESSIONAL_ID/faqs/stats"
+
+echo -e "\n\n"
+
+# Note: For the following commands, you need to set FAQ_ID to a real FAQ ID
+if [ ! -z "$FAQ_ID" ]; then
+    # 9. GET FAQ BY ID
+    echo "9. Getting FAQ by ID..."
+    curl -X GET $HEADERS \
+      "$BASE_URL/professionals/faqs/$FAQ_ID"
+
+    echo -e "\n\n"
+
+    # 10. UPDATE FAQ
+    echo "10. Updating FAQ..."
+    curl -X PUT $HEADERS \
+      -d '{
+        "question": "What home repair services do you offer?",
+        "answer": "We offer comprehensive home repair services including plumbing, electrical work, HVAC maintenance, painting, general handyman services, roofing, and landscaping.",
+        "category": "Services",
+        "priority": 2
+      }' \
+      "$BASE_URL/professionals/faqs/$FAQ_ID"
+
+    echo -e "\n\n"
+
+    # 11. INCREMENT VIEW COUNT
+    echo "11. Incrementing view count..."
+    curl -X POST $HEADERS \
+      -d '{}' \
+      "$BASE_URL/professionals/faqs/$FAQ_ID/view"
+
+    echo -e "\n\n"
+
+    # 12. MARK AS HELPFUL
+    echo "12. Marking FAQ as helpful..."
+    curl -X POST $HEADERS \
+      -d '{"is_helpful": true}' \
+      "$BASE_URL/professionals/faqs/$FAQ_ID/helpful"
+
+    echo -e "\n\n"
+
+    # 13. MARK AS NOT HELPFUL
+    echo "13. Marking FAQ as not helpful..."
+    curl -X POST $HEADERS \
+      -d '{"is_helpful": false}' \
+      "$BASE_URL/professionals/faqs/$FAQ_ID/helpful"
+
+    echo -e "\n\n"
+
+    # 14. DELETE FAQ
+    echo "14. Deleting FAQ..."
+    curl -X DELETE $HEADERS \
+      "$BASE_URL/professionals/faqs/$FAQ_ID"
+
+    echo -e "\n\n"
+else
+    echo "Note: Set FAQ_ID variable to test single FAQ operations (get by ID, update, delete, etc.)"
+fi
+
+# 15. DELETE MULTIPLE FAQs
+echo "15. Deleting multiple FAQs..."
+curl -X DELETE $HEADERS \
+  -d '{
+    "faq_ids": ["faq_id_1", "faq_id_2", "faq_id_3"]
+  }' \
+  "$BASE_URL/professionals/faqs/bulk"
+
+echo -e "\n\n"
+
+echo "=== FAQ API Testing Complete ==="
+
+# Additional useful commands for troubleshooting:
+
+# Test authentication
+# curl -X GET $HEADERS "$BASE_URL/professionals/$PROFESSIONAL_ID/faqs/stats"
+
+# Get all professionals (if you need to find a professional ID)
+# curl -X GET $HEADERS "$BASE_URL/professionals/"
+
+# Test with invalid professional ID (should return 404)
+# curl -X GET $HEADERS "$BASE_URL/professionals/invalid_id/faqs"
+
+# Test validation (missing question)
+# curl -X POST $HEADERS \
+#   -d '{"answer": "This should fail"}' \
+#   "$BASE_URL/professionals/$PROFESSIONAL_ID/faqs"
