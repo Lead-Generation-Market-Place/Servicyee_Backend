@@ -508,6 +508,47 @@ export async function getProfessionalServices(userId) {
   }
 }
 
+
+// =================================================
+//           Manage Services
+// =================================================
+
+export async function updateServiceStatus(serviceId, newStatus) {
+  try {
+    const updated = await ServiceModel.findByIdAndUpdate(
+      serviceId,
+      { is_active: newStatus },
+      { new: true } 
+    );
+
+    return updated;
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+export async function updateFeaturedService(serviceId, isFeatured) {
+  try {
+    const updated = await ServiceModel.findByIdAndUpdate(
+      serviceId,
+      { is_featured: isFeatured },
+      { new: true } // returns updated document
+    );
+
+    return updated;
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+   export async function updateService(serviceId, updateData) {
+    return await ServiceModel.findByIdAndUpdate(serviceId, updateData, {
+      new: true
+    });
+  }
+
 export async function updateServiceStatusServices(professional_id, service_id, service_status) {
   try {
     const service = await professionalServicesModel.findOneAndUpdate(
@@ -534,3 +575,4 @@ export async function updateServiceStatusServices(professional_id, service_id, s
     };
   }
 }
+

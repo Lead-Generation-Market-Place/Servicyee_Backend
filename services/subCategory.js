@@ -1,5 +1,6 @@
 import Subcategories from '../models/subCategoryModel.js';
 import Category from '../models/categoryModel.js';  // Import Category model
+import { create } from 'domain';
 
 class SubCategoryService {
   async getAllSubcategories(filter = {}) {
@@ -126,8 +127,14 @@ class SubCategoryService {
       {
         $project: {
           name: 1,
-          is_active: 1,
+          slug: 1,
+          description: 1,
+          subcategory_image_url: 1,
+          description: 1,
           category_id: 1,
+          is_active: 1,
+          created_at: 1,
+          updated_at: 1,
           servicesCount: { $size: '$services' }
         }
       },
@@ -145,3 +152,23 @@ class SubCategoryService {
 
 }
 export default new SubCategoryService();
+
+
+// =======================================
+//            Manage Categories
+// =======================================
+
+export const updateSubcategoryStatus = async (subcategoryId, isActive) => {
+  try {
+    const updatedSubcategory = await Subcategories.findByIdAndUpdate(
+      subcategoryId,
+      { is_active: isActive },
+      { new: true }
+    );
+
+    return updatedSubcategory;
+  } catch (error) {
+    throw error;
+  }
+};
+

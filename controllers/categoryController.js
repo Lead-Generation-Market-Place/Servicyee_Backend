@@ -150,3 +150,42 @@ export const getAllWithServiceCount = async (req, res, next) => {
     next(error);
   }
 }
+
+// =======================================
+//           Manage Categories
+// =======================================
+
+export const updateCategoryStatusHandler = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+
+    if (typeof is_active !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: 'is_active must be a boolean value.'
+      });
+    }
+
+    const updatedCategory = await categoryService.updateCategoryStatus(id, is_active);
+
+    if (!updatedCategory) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: 'Category not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      error: false,
+      message: 'Category status updated successfully',
+      data: updatedCategory
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+ 

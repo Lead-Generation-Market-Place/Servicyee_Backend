@@ -1,6 +1,12 @@
-import servicesService, { getProfessionalServices, updateServiceStatusServices } from '../services/services.js';
+
+import servicesService, { getProfessionalServices } from '../services/services.js';
+import { updateService, updateServiceStatus, updateFeaturedService } from '../services/services.js';
+
+import  { updateServiceStatusServices } from '../services/services.js';
+
 import path from 'path';
 import fs from 'fs';
+import { error } from 'console';
 
 export const getServices = async (req, res, next) => {
   try {
@@ -58,30 +64,6 @@ export const getServiceById = async (req, res, next) => {
     const service = await servicesService.getServiceById(req.params.id);
     if (!service) return res.status(404).json({ message: 'Service not found' });
     res.status(200).json({ data: service });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const updateService = async (req, res, next) => {
-  try {
-    const updatedServiceDaata = req.body;
-    const serviceId = req.params.id;
-    const existingService = await servicesService.getServiceById(serviceId);
-    if (!existingService) {
-      return res.status(404).json({ message: 'Service not found' });
-    }
-    if (req.file) {
-      if (existingService.image_url) {
-        const oldImagePath = path.join('uploads/service', existingService.image_url);
-        fs.unlink(oldImagePath, (err) => {
-          if (err) console.error('Error deleting old image:', err);
-        });
-      }
-      updatedServiceDaata.image_url = req.file.filename;
-    }
-    const updatedService = await servicesService.updateService(serviceId, updatedServiceDaata);
-    res.status(200).json({ data: updatedService });
   } catch (error) {
     next(error);
   }
@@ -322,6 +304,115 @@ export async function GetProfessionalServices(req, res)
 }
 
 
+// ===========================================================
+//                    Manage Services
+// ===========================================================
+
+export const updateServiceHandler = async (req, res, next) => {
+  try {
+    const updatedServiceDaata = req.body;
+    const serviceId = req.params.id;
+    const existingService = await servicesService.getServiceById(serviceId);
+    if (!existingService) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+    if (req.file) {
+      if (existingService.image_url) {
+        const oldImagePath = path.join('uploads/service', existingService.image_url);
+        fs.unlink(oldImagePath, (err) => {
+          if (err) console.error('Error deleting old image:', err);
+        });
+      }
+      updatedServiceDaata.image_url = req.file.filename;
+    }
+    const updatedService = await updateService(serviceId, updatedServiceDaata);
+    res.status(200).json({ data: updatedService });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateServiceStatusHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+
+    if (typeof is_active !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: 'is_active must be a boolean value.',
+      });
+    }
+
+    const updatedService = await updateServiceStatus(id, is_active);
+
+    if (!updatedService) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: 'Service not found',
+
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      error: false,
+      message: 'Service status updated successfully',
+      data: updatedService,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message || 'Failed to update service status',
+    });
+  }
+};
+
+
+export const updateFeaturedServiceHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_featured } = req.body;
+
+    if (typeof is_featured !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: 'is_featured must be a boolean value.'
+      });
+    }
+
+    const updatedService = await updateFeaturedService(id, is_featured);
+
+    if (!updatedService) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: 'Service not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      error: false,
+      message: 'Service featured status updated successfully',
+      data: updatedService
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message || 'Failed to update service featured status'
+    });
+  }
+};
+
+
+
+
 export const updateProfessionalServiceStatus = async (req, res) => {
   try {
     const { professional_id, service_id, service_status } = req.body;
@@ -343,11 +434,6 @@ export const updateProfessionalServiceStatus = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "No matching service found to update.",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
       message: "Service status updated successfully.",
       data: service.data,
     });
