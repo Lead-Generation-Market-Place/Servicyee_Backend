@@ -15,7 +15,7 @@ import {
 	createProfessionalStepEight,
 	getServicesQuestionsPro,
 	createProfessionalStepNine,
-	createProfessionalReview,
+	// createProfessionalReview,
 	getProfessionalProfile,
 	addProfessionalFiles,
 	createFeaturedProjectHandler,
@@ -32,7 +32,7 @@ import {
 	getAllProfessionalLicensesHandler,
 	getProfessionalLicenseByIdHandler,
 	updateProfessionalLicenseHandler,
-	deleteProfessionalLicenseHandler
+	deleteProfessionalLicenseHandler,
 	createProfessionalGetSteps
 } from '../controllers/ProfessionalController.js';
 import {

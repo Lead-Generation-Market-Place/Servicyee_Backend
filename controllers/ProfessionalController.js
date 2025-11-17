@@ -14,7 +14,7 @@ import {
   getProServicesQuestions,
   createProfessionalServicesAnswers,
   createProAccountStepNine,
-  createProfessionalAccountReview,
+  // createProfessionalAccountReview,
   getProfessionalProfileSummary,
   createFeaturedProject,
   createFeaturedProjectWithFiles,
