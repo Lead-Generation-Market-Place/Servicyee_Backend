@@ -20,6 +20,7 @@ import {
   getServiceQuestionsByServiceId,
   SubmitAnswersServiceQuestions,
   createServiceLocationController,
+  deleteSerivceById,
 } from "../controllers/serviceController.js";
 
 import fileupload from "../config/multer.js";
@@ -54,6 +55,7 @@ router.get(
 );
 router.put("/answers_submit", authenticateToken, SubmitAnswersServiceQuestions);
 router.put("/service_location", authenticateToken, createServiceLocationController);
+router.delete("/delete_service", authenticateToken, deleteSerivceById);
 
 // end of services Management Routes
 

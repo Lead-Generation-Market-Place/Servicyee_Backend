@@ -1,6 +1,7 @@
 import servicesService, {
   CreateNewServiceProfessional,
   createServiceLocationServices,
+  deleteProfessionalService,
   fetchServiceQuestionsByServiceId,
   getProfessionalServices,
   submitServiceAnswers,
@@ -531,6 +532,32 @@ export async function createServiceLocationController(req, res) {
     return res.status(500).json({
       success: false,
       message: "Failed to update service location.",
+      error: error?.message ?? "Unexpected server error.",
+    });
+  }
+}
+
+
+// Delete Service 
+export async function deleteSerivceById(req, res) {
+  const { professional_id, service_id } = req.body;
+  if (!service_id || !professional_id) {
+    return res.status(400).json({
+      success: false,
+      message: "Both service ID and professional ID are required.",
+    });
+  }
+  try {
+    const result = await deleteProfessionalService({service_id, professional_id});
+    return res.status(200).json({
+      success: true,
+      message: "Service deleted successfully.",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete service.",
       error: error?.message ?? "Unexpected server error.",
     });
   }

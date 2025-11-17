@@ -693,3 +693,35 @@ export const createServiceLocationServices = async (payload) => {
     throw new Error(error.message || "Failed to save location");
   }
 };
+
+
+// Deleting Service of professional
+export const deleteProfessionalService = async ({professional_id, service_id}) => {
+  
+  try {
+    if (!professional_id || !service_id) {
+      throw new Error("Professional ID and Service ID are required.");
+    }
+    const existingService = await professionalServicesModel.findOne({
+      professional_id,
+      service_id,
+    });
+    if (!existingService) {
+      throw new Error("Service not found for this professional.");
+    }
+    const deletedService = await professionalServicesModel.findOneAndDelete({
+      professional_id,
+      service_id,
+    });
+    return {
+      success: true,
+      message: "Service deleted successfully",
+      data: deletedService
+    };
+  } catch (error) {
+    throw new Error(
+      error?.message || "Failed to delete professional service."
+    );
+  }
+};
+
