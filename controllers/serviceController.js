@@ -13,9 +13,9 @@ import servicesService, {
   updateService,
   updateServiceStatus,
   updateFeaturedService,
-} from '../services/services.js';
+} from "../services/services.js";
 
-import { error } from 'console';
+import { error } from "console";
 
 export const getServices = async (req, res, next) => {
   try {
@@ -82,7 +82,7 @@ export const getServiceById = async (req, res, next) => {
   }
 };
 
-export const updateServiceController  = async (req, res, next) => {
+export const updateServiceController = async (req, res, next) => {
   try {
     const updatedServiceDaata = req.body;
     const serviceId = req.params.id;
@@ -363,7 +363,6 @@ export async function GetProfessionalServices(req, res) {
   }
 }
 
-
 // ===========================================================
 //                    Manage Services
 // ===========================================================
@@ -374,13 +373,16 @@ export const updateServiceHandler = async (req, res, next) => {
     const serviceId = req.params.id;
     const existingService = await servicesService.getServiceById(serviceId);
     if (!existingService) {
-      return res.status(404).json({ message: 'Service not found' });
+      return res.status(404).json({ message: "Service not found" });
     }
     if (req.file) {
       if (existingService.image_url) {
-        const oldImagePath = path.join('uploads/service', existingService.image_url);
+        const oldImagePath = path.join(
+          "uploads/service",
+          existingService.image_url
+        );
         fs.unlink(oldImagePath, (err) => {
-          if (err) console.error('Error deleting old image:', err);
+          if (err) console.error("Error deleting old image:", err);
         });
       }
       updatedServiceDaata.image_url = req.file.filename;
@@ -397,11 +399,11 @@ export const updateServiceStatusHandler = async (req, res) => {
     const { id } = req.params;
     const { is_active } = req.body;
 
-    if (typeof is_active !== 'boolean') {
+    if (typeof is_active !== "boolean") {
       return res.status(400).json({
         success: false,
         error: true,
-        message: 'is_active must be a boolean value.',
+        message: "is_active must be a boolean value.",
       });
     }
 
@@ -411,37 +413,35 @@ export const updateServiceStatusHandler = async (req, res) => {
       return res.status(404).json({
         success: false,
         error: true,
-        message: 'Service not found',
-
+        message: "Service not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       error: false,
-      message: 'Service status updated successfully',
+      message: "Service status updated successfully",
       data: updatedService,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       error: true,
-      message: error.message || 'Failed to update service status',
+      message: error.message || "Failed to update service status",
     });
   }
 };
-
 
 export const updateFeaturedServiceHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const { is_featured } = req.body;
 
-    if (typeof is_featured !== 'boolean') {
+    if (typeof is_featured !== "boolean") {
       return res.status(400).json({
         success: false,
         error: true,
-        message: 'is_featured must be a boolean value.'
+        message: "is_featured must be a boolean value.",
       });
     }
 
@@ -451,55 +451,51 @@ export const updateFeaturedServiceHandler = async (req, res) => {
       return res.status(404).json({
         success: false,
         error: true,
-        message: 'Service not found'
+        message: "Service not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       error: false,
-      message: 'Service featured status updated successfully',
-      data: updatedService
+      message: "Service featured status updated successfully",
+      data: updatedService,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       error: true,
-      message: error.message || 'Failed to update service featured status'
+      message: error.message || "Failed to update service featured status",
     });
   }
 };
 
-
-
-
 export const updateProfessionalServiceStatus = async (req, res) => {
   try {
     const { professional_id, service_id, service_status } = req.body;
-
     if (!professional_id || !service_id) {
       return res.status(400).json({
         success: false,
         message: "professional_id and service_id are required.",
       });
     }
-
     const service = await updateServiceStatusServices(
       professional_id,
       service_id,
       service_status
     );
-
     if (!service || !service.success) {
       return res.status(404).json({
         success: false,
         message: "No matching service found to update.",
-      message: "Service status updated successfully.",
-      data: service.data,
-    });
+      });
     }
+    return res.status(200).json({
+      success: true,
+      message: "Service status updated successfully.",
+      data: service.data || null,
+    });
   } catch (error) {
-    console.error("Error updating professional service status:", error);
     return res.status(500).json({
       success: false,
       message: "Server error while updating service status.",
@@ -507,6 +503,7 @@ export const updateProfessionalServiceStatus = async (req, res) => {
     });
   }
 };
+
 
 // Create New Service - Professional
 export async function CreateService(req, res) {
@@ -565,7 +562,6 @@ export const getServiceQuestionsByServiceId = async (req, res) => {
   }
 };
 
-
 // Submit Answers to Service Questions for a Professional service
 export const SubmitAnswersServiceQuestions = async (req, res) => {
   try {
@@ -598,14 +594,22 @@ export const SubmitAnswersServiceQuestions = async (req, res) => {
           message: "Question ID is required in each answer.",
         });
       }
-      if (ans === undefined || ans === null || (Array.isArray(ans) && ans.length === 0)) {
+      if (
+        ans === undefined ||
+        ans === null ||
+        (Array.isArray(ans) && ans.length === 0)
+      ) {
         return res.status(400).json({
           success: false,
           message: `Answer for question_id ${question_id} is missing.`,
         });
       }
     }
-    const inserted = await submitServiceAnswers(answers, professional_id, service_id);
+    const inserted = await submitServiceAnswers(
+      answers,
+      professional_id,
+      service_id
+    );
     return res.status(201).json({
       success: true,
       message: "Answers submitted successfully.",
@@ -621,8 +625,6 @@ export const SubmitAnswersServiceQuestions = async (req, res) => {
   }
 };
 
-
-
 // Create Service Location for Professional Service
 export async function createServiceLocationController(req, res) {
   const payload = req.body;
@@ -633,7 +635,6 @@ export async function createServiceLocationController(req, res) {
       message: "Service location added successfully.",
       data: result,
     });
-
   } catch (error) {
     console.error("Service Location Error:", error);
     if (error.message === "Professional not found.") {
@@ -650,8 +651,7 @@ export async function createServiceLocationController(req, res) {
   }
 }
 
-
-// Delete Service 
+// Delete Service
 export async function deleteSerivceById(req, res) {
   const { professional_id, service_id } = req.body;
   if (!service_id || !professional_id) {
@@ -661,7 +661,10 @@ export async function deleteSerivceById(req, res) {
     });
   }
   try {
-    const result = await deleteProfessionalService({service_id, professional_id});
+    const result = await deleteProfessionalService({
+      service_id,
+      professional_id,
+    });
     return res.status(200).json({
       success: true,
       message: "Service deleted successfully.",
