@@ -306,6 +306,42 @@ export const addServicePricing = async (req, res) => {
   }
 };
 
+
+
+export const getprofessionalServiceById = async (req, res) => {
+ try {
+    const { professional_id, service_id } = req.query;
+    if (!professional_id || !service_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Both professional_id and service_id are required.",
+      });
+    }
+    const services = await servicesService.getProfessionalServiceDetails(
+      professional_id,
+      service_id
+    );
+    if (!services) {
+      return res.status(404).json({
+        success: false,
+        message: "No service found for this professional.",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Service retrieved successfully.",
+      data: services,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error?.message ||
+        "An unexpected error occurred while retrieving service.",
+    });
+  }
+};
+
 export const updateServicePricing = async (req, res) => {
   try {
     const { professional_id, service_id, ...updateData } = req.body;

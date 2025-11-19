@@ -431,12 +431,53 @@ class ServicesService {
     }
   }
 
-  async updateServicePricing(professionalId, serviceId, updateData) {
-    if (!mongoose.Types.ObjectId.isValid(professionalId)) {
-      throw new Error("Valid professionalId is required");
+
+
+  
+  async getProfessionalServiceDetails(professional_id, service_id) {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(professional_id)) {
+        throw new Error("A valid professional_id is required.");
+      }
+      if (!mongoose.Types.ObjectId.isValid(service_id)) {
+        throw new Error("A valid service_id is required.");
+      }
+      const service = await professionalServicesModel
+        .findOne({ professional_id, service_id })
+        .populate("location_ids")
+        .populate("question_ids")
+        .lean();
+
+      if (!service) {
+        return {
+          success: false,
+          message: "No professional service found for this Professional.",
+        };
+      }
+
+      return {
+        success: true,
+        message: "Professional service details retrieved successfully.",
+        data: service,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Error retrieving professional service details.",
+        error: error?.message || "An unexpected error occurred.",
+      };
     }
-    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-      throw new Error("Valid serviceId is required");
+  }
+
+
+
+
+  async updateServicePricing(professionalId, serviceId, updateData) {
+    if (!professionalId) {
+      throw new Error("A valid professional_id is required.");
+    }
+    if (!serviceId) {
+      throw new Error("A valid service_id is required.");
     }
 
     const professionalService = await ProfessionalServicesModel.findOne({
