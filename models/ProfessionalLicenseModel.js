@@ -14,9 +14,9 @@ const ProfessionalLicenseSchema = new Schema(
       ref: "LicenseType",
       required: true
     },
-    zipcode_id: {
+    state_id: {
       type: ObjectId,
-      ref: "Zipcode",
+      ref: "Location",
       required: true
     },
     license_owner_name: {

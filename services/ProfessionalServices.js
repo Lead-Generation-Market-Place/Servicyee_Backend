@@ -945,26 +945,19 @@ export async function saveProfessionalLicense(data) {
     
     const {
       professional_id,
+      state_id,
       license_type_id,
-      zipcode_id,
       license_owner_name,
       license_expiration,
       link_to_licensing_agency,
       status = "pending"
     } = data;
 
-    let finalZipcodeId = zipcode_id;
+
     
-    // If zipcode_id is not provided but state_name or city is provided, get zipcode_id
-    if (!zipcode_id) {
-      const stateName = getStateNameFromRequest(data);
-      if (stateName) {
-        finalZipcodeId = await getZipcodeIdByStateName(stateName);
-      }
-    }
 
     // Validate required fields according to schema
-    if (!professional_id || !license_type_id || !finalZipcodeId || !license_owner_name || !license_expiration) {
+    if (!professional_id || !license_type_id || !license_owner_name || !license_expiration) {
       throw new Error('professional_id, license_type_id, zipcode_id, license_owner_name, and license_expiration are required');
     }
 
@@ -977,8 +970,8 @@ export async function saveProfessionalLicense(data) {
     // Create the professional license
     const professionalLicense = new ProfessionalLicense({
       professional_id,
+      state_id,
       license_type_id,
-      zipcode_id: finalZipcodeId,
       license_owner_name,
       license_expiration: new Date(license_expiration),
       link_to_licensing_agency,
@@ -1001,20 +994,23 @@ export async function saveProfessionalLicense(data) {
 // Get all professional licenses
 export async function getAllProfessionalLicenses(professional_id) {
   try {
-    const licenses = await ProfessionalLicense.find({
-      professional_id: new mongoose.Types.ObjectId(professional_id)
-    })
-    .populate({
-      path: 'zipcode_id',
-      select: 'city state_name zip'
-    })
-    .populate({
-      path: 'license_type_id',
-      select: 'name'
-    })
-    .lean();
+    const [latestLicense] = await ProfessionalLicense.find({
+  professional_id: new mongoose.Types.ObjectId(professional_id)
+})
+  .populate({
+    path: 'state_id',
+    select: 'city state_name zip'
+  })
+  .populate({
+    path: 'license_type_id',
+    select: 'name'
+  })
+  .sort({ createdAt: -1 })
+  .limit(1)
+  .lean();
+
     
-    return licenses;
+    return latestLicense;
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch professional licenses');
   }

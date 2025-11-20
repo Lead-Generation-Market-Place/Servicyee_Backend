@@ -881,6 +881,8 @@ export async function saveProfessionalLicenseHandler(req, res) {
         message: "Request body is required"
       });
     }
+
+    console.log('License Data:', licenseData);
     
     const savedLicense = await saveProfessionalLicense(licenseData);
     res.status(201).json({

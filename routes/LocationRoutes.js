@@ -20,7 +20,7 @@ import { authenticateToken } from "../middleware/authMiddleware.js";
 
 
 const router = express.Router();
-router.get('/all',authenticateToken, getLocationHandler);
+router.get('/all',getLocationHandler);
 router.get('/pro',authenticateToken, getLocationByUserIdHandler);
 router.get('/miles',authenticateToken,getAllMilesFromDB)
 router.get('/minute',authenticateToken,getAllMinutesFromDB);
