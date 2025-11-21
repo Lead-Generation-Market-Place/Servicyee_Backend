@@ -431,9 +431,6 @@ class ServicesService {
     }
   }
 
-
-
-  
   async getProfessionalServiceDetails(professional_id, service_id) {
     try {
       if (!mongoose.Types.ObjectId.isValid(professional_id)) {
@@ -468,6 +465,36 @@ class ServicesService {
       };
     }
   }
+
+
+// Location of of service by location Id and pro_id
+async getProfessionalServiceLocation(professional_id, location_id) {
+  try {
+    if (
+      !mongoose.Types.ObjectId.isValid(professional_id) ||
+      !mongoose.Types.ObjectId.isValid(location_id)
+    ) {
+      throw new Error("Valid professional_id and location_id are required");
+    }
+    const location = await LocationModel.findOne({
+      _id: location_id,
+      professional_id: professional_id,
+    }).lean();
+    return {
+      success: true,
+      message: "Location retrieved successfully",
+      data: location,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Failed to retrieve location",
+      error: error.message,
+      data: null,
+    };
+  }
+}
+
 
 
 
@@ -773,6 +800,134 @@ export const createServiceLocationServices = async (payload) => {
     throw new Error(error.message || "Failed to save location");
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+// Update service Location
+export const updateServiceLocationServices = async (payload) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const {
+      professional_id,
+      service_id,
+      location_id,
+      lat,
+      lng,
+      city,
+      state,
+      radius_miles,
+      radiusMiles,
+      country,
+      address_line,
+      zip, // Add zip if needed
+    } = payload;
+    if (!professional_id || !location_id) {
+      throw new Error("professional_id and location_id are required.");
+    }
+    const radius = radius_miles || radiusMiles;
+    let zipcodes = [];
+    if (radius && radius > 0) {
+      const radiusRadians = radius / 3958.8;
+      const nearbyZips = await zipcodeModel
+        .find({
+          coordinates: {
+            $geoWithin: {
+              $centerSphere: [[lng, lat], radiusRadians],
+            },
+          },
+        })
+        .session(session);
+      zipcodes = nearbyZips.map((z) => z.zip);
+    }
+
+    const locationData = {
+      type: "professional",
+      professional_id,
+      service_id,
+      country: country || "USA",
+      state: state || "",
+      city: city || "",
+      zipcode: zipcodes,
+      address_line: address_line || "",
+      coordinates: { type: "Point", coordinates: [lng, lat] },
+      serviceRadiusMiles: radius || 0,
+      updatedAt: new Date(), 
+    };
+
+    let locationDoc;
+    let operationType = "created";
+
+    if (location_id) {
+      const existingLocation = await LocationModel.findOne({
+        _id: location_id,
+      }).session(session);
+      if (existingLocation) {
+        locationDoc = await LocationModel.findByIdAndUpdate(
+          location_id,
+          {
+            $set: locationData,
+          },
+          {
+            new: true,
+            runValidators: true,
+            session,
+          }
+        );
+        operationType = "updated";
+      } else {
+        throw new Error(
+          "Location not found or doesn't belong to this professional and service."
+        );
+      }
+    } else {
+      [locationDoc] = await LocationModel.create([locationData], {
+        session,
+      });
+      await ProfessionalServicesModel.findOneAndUpdate(
+        { professional_id, service_id },
+        { $addToSet: { location_ids: locationDoc._id } },
+        { new: true, session }
+      );
+    }
+    await session.commitTransaction();
+    session.endSession();
+    return {
+      success: true,
+      message: `Service Location ${operationType} successfully.`,
+      location: locationDoc,
+      operation: operationType,
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error.message || "Failed to save location");
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Deleting Service of professional
 export const deleteProfessionalService = async ({
