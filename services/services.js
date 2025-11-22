@@ -431,73 +431,106 @@ class ServicesService {
     }
   }
 
-  async getProfessionalServiceDetails(professional_id, service_id) {
+async getProfessionalServiceDetails(professional_id, service_id) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(professional_id)) {
-        throw new Error("A valid professional_id is required.");
-      }
-      if (!mongoose.Types.ObjectId.isValid(service_id)) {
-        throw new Error("A valid service_id is required.");
-      }
-      const service = await professionalServicesModel
-        .findOne({ professional_id, service_id })
-        .populate("location_ids")
-        .populate("question_ids")
-        .lean();
+        if (!mongoose.Types.ObjectId.isValid(professional_id)) {
+            throw new Error("A valid professional_id is required.");
+        }
+        if (!mongoose.Types.ObjectId.isValid(service_id)) {
+            throw new Error("A valid service_id is required.");
+        }
+        const service = await professionalServicesModel
+            .findOne({ professional_id, service_id })
+            .populate("location_ids")
+            .lean();
+        if (!service) {
+            return {
+                success: false,
+                message: "No professional service found for this Professional.",
+            };
+        }
+        const questions = await questionModel
+            .find({
+                service_id: service_id,
+            })
+            .lean();
+        const questionsWithAnswers = await Promise.all(
+            questions.map(async (question) => {
+                const latestAnswer = await answerModel
+                    .findOne({
+                        question_id: question._id,
+                        professional_id: professional_id,
+                    })
+                    .sort({ createdAt: -1 }) // Get the most recent
+                    .lean();
 
-      if (!service) {
-        return {
-          success: false,
-          message: "No professional service found for this Professional.",
+                return {
+                    ...question,
+                    answers: latestAnswer ? [latestAnswer] : []
+                };
+            })
+        );
+
+        const result = {
+            ...service,
+            questions: questionsWithAnswers,
         };
-      }
 
-      return {
-        success: true,
-        message: "Professional service details retrieved successfully.",
-        data: service,
-      };
+        return {
+            success: true,
+            message: "Professional service details retrieved successfully.",
+            data: result,
+        };
     } catch (error) {
-      return {
-        success: false,
-        message: "Error retrieving professional service details.",
-        error: error?.message || "An unexpected error occurred.",
-      };
+        return {
+            success: false,
+            message: "Error retrieving professional service details.",
+            error: error?.message || "An unexpected error occurred.",
+        };
     }
-  }
-
-
-// Location of of service by location Id and pro_id
-async getProfessionalServiceLocation(professional_id, location_id) {
-  try {
-    if (
-      !mongoose.Types.ObjectId.isValid(professional_id) ||
-      !mongoose.Types.ObjectId.isValid(location_id)
-    ) {
-      throw new Error("Valid professional_id and location_id are required");
-    }
-    const location = await LocationModel.findOne({
-      _id: location_id,
-      professional_id: professional_id,
-    }).lean();
-    return {
-      success: true,
-      message: "Location retrieved successfully",
-      data: location,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: "Failed to retrieve location",
-      error: error.message,
-      data: null,
-    };
-  }
 }
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+  // Location of of service by location Id and pro_id
+  async getProfessionalServiceLocation(professional_id, location_id) {
+    try {
+      if (
+        !mongoose.Types.ObjectId.isValid(professional_id) ||
+        !mongoose.Types.ObjectId.isValid(location_id)
+      ) {
+        throw new Error("Valid professional_id and location_id are required");
+      }
+      const location = await LocationModel.findOne({
+        _id: location_id,
+        professional_id: professional_id,
+      }).lean();
+      return {
+        success: true,
+        message: "Location retrieved successfully",
+        data: location,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Failed to retrieve location",
+        error: error.message,
+        data: null,
+      };
+    }
+  }
 
   async updateServicePricing(professionalId, serviceId, updateData) {
     if (!professionalId) {
@@ -801,16 +834,6 @@ export const createServiceLocationServices = async (payload) => {
   }
 };
 
-
-
-
-
-
-
-
-
-
-
 // Update service Location
 export const updateServiceLocationServices = async (payload) => {
   const session = await mongoose.startSession();
@@ -860,7 +883,7 @@ export const updateServiceLocationServices = async (payload) => {
       address_line: address_line || "",
       coordinates: { type: "Point", coordinates: [lng, lat] },
       serviceRadiusMiles: radius || 0,
-      updatedAt: new Date(), 
+      updatedAt: new Date(),
     };
 
     let locationDoc;
@@ -912,22 +935,6 @@ export const updateServiceLocationServices = async (payload) => {
     throw new Error(error.message || "Failed to save location");
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Deleting Service of professional
 export const deleteProfessionalService = async ({
