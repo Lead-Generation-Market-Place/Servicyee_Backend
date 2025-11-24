@@ -31,7 +31,6 @@ import {
 } from "../controllers/serviceController.js";
 
 import fileupload from "../config/multer.js";
-import { uploadFile } from "../controllers/ProfessionalController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { getCategories } from "../controllers/categoryController.js";
 import { getSubCategories } from "../controllers/subCategoryController.js";
@@ -57,7 +56,6 @@ router.post("/create_service", authenticateToken, CreateService);
 router.put("/pricing", authenticateToken, addServicePricing);
 router.get("/get_service", authenticateToken, getprofessionalServiceById);
 router.get("/get_servicelocation", authenticateToken, getServiceLocationsById);
-
 router.get(
   "/service_questions/:id",
   authenticateToken,
