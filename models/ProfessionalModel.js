@@ -30,10 +30,6 @@ const ProfessionalSchema = new Schema(
       type: Date,
       default: null,
     },
-    auto_reactivate_at: {
-      type: Date,
-      default: null,
-    },
     payment_methods: {
       type: [String],
       default: [],
