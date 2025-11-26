@@ -35,6 +35,7 @@ import {
   deleteProfessionalLicenseHandler,
   createProfessionalGetSteps,
   updateBusinessAvailability,
+  getProfessionaLeadsById,
 } from "../controllers/ProfessionalController.js";
 import {
   addQuestionHandler,
@@ -87,6 +88,12 @@ router.post(
 );
 router.get("/progress", authenticateToken, getProfessionalByUserIdHandler);
 // End of Professional Registration Route with account cretion
+
+
+// Professional Leads and Leads Details ....
+router.get("/professional_leads", authenticateToken, getProfessionaLeadsById);
+
+
 router.post(
   "/files",
   authenticateToken,

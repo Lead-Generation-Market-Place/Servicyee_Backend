@@ -14,9 +14,11 @@ import serviceQuestionsRoute from "./serviceQuestionsRoute.js";
 import leadRoute from "./leadRoute.js";
 import ReviewsRoutes from "./ReviewsRoutes.js";
 import promotionRoutes from "./promotionRoute.js";
-import popularServicesRoute from './popularServicesRoute.js';
-import professionalServiceProviderRoute from './professionalServiceProviderRoute.js';
-import licenseTypeRoute from './licenseTypeRoute.js';
+import popularServicesRoute from "./popularServicesRoute.js";
+import professionalServiceProviderRoute from "./professionalServiceProviderRoute.js";
+import licenseTypeRoute from "./licenseTypeRoute.js";
+import creditTransaction from "./creditTransactionroute.js";
+
 // Organized by feature
 const apiRoutes = [
   // Authentication & Users
@@ -26,6 +28,14 @@ const apiRoutes = [
     developer: "esmatullah",
     domain: "authentication",
     description: "User authentication and authorization",
+  },
+
+  {
+    path: "/transaction",
+    router: creditTransaction,
+    developer: "liaqat Paindah",
+    domain: "transactions",
+    description: "creditTransaction",
   },
 
   // Professionals
@@ -76,11 +86,11 @@ const apiRoutes = [
     description: "Service management",
   },
   {
-    path:"/popular-services",
-    router:popularServicesRoute,
-    developer:"esmatullah",
+    path: "/popular-services",
+    router: popularServicesRoute,
+    developer: "esmatullah",
     domain: "popular services",
-    description: "get all popular services by user location if provided"
+    description: "get all popular services by user location if provided",
   },
   {
     path: "/categories",

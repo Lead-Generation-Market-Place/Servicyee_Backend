@@ -24,7 +24,7 @@ import {
   updateFeaturedProject,
   updateFeaturedProjectWithFiles,
   deleteFeaturedProject,
-  deleteFilesByIds,
+  //deleteFilesByIds,
   addFilesToFeaturedProject,
   removeFilesFromFeaturedProject,
   // Simple FAQ Service Imports
@@ -39,6 +39,7 @@ import {
   deleteProfessionalLicense,
   createProfessionalReview,
   updateProfessionalAvailabilityService,
+  getProfessionalLeadsByUserId,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -61,6 +62,23 @@ export async function getProfessionalByUserIdHandler(req, res) {
     const user_id = req.user.id;
 
     const professional = await getProfessionalByUserId(user_id);
+    if (!professional)
+      return res.status(404).json({ message: "Professional not found" });
+    res.json(professional);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching professional",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Get Professional leads ///
+export async function getProfessionaLeadsById(req, res) {
+  try {
+    const user_id = req.user.id;
+    const professional = await getProfessionalLeadsByUserId(user_id);
     if (!professional)
       return res.status(404).json({ message: "Professional not found" });
     res.json(professional);

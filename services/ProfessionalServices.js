@@ -19,6 +19,8 @@ import path from "path";
 import Review from "../models/ReviewModel.js";
 import zipcodeModel from "../models/zipcodeModel.js";
 import servicesModel from "../models/servicesModel.js";
+import professionalLeadModel from "../models/professionalLeadModel.js";
+import CreditTransactionModel from "../models/CreditTransactionModel.js";
 
 export function createProfessional(data) {
   const professional = new Professional(data);
@@ -27,6 +29,60 @@ export function createProfessional(data) {
 
 export function getProfessionalByUserId(user_id) {
   return Professional.findOne({ user_id }).exec();
+}
+// Fetch Professional Leads....
+
+export async function getProfessionalLeadsByUserId(user_id) {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(user_id)) {
+      throw new Error("Invalid user ID");
+    }
+    const professional = await Professional.findOne({ user_id }).lean();
+
+    if (!professional) {
+      return {
+        success: false,
+        message: "Professional not found",
+        professional: null,
+        professionalServices: [],
+        professionalLeads: [],
+      };
+    }
+
+    const professional_id = professional._id;
+    const professionalServices = await ProfessionalService.find({
+      professional_id,
+      service_status: true,
+    }).lean();
+
+    const credits = await CreditTransactionModel.find({ professional_id }).lean();
+    const professionalLeads = await professionalLeadModel
+      .find({
+        professional_id,
+        status: "accepted",
+      })
+      .populate("lead_id")
+      .lean();
+
+    return {
+      success: true,
+      message: "Professional data fetched successfully",
+      professional,
+      professionalServices,
+      professionalLeads,
+      credits,
+    };
+  } catch (error) {
+    console.error("Error fetching professional data:", error);
+    return {
+      success: false,
+      message: "Failed to fetch professional data",
+      error: error.message,
+      professional: null,
+      professionalServices: [],
+      professionalLeads: [],
+    };
+  }
 }
 
 export function getAllProfessionals(limit = 10) {
@@ -1222,9 +1278,6 @@ export async function deleteProfessionalLicense(professional_id, license_id) {
 
 // update Business
 
-
-
-
 // services/professionalAvailabilityService.js
 export async function updateProfessionalAvailabilityService(
   professionalId,
@@ -1233,7 +1286,7 @@ export async function updateProfessionalAvailabilityService(
   const updateData = {};
   if (isAvailable === false) {
     updateData.is_available = false;
-    
+
     if (hiddenUntil) {
       const hiddenUntilDate = new Date(hiddenUntil);
       if (isNaN(hiddenUntilDate.getTime())) {
@@ -1242,7 +1295,7 @@ export async function updateProfessionalAvailabilityService(
       if (hiddenUntilDate <= new Date()) {
         throw new Error("Hidden until date must be in the future");
       }
-      
+
       updateData.hidden_until = hiddenUntilDate;
     }
   }
