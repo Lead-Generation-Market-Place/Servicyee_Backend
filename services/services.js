@@ -761,4 +761,22 @@ export const deleteProfessionalService = async ({
   } catch (error) {
     throw new Error(error?.message || "Failed to delete professional service.");
   }
+
+};
+
+  //getting services by subcategory id creating by Khalid Durrani
+export const getServicesBySubcategoryId = async (
+  subcategory_id
+) => {
+  try {
+    if (!subcategory_id) {
+      throw new Error("Subcategory Id is Requierd to fetch services.");
+    }
+      const services = await ServiceModel.find({ subcategory_id: subcategory_id });
+
+    return services;
+  } catch (error) {
+    throw new Error(error?.message || "Failed to Retrieve services.");
+  }
+
 };
