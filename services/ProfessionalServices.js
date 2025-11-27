@@ -1074,19 +1074,27 @@ export async function saveProfessionalLicense(data) {
       license_expiration,
       link_to_licensing_agency,
       status = "pending",
+      zipcode_id, // <-- Added (you were missing this)
     } = data;
 
     let finalZipcodeId = zipcode_id;
 
-    // If zipcode_id is not provided but state_name or city is provided, get zipcode_id
-    if (!zipcode_id) {
+    // If zipcode_id is not provided but state_name or city is provided, resolve zipcode
+    if (!finalZipcodeId) {
+      if (typeof getStateNameFromRequest !== "function") {
+        throw new Error("getStateNameFromRequest() is not defined");
+      }
+      if (typeof getZipcodeIdByStateName !== "function") {
+        throw new Error("getZipcodeIdByStateName() is not defined");
+      }
+
       const stateName = getStateNameFromRequest(data);
       if (stateName) {
         finalZipcodeId = await getZipcodeIdByStateName(stateName);
       }
     }
 
-    // Validate required fields according to schema
+    // Validate required fields
     if (
       !professional_id ||
       !license_type_id ||
@@ -1097,25 +1105,20 @@ export async function saveProfessionalLicense(data) {
       throw new Error(
         "professional_id, license_type_id, zipcode_id, license_owner_name, and license_expiration are required"
       );
-
-    
-
-    // Validate required fields according to schema
-    if (!professional_id || !license_type_id || !license_owner_name || !license_expiration) {
-      throw new Error('professional_id, license_type_id, zipcode_id, license_owner_name, and license_expiration are required');
     }
 
-    // Validate status enum values
+    // Validate status enum
     const validStatuses = ["pending", "active", "approved"];
     if (status && !validStatuses.includes(status)) {
       throw new Error("status must be one of: pending, active, approved");
     }
 
-    // Create the professional license
+    // Create the license record
     const professionalLicense = new ProfessionalLicense({
       professional_id,
       state_id,
       license_type_id,
+      zipcode_id: finalZipcodeId, // <-- Add zipcode to DB
       license_owner_name,
       license_expiration: new Date(license_expiration),
       link_to_licensing_agency,

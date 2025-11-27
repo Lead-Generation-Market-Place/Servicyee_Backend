@@ -14,8 +14,6 @@ import servicesService, {
   updateServiceStatus,
   updateFeaturedService,
   updateServiceLocationServices,
-} from "../services/services.js";
-
   getServicesBySubcategoryId,
 } from "../services/services.js";
 
