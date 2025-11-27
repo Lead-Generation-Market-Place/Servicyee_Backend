@@ -16,4 +16,14 @@ const QuestionSchema = new Schema({
   active: { type: Boolean, default: true }
 }, { timestamps: true, versionKey: false, collection: 'questions' });
 
+QuestionSchema.virtual("answers", {
+  ref: "Answer", 
+  localField: "_id", 
+  foreignField: "question_id" 
+});
+
+// Enable virtuals in JSON
+QuestionSchema.set("toJSON", { virtuals: true });
+QuestionSchema.set("toObject", { virtuals: true });
+
 export default model('Question', QuestionSchema);

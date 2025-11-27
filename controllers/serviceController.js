@@ -13,6 +13,9 @@ import servicesService, {
   updateService,
   updateServiceStatus,
   updateFeaturedService,
+  updateServiceLocationServices,
+} from "../services/services.js";
+
   getServicesBySubcategoryId,
 } from "../services/services.js";
 
@@ -45,7 +48,6 @@ export const addServices = async (req, res, next) => {
 
 export const assignServiceToProfessional = async (req, res, next) => {
   try {
-    console.log("Received data:", req.body);
     const assignedService = await servicesService.assignServiceToProfessional(
       req.body
     );
@@ -186,7 +188,6 @@ export const featuredServicesHandler = async (req, res) => {
       data: featuredServices,
     });
   } catch (error) {
-    console.error("Error fetching featured services:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -209,7 +210,6 @@ export const fetchAllServicesOfAProfessional = async (req, res) => {
       data: services,
     });
   } catch (error) {
-    console.error("Error fetching services of professional:", error.message);
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -242,7 +242,6 @@ export const updateProfessionalService = async (req, res, next) => {
       data: updatedService,
     });
   } catch (error) {
-    console.error("Error updating professional service:", error.message);
     res.status(400).json({
       success: false,
       message: error.message || "Failed to update professional service",
@@ -306,6 +305,74 @@ export const addServicePricing = async (req, res) => {
     });
   }
 };
+
+export const getprofessionalServiceById = async (req, res) => {
+  try {
+    const { professional_id, service_id } = req.query;
+    if (!professional_id || !service_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Both professional_id and service_id are required.",
+      });
+    }
+    const services = await servicesService.getProfessionalServiceDetails(
+      professional_id,
+      service_id
+    );
+    if (!services) {
+      return res.status(404).json({
+        success: false,
+        message: "No service found for this professional.",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Service retrieved successfully.",
+      data: services,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error?.message ||
+        "An unexpected error occurred while retrieving service.",
+    });
+  }
+};
+
+// Get Lcoation of Specific Service
+export const getServiceLocationsById = async (req, res) => {
+  try {
+    const { professional_id, service_id, location_id } = req.query;
+    if (!professional_id || !service_id || !location_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Both professional_id, location_id and service_id are required.",
+      });
+    }
+    const result = await servicesService.getProfessionalServiceLocation(
+      professional_id,
+      location_id 
+    );
+    if (!result.success || !result.data) {
+      return res.status(404).json({
+        success: false,
+        message: "No location found for this professional.",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Location retrieved successfully.",
+      data: result.data,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error?.message || "An unexpected error occurred while retrieving location.",
+    });
+  }
+};
+
 
 export const updateServicePricing = async (req, res) => {
   try {
@@ -474,30 +541,29 @@ export const updateFeaturedServiceHandler = async (req, res) => {
 export const updateProfessionalServiceStatus = async (req, res) => {
   try {
     const { professional_id, service_id, service_status } = req.body;
-
     if (!professional_id || !service_id) {
       return res.status(400).json({
         success: false,
         message: "professional_id and service_id are required.",
       });
     }
-
     const service = await updateServiceStatusServices(
       professional_id,
       service_id,
       service_status
     );
-
     if (!service || !service.success) {
       return res.status(404).json({
         success: false,
         message: "No matching service found to update.",
-        message: "Service status updated successfully.",
-        data: service.data,
       });
     }
+    return res.status(200).json({
+      success: true,
+      message: "Service status updated successfully.",
+      data: service.data || null,
+    });
   } catch (error) {
-    console.error("Error updating professional service status:", error);
     return res.status(500).json({
       success: false,
       message: "Server error while updating service status.",
@@ -617,7 +683,6 @@ export const SubmitAnswersServiceQuestions = async (req, res) => {
       data: inserted,
     });
   } catch (error) {
-    console.error("SubmitAnswersServiceQuestions error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to submit answers.",
@@ -637,7 +702,31 @@ export async function createServiceLocationController(req, res) {
       data: result,
     });
   } catch (error) {
-    console.error("Service Location Error:", error);
+    if (error.message === "Professional not found.") {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update service location.",
+      error: error?.message ?? "Unexpected server error.",
+    });
+  }
+}
+
+// Create Service Location for Professional Service
+export async function updateServiceLocation(req, res) {
+  const payload = req.body;
+  try {
+    const result = await updateServiceLocationServices(payload);
+    return res.status(200).json({
+      success: true,
+      message: "Service location updated successfully.",
+      data: result,
+    });
+  } catch (error) {
     if (error.message === "Professional not found.") {
       return res.status(404).json({
         success: false,

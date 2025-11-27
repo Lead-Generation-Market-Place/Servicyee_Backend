@@ -25,11 +25,13 @@ import {
   updateFeaturedServiceHandler,
   updateServiceHandler,
   updateServiceController,
+  getprofessionalServiceById,
+  updateServiceLocation,
+  getServiceLocationsById,
   getServicesBySubcategoryIdHandler
 } from "../controllers/serviceController.js";
 
 import fileupload from "../config/multer.js";
-import { uploadFile } from "../controllers/ProfessionalController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { getCategories } from "../controllers/categoryController.js";
 import { getSubCategories } from "../controllers/subCategoryController.js";
@@ -54,13 +56,20 @@ router.put(
 router.get("/list", authenticateToken, getServices);
 router.post("/create_service", authenticateToken, CreateService);
 router.put("/pricing", authenticateToken, addServicePricing);
+router.get("/get_service", authenticateToken, getprofessionalServiceById);
+router.get("/get_servicelocation", authenticateToken, getServiceLocationsById);
 router.get(
   "/service_questions/:id",
   authenticateToken,
   getServiceQuestionsByServiceId
 );
 router.put("/answers_submit", authenticateToken, SubmitAnswersServiceQuestions);
-router.put("/service_location", authenticateToken, createServiceLocationController);
+router.put(
+  "/service_location",
+  authenticateToken,
+  createServiceLocationController
+);
+router.put("/updateservice_location", authenticateToken, updateServiceLocation);
 router.delete("/delete_service", authenticateToken, deleteSerivceById);
 
 // end of services Management Routes
@@ -75,25 +84,30 @@ router.get("/featured", featuredServicesHandler);
 // ✅ Dynamic route must be LAST
 router.get("/:id", getServiceById);
 router.put("/pricing/update", updateProfessionalService);
-router.put("/:id", fileupload("service").single("image_url"), updateServiceController);
-router.get('/', getServices);
-router.post('/', fileupload('service').single('image_url'),
- addServices);
-router.post('/pricing', addServicePricing);
- //featured services
-router.get('/featured', featuredServicesHandler);
+router.put(
+  "/:id",
+  fileupload("service").single("image_url"),
+  updateServiceController
+);
+router.get("/", getServices);
+router.post("/", fileupload("service").single("image_url"), addServices);
+router.post("/pricing", addServicePricing);
+//featured services
+router.get("/featured", featuredServicesHandler);
 
-router.get('/:id', getServiceById);
-router.put('/pricing/update', updateProfessionalService);
+router.get("/:id", getServiceById);
+router.put("/pricing/update", updateProfessionalService);
 
 // ******************************************
 //       Manage Services
 // ******************************************
-router.put('/:id', fileupload('service').single('image_url'), updateServiceHandler);
-router.put('/:id/status', updateServiceStatusHandler);
-router.put('/:id/featured', updateFeaturedServiceHandler);
-
-
+router.put(
+  "/:id",
+  fileupload("service").single("image_url"),
+  updateServiceHandler
+);
+router.put("/:id/status", updateServiceStatusHandler);
+router.put("/:id/featured", updateFeaturedServiceHandler);
 
 // Use this pattern: /professional-service/:professionalId/:serviceId
 router.put("/professional-service/update", updateProfessionalService);
