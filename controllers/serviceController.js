@@ -16,6 +16,10 @@ import servicesService, {
   updateServiceLocationServices,
 } from "../services/services.js";
 
+  getServicesBySubcategoryId,
+} from "../services/services.js";
+
+import { error } from "console";
 
 export const getServices = async (req, res, next) => {
   try {
@@ -764,3 +768,27 @@ export async function deleteSerivceById(req, res) {
     });
   }
 }
+
+//getting services based on subcategory id Khalid Durrani
+export const getServicesBySubcategoryIdHandler = async (req, res, next) => {
+  try {
+    const subcategory_id = req.params.id;
+    const services = await getServicesBySubcategoryId(subcategory_id);
+    if (!services) {
+      return res
+        .status(404)
+        .json({ message: "No services found for this subcategory." });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Services Found Successfully.",
+      data: services,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error?.message || "Failed to retrieve services by subcategory ID.",
+    });
+  }
+};

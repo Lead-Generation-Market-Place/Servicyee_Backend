@@ -1068,8 +1068,8 @@ export async function saveProfessionalLicense(data) {
 
     const {
       professional_id,
+      state_id,
       license_type_id,
-      zipcode_id,
       license_owner_name,
       license_expiration,
       link_to_licensing_agency,
@@ -1097,6 +1097,12 @@ export async function saveProfessionalLicense(data) {
       throw new Error(
         "professional_id, license_type_id, zipcode_id, license_owner_name, and license_expiration are required"
       );
+
+    
+
+    // Validate required fields according to schema
+    if (!professional_id || !license_type_id || !license_owner_name || !license_expiration) {
+      throw new Error('professional_id, license_type_id, zipcode_id, license_owner_name, and license_expiration are required');
     }
 
     // Validate status enum values
@@ -1108,8 +1114,8 @@ export async function saveProfessionalLicense(data) {
     // Create the professional license
     const professionalLicense = new ProfessionalLicense({
       professional_id,
+      state_id,
       license_type_id,
-      zipcode_id: finalZipcodeId,
       license_owner_name,
       license_expiration: new Date(license_expiration),
       link_to_licensing_agency,
@@ -1146,6 +1152,23 @@ export async function getAllProfessionalLicenses(professional_id) {
       .lean();
 
     return licenses;
+    const [latestLicense] = await ProfessionalLicense.find({
+  professional_id: new mongoose.Types.ObjectId(professional_id)
+})
+  .populate({
+    path: 'state_id',
+    select: 'city state_name zip'
+  })
+  .populate({
+    path: 'license_type_id',
+    select: 'name'
+  })
+  .sort({ createdAt: -1 })
+  .limit(1)
+  .lean();
+
+    
+    return latestLicense;
   } catch (error) {
     throw new Error(error.message || "Failed to fetch professional licenses");
   }

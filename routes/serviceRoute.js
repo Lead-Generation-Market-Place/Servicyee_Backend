@@ -28,12 +28,14 @@ import {
   getprofessionalServiceById,
   updateServiceLocation,
   getServiceLocationsById,
+  getServicesBySubcategoryIdHandler
 } from "../controllers/serviceController.js";
 
 import fileupload from "../config/multer.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { getCategories } from "../controllers/categoryController.js";
 import { getSubCategories } from "../controllers/subCategoryController.js";
+import { get } from "http";
 
 const router = express.Router();
 
@@ -112,5 +114,8 @@ router.put("/professional-service/update", updateProfessionalService);
 
 router.delete("/:id", deleteService);
 router.delete("/pro-service/delete/:id", deleteProService);
+
+//getting services by subcategory id route  created by Khalid Durrani
+router.get("/services-by-subcategory/:id", getServicesBySubcategoryIdHandler);
 
 export default router;
