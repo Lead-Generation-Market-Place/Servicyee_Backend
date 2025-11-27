@@ -55,7 +55,12 @@ export async function getProfessionalLeadsByUserId(user_id) {
       service_status: true,
     }).lean();
 
-    const credits = await CreditTransactionModel.find({ professional_id }).lean();
+    const credits = await CreditTransactionModel.find({
+      professional_id,
+    }).lean();
+    const reviews = await Review.find({
+      professional_id,
+    }).lean();
     const professionalLeads = await professionalLeadModel
       .find({
         professional_id,
@@ -71,6 +76,7 @@ export async function getProfessionalLeadsByUserId(user_id) {
       professionalServices,
       professionalLeads,
       credits,
+      reviews,
     };
   } catch (error) {
     console.error("Error fetching professional data:", error);

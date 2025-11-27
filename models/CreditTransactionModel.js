@@ -62,6 +62,10 @@ const creditTransactionSchema = new Schema(
       type: String,
       enum: FeatureTypes,
     },
+    price: {
+      type: Number,
+      required: false,
+    },
     amount: {
       type: Number,
       required: true,
@@ -80,7 +84,8 @@ const creditTransactionSchema = new Schema(
       default: "USD",
     },
     payment_method: {
-      type: String  },
+      type: String,
+    },
     payment_transaction_id: {
       type: String,
       index: true,
