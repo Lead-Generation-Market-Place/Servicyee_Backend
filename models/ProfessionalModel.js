@@ -30,6 +30,7 @@ const ProfessionalSchema = new Schema(
       type: Date,
       default: null,
     },
+    profile_views: { type: Number, default: 0 },
     payment_methods: {
       type: [String],
       default: [],

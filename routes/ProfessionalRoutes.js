@@ -2,6 +2,41 @@ import express from "express";
 import { celebrate, Segments } from "celebrate";
 import { professionalSchema } from "../validators/professionalValidator.js";
 import {
+  getAllProfessionalsHandler,
+  createProfessionalHandler,
+  deleteProfessionalHandler,
+  getProfessionalByUserIdHandler,
+  updateProfessionalIntroductionById,
+  updateProfessionalInfo,
+  createProfessionalAccount,
+  createProfessionalStepThree,
+  createProfessionalStepFour,
+  createProfessionalStepSeven,
+  createProfessionalStepEight,
+  getServicesQuestionsPro,
+  createProfessionalStepNine,
+  // createProfessionalReview,
+  getProfessionalProfile,
+  addProfessionalFiles,
+  createFeaturedProjectHandler,
+  getFeaturedProjectByIdHandler,
+  getFeaturedProjectsHandler,
+  getFeaturedProjectsByServiceHandler,
+  updateFeaturedProjectHandler,
+  deleteFeaturedProjectHandler,
+  addFilesToFeaturedProjectHandler,
+  removeFilesFromFeaturedProjectHandler,
+  getLicenseTypesHandler,
+  getCitiesHandler,
+  saveProfessionalLicenseHandler,
+  getAllProfessionalLicensesHandler,
+  getProfessionalLicenseByIdHandler,
+  updateProfessionalLicenseHandler,
+  deleteProfessionalLicenseHandler,
+  createProfessionalGetSteps,
+  updateBusinessAvailability,
+  getProfessionaLeadsById,
+  professionalProfileView,
 	getAllProfessionalsHandler,
 	createProfessionalHandler,
 	deleteProfessionalHandler,
@@ -86,6 +121,8 @@ router.post(
 router.get("/progress", authenticateToken, getProfessionalByUserIdHandler);
 // End of Professional Registration Route with account cretion
 
+// Track Views of Professional Profile - DOn't need Token
+router.post("/trackView", professionalProfileView);
 router.post('/featured-projects', authenticateToken, featuredProjectUploader.array('files', 20), createFeaturedProjectHandler);
 router.get('/featured-project/:id', authenticateToken, getProFeaturedProjectHandler);
 
