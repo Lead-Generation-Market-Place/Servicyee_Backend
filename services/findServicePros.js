@@ -280,7 +280,7 @@ class FindServicePros {
   try {
     // First find locations that have the zipcode in their zipcodesWithinRadius array
     const matchingLocations = await locations.find({
-      zipcodesWithinRadius: { $in: [zipCode] }
+      zipcode: { $in: [zipCode] }
     });
     
     const locationIds = matchingLocations.map(loc => loc._id);
@@ -304,6 +304,7 @@ class FindServicePros {
     
     return services;
   } catch(error) {
+    console.log("Error in getServicesByZip:", error);
     throw error;
   }
 }

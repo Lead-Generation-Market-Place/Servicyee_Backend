@@ -16,10 +16,25 @@ import {
   createProAccountStepNine,
   // createProfessionalAccountReview,
   getProfessionalProfileSummary,
+
  
   // Simple FAQ Service Imports
 
   FaqService,
+
+  createFeaturedProject,
+  createFeaturedProjectWithFiles,
+  getFeaturedProjectById,
+  getFeaturedProjects,
+  getFeaturedProjectsByService,
+  updateFeaturedProject,
+  updateFeaturedProjectWithFiles,
+  deleteFeaturedProject,
+  //deleteFilesByIds,
+  addFilesToFeaturedProject,
+  removeFilesFromFeaturedProject,
+  // Simple FAQ Service Imports
+  getAllQuestions,
   getFaqsByProfessional,
   getAllLicenseTypes,
   getAllCities,
@@ -28,11 +43,17 @@ import {
   getProfessionalLicenseById,
   updateProfessionalLicense,
   deleteProfessionalLicense,
+
   uploadProMediaService,
   createProfessionalReview,
   getProMediaService,
   createFeaturedProjectService,
   getProFeaturedProjectService
+
+  createProfessionalReview,
+  updateProfessionalAvailabilityService,
+  getProfessionalLeadsByUserId,
+
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -55,6 +76,23 @@ export async function getProfessionalByUserIdHandler(req, res) {
     const user_id = req.user.id;
 
     const professional = await getProfessionalByUserId(user_id);
+    if (!professional)
+      return res.status(404).json({ message: "Professional not found" });
+    res.json(professional);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching professional",
+      error: error?.message || "An unexpected error occurred",
+    });
+  }
+}
+
+// Get Professional leads ///
+export async function getProfessionaLeadsById(req, res) {
+  try {
+    const user_id = req.user.id;
+    const professional = await getProfessionalLeadsByUserId(user_id);
     if (!professional)
       return res.status(404).json({ message: "Professional not found" });
     res.json(professional);
@@ -354,7 +392,7 @@ export async function getServicesQuestionsPro(req, res) {
   }
 }
 
-// Create Professional Account Step 08 
+// Create Professional Account Step 08
 export async function createProfessionalStepEight(req, res) {
   try {
     const answers = Array.isArray(req.body) ? req.body : req.body.answers;
@@ -368,7 +406,8 @@ export async function createProfessionalStepEight(req, res) {
     answers.forEach(({ professional_id, service_id, question_id, answer }) => {
       if (!professional_id || !service_id || !question_id) return;
       const key = `${professional_id}-${service_id}`;
-      if (!grouped[key]) grouped[key] = { professional_id, service_id, answers: [] };
+      if (!grouped[key])
+        grouped[key] = { professional_id, service_id, answers: [] };
       grouped[key].answers.push({ question_id, answer });
     });
 
@@ -376,7 +415,11 @@ export async function createProfessionalStepEight(req, res) {
 
     for (const key in grouped) {
       const { professional_id, service_id, answers } = grouped[key];
-      const result = await createProfessionalServicesAnswers(professional_id, service_id, { answers });
+      const result = await createProfessionalServicesAnswers(
+        professional_id,
+        service_id,
+        { answers }
+      );
       updatedAnswers.push(...result);
     }
 
@@ -394,7 +437,7 @@ export async function createProfessionalStepEight(req, res) {
   }
 }
 
-// Create Professional Step 09 
+// Create Professional Step 09
 export async function createProfessionalStepNine(req, res) {
   const data = req.body;
   try {
@@ -417,7 +460,7 @@ export async function createProfessionalStepNine(req, res) {
   }
 }
 
-// Create Professional Account - Review Account 
+// Create Professional Account - Review Account
 export async function createProfessionalGetSteps(req, res) {
   try {
     const userId = req.user?._id || req.user?.id;
@@ -442,7 +485,6 @@ export async function createProfessionalGetSteps(req, res) {
       message: "Professional account - Get details successfully",
       professional: reviewData,
     });
-
   } catch (error) {
     console.error("Error creating professional review:", error);
     res.status(500).json({
@@ -479,12 +521,11 @@ export async function getProfessionalProfile(req, res) {
   }
 }
 
+
 // ========================================================
 //             Professional featured project
 // ========================================================
 export const createFeaturedProjectHandler = async (req, res) => {
-  console.log("Received the call from frontend*********************************************");
-  
   try {
     const {
       professional_id,
@@ -500,6 +541,7 @@ export const createFeaturedProjectHandler = async (req, res) => {
 
     console.log("Feature project data: ", req.body);
     const files = req.files;
+
     console.log("The files: ", req.files);
 
     const projectData = {
@@ -568,17 +610,41 @@ export async function getProFeaturedProjectHandler(req, res) {
 }
 
 
+export async function addProfessionalFiles(req, res) {
+  try {
+    const { userId, professionalId, relatedModel, relatedModelId, fileType } =
+      req.body;
+
+    if (!req.files || req.files.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No files uploaded" });
+    }
+
+    const fileDocs = req.files.map((file) => ({
+      userId,
+      professionalId,
+      relatedModel,
+      relatedModelId,
+      fileName: file.originalname,
+      filePath: file.path,
+      fileType,
+      fileSize: file.size,
+      metaData: { mimetype: file.mimetype },
+    }));
+
+
 
 // Simple FAQ Controller Methods
 
 export async function createFaqQuestionHandler(req, res) {
   try {
     const { question } = req.body;
-    
+
     if (!question || question.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Question is required"
+        message: "Question is required",
       });
     }
 
@@ -600,10 +666,12 @@ export async function createFaqQuestionHandler(req, res) {
 
 export async function getProFaqsHandler(req, res) {
   try {
+
     const { professionalId } = req.query;
     console.log("Received Professional ID:", professionalId);
 
     const questions = await FaqService.getProfessionalFaq(professionalId);
+
 
     res.status(200).json({
       success: true,
@@ -623,11 +691,11 @@ export async function getFaqsByProfessionalHandler(req, res) {
     const { professionalId } = req.params;
 
     const faqs = await getFaqsByProfessional(professionalId);
-    
+
     res.status(200).json({
       success: true,
       faqs,
-      total: faqs.length
+      total: faqs.length,
     });
   } catch (error) {
     res.status(500).json({
@@ -646,7 +714,7 @@ export async function updateFaqAnswerHandler(req, res) {
     if (!answer || answer.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Answer is required"
+        message: "Answer is required",
       });
     }
 
@@ -655,7 +723,7 @@ export async function updateFaqAnswerHandler(req, res) {
     if (!updatedFaq) {
       return res.status(404).json({
         success: false,
-        message: "FAQ not found"
+        message: "FAQ not found",
       });
     }
 
@@ -680,7 +748,7 @@ export async function getLicenseTypesHandler(req, res) {
     res.status(200).json({
       success: true,
       data: licenseTypes,
-      count: licenseTypes.length
+      count: licenseTypes.length,
     });
   } catch (error) {
     res.status(500).json({
@@ -698,7 +766,7 @@ export async function getCitiesHandler(req, res) {
     res.status(200).json({
       success: true,
       data: cities,
-      count: cities.length
+      count: cities.length,
     });
   } catch (error) {
     res.status(500).json({
@@ -712,27 +780,23 @@ export async function getCitiesHandler(req, res) {
 // Save professional license
 export async function saveProfessionalLicenseHandler(req, res) {
   try {
-
     const licenseData = req.body;
 
-    
     if (!licenseData) {
       return res.status(400).json({
         success: false,
-        message: "Request body is required"
+        message: "Request body is required",
       });
     }
 
-    console.log('License Data:', licenseData);
-    
     const savedLicense = await saveProfessionalLicense(licenseData);
     res.status(201).json({
       success: true,
       message: "Professional license saved successfully",
-      data: savedLicense
+      data: savedLicense,
     });
   } catch (error) {
-    console.error('Error in saveProfessionalLicenseHandler:', error);
+    console.error("Error in saveProfessionalLicenseHandler:", error);
     res.status(500).json({
       success: false,
       message: "Error saving professional license",
@@ -745,22 +809,22 @@ export async function saveProfessionalLicenseHandler(req, res) {
 export async function getAllProfessionalLicensesHandler(req, res) {
   try {
     const { professional_id } = req.params;
-    
+
     if (!professional_id) {
       return res.status(400).json({
         success: false,
-        message: "Professional ID is required"
+        message: "Professional ID is required",
       });
     }
-    
+
     const licenses = await getAllProfessionalLicenses(professional_id);
     res.status(200).json({
       success: true,
       data: licenses,
-      count: licenses.length
+      count: licenses.length,
     });
   } catch (error) {
-    console.error('Error in getAllProfessionalLicensesHandler:', error);
+    console.error("Error in getAllProfessionalLicensesHandler:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching professional licenses",
@@ -772,45 +836,54 @@ export async function getAllProfessionalLicensesHandler(req, res) {
 export async function getProfessionalLicenseByIdHandler(req, res) {
   try {
     const { professional_id, license_id } = req.params;
-    
+
     if (!professional_id || !license_id) {
       return res.status(400).json({
         success: false,
-        message: "Professional ID and License ID are required"
+        message: "Professional ID and License ID are required",
       });
     }
-    
-    const license = await getProfessionalLicenseById(professional_id, license_id);
+
+    const license = await getProfessionalLicenseById(
+      professional_id,
+      license_id
+    );
     res.status(200).json({
       success: true,
-      data: license
+      data: license,
     });
   } catch (error) {
-    console.error('Error in getProfessionalLicenseByIdHandler:', error);
+    console.error("Error in getProfessionalLicenseByIdHandler:", error);
     res.status(500).json({
-  error})}
+      error,
+    });
+  }
 }
 // Update specific professional license
 export async function updateProfessionalLicenseHandler(req, res) {
   try {
     const { professional_id, license_id } = req.params;
     const updateData = req.body;
-    
+
     if (!professional_id || !license_id) {
       return res.status(400).json({
         success: false,
-        message: "Professional ID and License ID are required"
+        message: "Professional ID and License ID are required",
       });
     }
-    
-    const updatedLicense = await updateProfessionalLicense(professional_id, license_id, updateData);
+
+    const updatedLicense = await updateProfessionalLicense(
+      professional_id,
+      license_id,
+      updateData
+    );
     res.status(200).json({
       success: true,
       message: "Professional license updated successfully",
-      data: updatedLicense
+      data: updatedLicense,
     });
   } catch (error) {
-    console.error('Error in updateProfessionalLicenseHandler:', error);
+    console.error("Error in updateProfessionalLicenseHandler:", error);
     res.status(500).json({
       success: false,
       message: "Error updating professional license",
@@ -823,22 +896,25 @@ export async function updateProfessionalLicenseHandler(req, res) {
 export async function deleteProfessionalLicenseHandler(req, res) {
   try {
     const { professional_id, license_id } = req.params;
-    
+
     if (!professional_id || !license_id) {
       return res.status(400).json({
         success: false,
-        message: "Professional ID and License ID are required"
+        message: "Professional ID and License ID are required",
       });
     }
-    
-    const deletedLicense = await deleteProfessionalLicense(professional_id, license_id);
+
+    const deletedLicense = await deleteProfessionalLicense(
+      professional_id,
+      license_id
+    );
     res.status(200).json({
       success: true,
       message: "Professional license deleted successfully",
-      data: deletedLicense
+      data: deletedLicense,
     });
   } catch (error) {
-    console.error('Error in deleteProfessionalLicenseHandler:', error);
+    console.error("Error in deleteProfessionalLicenseHandler:", error);
     res.status(500).json({
       success: false,
       message: "Error deleting professional license",
@@ -846,8 +922,6 @@ export async function deleteProfessionalLicenseHandler(req, res) {
     });
   }
 }
-
-
 
 export async function deleteFaqHandler(req, res) {
   try {
@@ -857,7 +931,7 @@ export async function deleteFaqHandler(req, res) {
     if (!deletedFaq) {
       return res.status(404).json({
         success: false,
-        message: "FAQ not found"
+        message: "FAQ not found",
       });
     }
 
@@ -873,6 +947,7 @@ export async function deleteFaqHandler(req, res) {
     });
   }
 }
+
 
 // ===================================================
 //           Pro Media Controller section
@@ -960,3 +1035,49 @@ export const getProMediaHandler = async (req, res, next) => {
     });
   }
 };
+
+// Update Business Availability
+/**
+ * Update business availability
+ * PUT /api/v1/professionals/update_availability
+ */
+export const updateBusinessAvailability = async (req, res) => {
+  try {
+    const { professional_id, isAvailable, hiddenUntil } = req.body;
+
+    // Validate required fields
+    if (!professional_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Professional ID is required",
+      });
+    }
+
+    if (isAvailable === false && !hiddenUntil) {
+      return res.status(400).json({
+        success: false,
+        message: "Hidden until date is required when deactivating business",
+      });
+    }
+    // Update professional availability
+    const updatedProfessional = await updateProfessionalAvailabilityService(
+      professional_id,
+      { isAvailable, hiddenUntil }
+    );
+    return res.json({
+      success: true,
+      message: isAvailable
+        ? "Business activated successfully"
+        : "Business temporarily deactivated",
+      data: updatedProfessional,
+    });
+
+  } catch (error) {
+    console.error("Update availability error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+};
+

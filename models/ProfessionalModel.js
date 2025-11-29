@@ -12,16 +12,24 @@ const ProfessionalSchema = new Schema(
     business_name: String,
     introduction: String,
     business_type: { type: String, enum: BusinessType },
-    timezone: { type: String, default: "UTC" }, 
+    timezone: { type: String, default: "UTC" },
     website: { type: String, required: false },
     founded_year: { type: Number, min: 1, required: false },
     employees: { type: Number, min: 1, required: false },
     total_hire: { type: Number, default: 0 },
-    credit_balance: { type: Number, default: 0, min: 0 }, 
+    credit_balance: { type: Number, default: 0, min: 0 },
     total_review: { type: Number, default: 0 },
     rating_avg: { type: Number, default: 0 },
     profile_image: { type: String, required: false },
-    step: {type:Number, required:true, default: 0 },
+    step: { type: Number, required: true, default: 0 },
+    is_available: {
+      type: Boolean,
+      default: true,
+    },
+    hidden_until: {
+      type: Date,
+      default: null,
+    },
     payment_methods: {
       type: [String],
       default: [],
@@ -49,6 +57,7 @@ const ProfessionalSchema = new Schema(
       },
     ],
   },
+
   { timestamps: true, versionKey: false, collection: "professionals" }
 );
 

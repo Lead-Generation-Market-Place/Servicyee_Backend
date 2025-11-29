@@ -14,10 +14,20 @@ import FaqQuestion from "../models/faqquestionsModel.js";
 import Zipcode from "../models/zipcodeModel.js";
 import ProfessionalLicense from "../models/ProfessionalLicenseModel.js";
 
+
 import Review from "../models/ReviewModel.js";
 import zipcodeModel from "../models/zipcodeModel.js";
 import servicesModel from "../models/servicesModel.js";
 import ProMedia from "../models/proMediaModel.js";
+
+import fs from "fs";
+import path from "path";
+import Review from "../models/ReviewModel.js";
+import zipcodeModel from "../models/zipcodeModel.js";
+import servicesModel from "../models/servicesModel.js";
+import professionalLeadModel from "../models/professionalLeadModel.js";
+import CreditTransactionModel from "../models/CreditTransactionModel.js";
+
 
 export function createProfessional(data) {
   const professional = new Professional(data);
@@ -26,6 +36,66 @@ export function createProfessional(data) {
 
 export function getProfessionalByUserId(user_id) {
   return Professional.findOne({ user_id }).exec();
+}
+// Fetch Professional Leads....
+
+export async function getProfessionalLeadsByUserId(user_id) {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(user_id)) {
+      throw new Error("Invalid user ID");
+    }
+    const professional = await Professional.findOne({ user_id }).lean();
+
+    if (!professional) {
+      return {
+        success: false,
+        message: "Professional not found",
+        professional: null,
+        professionalServices: [],
+        professionalLeads: [],
+      };
+    }
+
+    const professional_id = professional._id;
+    const professionalServices = await ProfessionalService.find({
+      professional_id,
+      service_status: true,
+    }).lean();
+
+    const credits = await CreditTransactionModel.find({
+      professional_id,
+    }).lean();
+    const reviews = await Review.find({
+      professional_id,
+    }).lean();
+    const professionalLeads = await professionalLeadModel
+      .find({
+        professional_id,
+        status: "accepted",
+      })
+      .populate("lead_id")
+      .lean();
+
+    return {
+      success: true,
+      message: "Professional data fetched successfully",
+      professional,
+      professionalServices,
+      professionalLeads,
+      credits,
+      reviews,
+    };
+  } catch (error) {
+    console.error("Error fetching professional data:", error);
+    return {
+      success: false,
+      message: "Failed to fetch professional data",
+      error: error.message,
+      professional: null,
+      professionalServices: [],
+      professionalLeads: [],
+    };
+  }
 }
 
 export function getAllProfessionals(limit = 10) {
@@ -98,7 +168,9 @@ export async function CreateProAccountStepOne(data) {
   session.startTransaction();
 
   try {
-    const existingUser = await User.findOne({ email: data.email }).session(session);
+    const existingUser = await User.findOne({ email: data.email }).session(
+      session
+    );
     if (existingUser) throw new Error("User already exists with this email");
     const hashedPassword = await bcrypt.hash(data.password.trim(), 12);
     const user = await User.create(
@@ -156,7 +228,7 @@ export async function CreateProAccountStepOne(data) {
       service_id: serviceId,
       service_name: serviceNameMap[serviceId.toString()] || "",
     }));
-    console.log("the service data is", professionalServices)
+    console.log("the service data is", professionalServices);
     await ProfessionalService.insertMany(professionalServices, { session });
     await session.commitTransaction();
     session.endSession();
@@ -361,9 +433,9 @@ export async function createProfessionalServicesAnswers(
     await profService.save({ session });
 
     const professional = await Professional.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(professionalId) }, 
+      { _id: new mongoose.Types.ObjectId(professionalId) },
       { step: 8 }, // update
-      { new: true, runValidators: true, session } 
+      { new: true, runValidators: true, session }
     );
 
     await session.commitTransaction();
@@ -459,7 +531,6 @@ export async function createProAccountStepNine(data) {
 
     await session.commitTransaction();
     session.endSession();
-
     return {
       success: true,
       message: "Location saved successfully.",
@@ -472,10 +543,6 @@ export async function createProAccountStepNine(data) {
     throw new Error(error.message || "Failed to save location");
   }
 }
-
-
-
-
 
 export async function createProfessionalReview(professional_id) {
   if (!professional_id) throw new Error("Professional ID is required.");
@@ -542,24 +609,30 @@ export async function createProfessionalReview(professional_id) {
       error: error.message,
     };
   }
-
-
 }
- //Noor Ahmad Bashery
+//Noor Ahmad Bashery
 export async function getProfessionalProfileSummary(userId) {
-  const professional = await Professional.findOne({user_id: userId});
-    console.info("Professional Profile Summary:", professional);
+  const professional = await Professional.findOne({ user_id: userId });
+  console.info("Professional Profile Summary:", professional);
   if (!professional) {
     throw new Error("Professional not found");
   }
   return professional;
 }
 
-
 // FeaturedProject Service Methods
 export async function createFeaturedProject(data) {
-  const { serviceId, cityname, projectTitle, approximate_total_price, duration, year, description, fileIds } = data;
-  
+  const {
+    serviceId,
+    cityname,
+    projectTitle,
+    approximate_total_price,
+    duration,
+    year,
+    description,
+    fileIds,
+  } = data;
+
   const featuredProject = new FeaturedProject({
     serviceId,
     cityname,
@@ -567,15 +640,16 @@ export async function createFeaturedProject(data) {
     approximate_total_price,
     duration: {
       type: duration.type,
-      value: duration.value
+      value: duration.value,
     },
     year,
     description,
-    fileIds: fileIds || []
+    fileIds: fileIds || [],
   });
-  
+
   return featuredProject.save();
 }
+
 // =======================================================
 //          Professional featured project services
 // =======================================================
@@ -603,6 +677,7 @@ export const createFeaturedProjectService = async (projectData, files) => {
 
 export const getProFeaturedProjectService = async (professional_id) => {
   try {
+
     // Validate professional_id
     if (!professional_id) {
       throw new Error('Professional ID is required');
@@ -652,6 +727,8 @@ export const getProFeaturedProjectService = async (professional_id) => {
       mediaMap.get(key).push(media);
     });
 
+    
+
     // Combine projects with their media
     const result = featuredProjects.map(project => ({
       ...project,
@@ -668,7 +745,9 @@ export const getProFeaturedProjectService = async (professional_id) => {
 
 
 
+
 // Simple FAQ Service Methods (Only What You Need)
+
 
 export async function addQuestion(questionText) {
   const faqQuestion = new FaqQuestion({
@@ -686,6 +765,7 @@ export class FaqService {
     const answers = await Faq.find({
       professional_id: professionalId,
     }).lean();
+
 
     // Merge results
     const result = questions.map((q) => {
@@ -712,6 +792,7 @@ export async function addAnswers(answersData) {
       answer: answerData.answer.trim()
     });
     return faq.save();
+
   });
   
   return Promise.all(faqPromises);
@@ -747,21 +828,23 @@ export async function updateOrCreateAnswers(answersData) {
 export async function getFaqsByProfessional(professionalId) {
   // Get all questions with their answers for this professional
   const questions = await FaqQuestion.find().sort({ createdAt: -1 }).lean();
-  
-  const answers = await Faq.find({ 
-    professional_id: professionalId 
+
+  const answers = await Faq.find({
+    professional_id: professionalId,
   }).lean();
-  
+
   // Map answers to questions
-  const questionsWithAnswers = questions.map(question => {
-    const answer = answers.find(a => a.question_id.toString() === question._id.toString());
+  const questionsWithAnswers = questions.map((question) => {
+    const answer = answers.find(
+      (a) => a.question_id.toString() === question._id.toString()
+    );
     return {
       ...question,
       answer: answer ? answer.answer : null,
-      faq_id: answer ? answer._id : null
+      faq_id: answer ? answer._id : null,
     };
   });
-  
+
   return questionsWithAnswers;
 }
 
@@ -769,10 +852,10 @@ export async function getFaqsByProfessional(professionalId) {
 
 export async function getAllLicenseTypes() {
   try {
-    const LicenseType = mongoose.model('LicenseType');
-    return await LicenseType.find().select('_id name').sort({ name: 1 });
+    const LicenseType = mongoose.model("LicenseType");
+    return await LicenseType.find().select("_id name").sort({ name: 1 });
   } catch (error) {
-    throw new Error(error.message || 'Failed to fetch license types');
+    throw new Error(error.message || "Failed to fetch license types");
   }
 }
 
@@ -781,24 +864,24 @@ export async function getAllCities() {
     const states = await Zipcode.aggregate([
       {
         $group: {
-          _id: '$state_name',
-          id: { $first: '$_id' }
-        }
+          _id: "$state_name",
+          id: { $first: "$_id" },
+        },
       },
       {
         $project: {
-          _id: '$id',
-          state_name: '$_id'
-        }
+          _id: "$id",
+          state_name: "$_id",
+        },
       },
       {
-        $sort: { state_name: 1 }
-      }
+        $sort: { state_name: 1 },
+      },
     ]);
-    
+
     return states;
   } catch (error) {
-    throw new Error(error.message || 'Failed to fetch cities');
+    throw new Error(error.message || "Failed to fetch cities");
   }
 }
 
@@ -814,7 +897,7 @@ export async function getZipcodeIdByStateName(state_name) {
 // Helper function to get state_name from frontend "city" field
 export function convertCityToStateName(city) {
   // Handle the case where frontend sends "city" but means state_name
-  if (typeof city === 'string' && city.length > 2) {
+  if (typeof city === "string" && city.length > 2) {
     return city; // Assume it's a state name if it's longer than 2 chars
   }
   return city; // Return as-is if it's already a state name or code
@@ -828,16 +911,16 @@ export function getStateNameFromRequest(data) {
 
 // Professional License Methods
 export async function saveProfessionalLicense(data) {
-  console.log('Service function called with data:', data);
-  
+  console.log("Service function called with data:", data);
+
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     if (!data) {
-      throw new Error('Data parameter is required');
+      throw new Error("Data parameter is required");
     }
-    
+
     const {
       professional_id,
       state_id,
@@ -845,32 +928,56 @@ export async function saveProfessionalLicense(data) {
       license_owner_name,
       license_expiration,
       link_to_licensing_agency,
-      status = "pending"
+      status = "pending",
+      zipcode_id, // <-- Added (you were missing this)
     } = data;
 
+    let finalZipcodeId = zipcode_id;
 
-    
+    // If zipcode_id is not provided but state_name or city is provided, resolve zipcode
+    if (!finalZipcodeId) {
+      if (typeof getStateNameFromRequest !== "function") {
+        throw new Error("getStateNameFromRequest() is not defined");
+      }
+      if (typeof getZipcodeIdByStateName !== "function") {
+        throw new Error("getZipcodeIdByStateName() is not defined");
+      }
 
-    // Validate required fields according to schema
-    if (!professional_id || !license_type_id || !license_owner_name || !license_expiration) {
-      throw new Error('professional_id, license_type_id, zipcode_id, license_owner_name, and license_expiration are required');
+      const stateName = getStateNameFromRequest(data);
+      if (stateName) {
+        finalZipcodeId = await getZipcodeIdByStateName(stateName);
+      }
     }
 
-    // Validate status enum values
+    // Validate required fields
+    if (
+      !professional_id ||
+      !license_type_id ||
+      !finalZipcodeId ||
+      !license_owner_name ||
+      !license_expiration
+    ) {
+      throw new Error(
+        "professional_id, license_type_id, zipcode_id, license_owner_name, and license_expiration are required"
+      );
+    }
+
+    // Validate status enum
     const validStatuses = ["pending", "active", "approved"];
     if (status && !validStatuses.includes(status)) {
-      throw new Error('status must be one of: pending, active, approved');
+      throw new Error("status must be one of: pending, active, approved");
     }
 
-    // Create the professional license
+    // Create the license record
     const professionalLicense = new ProfessionalLicense({
       professional_id,
       state_id,
       license_type_id,
+      zipcode_id: finalZipcodeId, // <-- Add zipcode to DB
       license_owner_name,
       license_expiration: new Date(license_expiration),
       link_to_licensing_agency,
-      status
+      status,
     });
 
     const savedLicense = await professionalLicense.save({ session });
@@ -882,13 +989,27 @@ export async function saveProfessionalLicense(data) {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    throw new Error(error.message || 'Failed to save professional license');
+    throw new Error(error.message || "Failed to save professional license");
   }
 }
 
 // Get all professional licenses
 export async function getAllProfessionalLicenses(professional_id) {
   try {
+    const licenses = await ProfessionalLicense.find({
+      professional_id: new mongoose.Types.ObjectId(professional_id),
+    })
+      .populate({
+        path: "zipcode_id",
+        select: "city state_name zip",
+      })
+      .populate({
+        path: "license_type_id",
+        select: "name",
+      })
+      .lean();
+
+    return licenses;
     const [latestLicense] = await ProfessionalLicense.find({
   professional_id: new mongoose.Types.ObjectId(professional_id)
 })
@@ -907,7 +1028,7 @@ export async function getAllProfessionalLicenses(professional_id) {
     
     return latestLicense;
   } catch (error) {
-    throw new Error(error.message || 'Failed to fetch professional licenses');
+    throw new Error(error.message || "Failed to fetch professional licenses");
   }
 }
 
@@ -916,29 +1037,33 @@ export async function getProfessionalLicenseById(professional_id, license_id) {
   try {
     const license = await ProfessionalLicense.findOne({
       _id: new mongoose.Types.ObjectId(license_id),
-      professional_id: new mongoose.Types.ObjectId(professional_id)
+      professional_id: new mongoose.Types.ObjectId(professional_id),
     })
-    .populate({
-      path: 'zipcode_id',
-      select: 'state_name'
-    })
-    .populate({
-      path: 'license_type_id',
-      select: 'name'
-    })
-    .lean();
-    
+      .populate({
+        path: "zipcode_id",
+        select: "state_name",
+      })
+      .populate({
+        path: "license_type_id",
+        select: "name",
+      })
+      .lean();
+
     if (!license) {
-      throw new Error('Professional license not found');
+      throw new Error("Professional license not found");
     }
-    
+
     return license;
   } catch (error) {
-    throw new Error(error.message || 'Failed to fetch professional license');
+    throw new Error(error.message || "Failed to fetch professional license");
   }
 }
 // Update professional license
-export async function updateProfessionalLicense(professional_id, license_id, updateData) {
+export async function updateProfessionalLicense(
+  professional_id,
+  license_id,
+  updateData
+) {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -949,11 +1074,11 @@ export async function updateProfessionalLicense(professional_id, license_id, upd
       license_owner_name,
       license_expiration,
       link_to_licensing_agency,
-      status
+      status,
     } = updateData;
 
     let finalZipcodeId = zipcode_id;
-    
+
     // If zipcode_id is not provided but state_name or city is provided, get zipcode_id
     if (!zipcode_id) {
       const stateName = getStateNameFromRequest(updateData);
@@ -967,13 +1092,15 @@ export async function updateProfessionalLicense(professional_id, license_id, upd
     if (license_type_id) updateObj.license_type_id = license_type_id;
     if (finalZipcodeId) updateObj.zipcode_id = finalZipcodeId;
     if (license_owner_name) updateObj.license_owner_name = license_owner_name;
-    if (license_expiration) updateObj.license_expiration = new Date(license_expiration);
-    if (link_to_licensing_agency !== undefined) updateObj.link_to_licensing_agency = link_to_licensing_agency;
+    if (license_expiration)
+      updateObj.license_expiration = new Date(license_expiration);
+    if (link_to_licensing_agency !== undefined)
+      updateObj.link_to_licensing_agency = link_to_licensing_agency;
     if (status !== undefined) {
       // Validate status enum values
       const validStatuses = ["pending", "active", "approved"];
       if (status && !validStatuses.includes(status)) {
-        throw new Error('status must be one of: pending, active, approved');
+        throw new Error("status must be one of: pending, active, approved");
       }
       updateObj.status = status;
     }
@@ -981,22 +1108,22 @@ export async function updateProfessionalLicense(professional_id, license_id, upd
     const updatedLicense = await ProfessionalLicense.findOneAndUpdate(
       {
         _id: new mongoose.Types.ObjectId(license_id),
-        professional_id: new mongoose.Types.ObjectId(professional_id)
+        professional_id: new mongoose.Types.ObjectId(professional_id),
       },
       updateObj,
       { new: true, runValidators: true, session }
     )
-    .populate({
-      path: 'zipcode_id',
-      select: 'city state_name zip'
-    })
-    .populate({
-      path: 'license_type_id',
-      select: 'name'
-    });
+      .populate({
+        path: "zipcode_id",
+        select: "city state_name zip",
+      })
+      .populate({
+        path: "license_type_id",
+        select: "name",
+      });
 
     if (!updatedLicense) {
-      throw new Error('Professional license not found');
+      throw new Error("Professional license not found");
     }
 
     await session.commitTransaction();
@@ -1006,7 +1133,7 @@ export async function updateProfessionalLicense(professional_id, license_id, upd
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    throw new Error(error.message || 'Failed to update professional license');
+    throw new Error(error.message || "Failed to update professional license");
   }
 }
 
@@ -1018,11 +1145,11 @@ export async function deleteProfessionalLicense(professional_id, license_id) {
   try {
     const deletedLicense = await ProfessionalLicense.findOneAndDelete({
       _id: new mongoose.Types.ObjectId(license_id),
-      professional_id: new mongoose.Types.ObjectId(professional_id)
+      professional_id: new mongoose.Types.ObjectId(professional_id),
     }).session(session);
 
     if (!deletedLicense) {
-      throw new Error('Professional license not found');
+      throw new Error("Professional license not found");
     }
 
     await session.commitTransaction();
@@ -1032,7 +1159,37 @@ export async function deleteProfessionalLicense(professional_id, license_id) {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    throw new Error(error.message || 'Failed to delete professional license');
+    throw new Error(error.message || "Failed to delete professional license");
+  }
+}
+
+// update Business
+
+// services/professionalAvailabilityService.js
+export async function updateProfessionalAvailabilityService(
+  professionalId,
+  { isAvailable, hiddenUntil }
+) {
+  const updateData = {};
+  if (isAvailable === false) {
+    updateData.is_available = false;
+
+    if (hiddenUntil) {
+      const hiddenUntilDate = new Date(hiddenUntil);
+      if (isNaN(hiddenUntilDate.getTime())) {
+        throw new Error("Invalid hidden until date format");
+      }
+      if (hiddenUntilDate <= new Date()) {
+        throw new Error("Hidden until date must be in the future");
+      }
+
+      updateData.hidden_until = hiddenUntilDate;
+    }
+  }
+  if (isAvailable === true) {
+    updateData.is_available = true;
+    updateData.hidden_until = null;
+    updateData.auto_reactivate_at = null;
   }
 }
 
@@ -1053,3 +1210,4 @@ export const uploadProMediaService = async (mediaArray) => {
 export const getProMediaService = async (proId) => {
   return ProMedia.find({ professionalId: proId }).exec();
 };
+

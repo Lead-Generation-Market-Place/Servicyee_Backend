@@ -18,8 +18,6 @@ export async function registerUserService({ email, username, password }) {
   const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) throw new Error("Email already exists");
 
-  const existingUsername = await User.findOne({ username: normalizedUsername });
-  if (existingUsername) throw new Error("Username already exists");
 
   const hashedPassword = await bcrypt.hash(password.trim(), 12);
 
