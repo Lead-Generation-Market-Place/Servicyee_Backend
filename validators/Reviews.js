@@ -39,10 +39,10 @@ export const createReviewSchema = Joi.object({
     .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
     .optional(),
 
-  photos: Joi.array()
+  media: Joi.array()
     .items(
       Joi.object({
-        media_url: Joi.string().uri().required(),
+        media_url: Joi.string(),
         type: Joi.string().valid("image", "video").default("image"),
       })
     )

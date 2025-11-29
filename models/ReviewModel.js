@@ -10,7 +10,7 @@ const ReviewSchema = new Schema(
     review_type: { type: String, enum: ["pending","approved","rejected"], index: true, default: "pending" },
     tags: [{ type: String }],
     helpful_by: [{ type: mongoose.Types.ObjectId, ref: "User" }],
-    photos: [{ media_url: String, type: { type: String, enum: ["image","video"], default: "image" } }],
+    media: [{ media_url: String, type: { type: String, enum: ["image","video"], default: "image" } }],
   },
   { timestamps: true, versionKey: false, collection: "reviews" }
 );

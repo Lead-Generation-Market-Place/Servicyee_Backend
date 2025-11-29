@@ -52,15 +52,19 @@ export async function getProfessionalLeadsByUserId(user_id) {
     const professional_id = professional._id;
     const professionalServices = await ProfessionalService.find({
       professional_id,
-      service_status: true,
     }).lean();
 
     const credits = await CreditTransactionModel.find({
       professional_id,
     }).lean();
-    const reviews = await Review.find({
-      professional_id,
-    }).lean();
+    const reviews = await Review.find({ professional_id })
+      .populate({
+        path: "user_id",
+        select: "username email", // choose fields you want
+      })
+      .sort({ createdAt: -1 }) // latest reviews first
+      .lean();
+
     const professionalLeads = await professionalLeadModel
       .find({
         professional_id,
@@ -448,7 +452,13 @@ export async function createProfessionalServicesAnswers(
   }
 }
 
+
 // End of Step 08
+
+
+
+
+
 export async function createProAccountStepNine(data) {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -1156,21 +1166,20 @@ export async function getAllProfessionalLicenses(professional_id) {
 
     return licenses;
     const [latestLicense] = await ProfessionalLicense.find({
-  professional_id: new mongoose.Types.ObjectId(professional_id)
-})
-  .populate({
-    path: 'state_id',
-    select: 'city state_name zip'
-  })
-  .populate({
-    path: 'license_type_id',
-    select: 'name'
-  })
-  .sort({ createdAt: -1 })
-  .limit(1)
-  .lean();
+      professional_id: new mongoose.Types.ObjectId(professional_id),
+    })
+      .populate({
+        path: "state_id",
+        select: "city state_name zip",
+      })
+      .populate({
+        path: "license_type_id",
+        select: "name",
+      })
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .lean();
 
-    
     return latestLicense;
   } catch (error) {
     throw new Error(error.message || "Failed to fetch professional licenses");
