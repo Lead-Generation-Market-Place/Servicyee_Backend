@@ -15,17 +15,20 @@ export const getTopProfessionalsByServiceAndZip = async (service_id, zipcode) =>
     if (!location) {
       return [];
     }
+    console.log("The location id found: ", location);
     
     // 2️⃣ Find all professionals offering that service in this location
-    const locationId = location._id.toString();
-    const results = await ProfessionalService.aggregate([
-      {
-        $match: {
-          service_status: true,
-          service_id: new mongoose.Types.ObjectId(service_id),
-          location_ids: locationId,  // ✅ matches if locationId exists inside array
-        },
-      },
+    const locationObjId = new mongoose.Types.ObjectId(location._id);
+const serviceObjId = new mongoose.Types.ObjectId(service_id);
+
+const results = await ProfessionalService.aggregate([
+  {
+    $match: {
+      service_status: true,
+      service_id: serviceObjId,            // matches ObjectId
+      location_ids: { $in: [locationObjId] } // checks inside array
+    }
+  },
       {
         $lookup: {
           from: "professionals",

@@ -2,55 +2,52 @@ import express from "express";
 import { celebrate, Segments } from "celebrate";
 import { professionalSchema } from "../validators/professionalValidator.js";
 import {
-  getAllProfessionalsHandler,
-  createProfessionalHandler,
-  deleteProfessionalHandler,
-  getProfessionalByUserIdHandler,
-  updateProfessionalIntroductionById,
-  updateProfessionalInfo,
-  createProfessionalAccount,
-  createProfessionalStepThree,
-  createProfessionalStepFour,
-  createProfessionalStepSeven,
-  createProfessionalStepEight,
-  getServicesQuestionsPro,
-  createProfessionalStepNine,
-  // createProfessionalReview,
-  getProfessionalProfile,
-  addProfessionalFiles,
-  createFeaturedProjectHandler,
-  getFeaturedProjectByIdHandler,
-  getFeaturedProjectsHandler,
-  getFeaturedProjectsByServiceHandler,
-  updateFeaturedProjectHandler,
-  deleteFeaturedProjectHandler,
-  addFilesToFeaturedProjectHandler,
-  removeFilesFromFeaturedProjectHandler,
-  getLicenseTypesHandler,
-  getCitiesHandler,
-  saveProfessionalLicenseHandler,
-  getAllProfessionalLicensesHandler,
-  getProfessionalLicenseByIdHandler,
-  updateProfessionalLicenseHandler,
-  deleteProfessionalLicenseHandler,
-  createProfessionalGetSteps,
-  updateBusinessAvailability,
-  getProfessionaLeadsById,
-} from "../controllers/ProfessionalController.js";
+	getAllProfessionalsHandler,
+	createProfessionalHandler,
+	deleteProfessionalHandler,
+	getProfessionalByUserIdHandler,
+	updateProfessionalIntroductionById,
+	updateProfessionalInfo,
+	createProfessionalAccount,
+	createProfessionalStepThree,
+	createProfessionalStepFour,
+	createProfessionalStepSeven,
+	createProfessionalStepEight,
+	getServicesQuestionsPro,
+	createProfessionalStepNine,
+	// createProfessionalReview,
+	getProfessionalProfile,
+	createFeaturedProjectHandler,
+	getLicenseTypesHandler,
+	getCitiesHandler,
+	saveProfessionalLicenseHandler,
+	getAllProfessionalLicensesHandler,
+	getProfessionalLicenseByIdHandler,
+	updateProfessionalLicenseHandler,
+	deleteProfessionalLicenseHandler,
+	createProfessionalGetSteps,
+	uploadProMediaHandler,
+	getProMediaHandler,
+	getProFeaturedProjectHandler,
+	getProFaqsHandler
+} from '../controllers/ProfessionalController.js';
 import {
-  addQuestionHandler,
-  getAllQuestionsHandler,
-  addAnswerHandler,
-  getFaqsByProfessionalHandler,
-} from "../controllers/FAQController.js";
-import createUploader from "../config/multer.js";
-import { UpdateprofessionalSchema } from "../validators/updatePorfessionaIntro.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
+	addQuestionHandler,
+	addAnswerHandler,
+	getFaqsByProfessionalHandler
+} from '../controllers/FAQController.js';
+import createUploader from '../config/multer.js';
+import { UpdateprofessionalSchema } from '../validators/updatePorfessionaIntro.js';
+import { authenticateToken } from '../middleware/authMiddleware.js';
 import { searchProfessionalsController } from "../controllers/SearchLog.js";
 import { SendReviewEmailCustomer } from "../controllers/SendReviewEmailController.js";
 const router = express.Router();
-const upload = createUploader("professionals");
-const featuredProjectUpload = createUploader("featuredProjects");
+
+const upload = createUploader('professionals');
+const proMediaUpload = createUploader("promedia");
+const featuredProjectUploader = createUploader("promedia");
+
+
 
 
 // Business Availability
@@ -89,6 +86,11 @@ router.post(
 router.get("/progress", authenticateToken, getProfessionalByUserIdHandler);
 // End of Professional Registration Route with account cretion
 
+router.post('/featured-projects', authenticateToken, featuredProjectUploader.array('files', 20), createFeaturedProjectHandler);
+router.get('/featured-project/:id', authenticateToken, getProFeaturedProjectHandler);
+
+
+
 
 // Professional Leads and Leads Details ....
 router.get("/professional_leads", authenticateToken, getProfessionaLeadsById);
@@ -123,6 +125,7 @@ router.put(
 );
 router.delete("/:id", authenticateToken, deleteProfessionalHandler);
 // End of CRUD Routes for Professionals Account Management
+
 // FeaturedProject Routes
 router.post("/featured-projects",  authenticateToken,featuredProjectUpload.array("files"),
   createFeaturedProjectHandler
@@ -160,18 +163,27 @@ router.delete(
   removeFilesFromFeaturedProjectHandler
 );
 
+
+// Form-data field for images = 'images', multiple: true
+router.post(
+  "/:proId",
+  proMediaUpload.array("images", 20), // up to 20 images per request
+  uploadProMediaHandler
+);
+router.get("/:proId/media", getProMediaHandler);
+
+
+// FeaturedProject Routes
 // Search Log Routes
 router.get("/search", searchProfessionalsController);
 
 // Simple FAQ Routes (Just What You Need)
-router.post("/faq/questions", authenticateToken, addQuestionHandler);
-router.get("/faq/questions", authenticateToken, getAllQuestionsHandler);
-router.post("/faq/answers", authenticateToken, addAnswerHandler);
-router.get(
-  "/faq/:professionalId/faqs",
-  authenticateToken,
-  getFaqsByProfessionalHandler
-);
+
+router.post('/faq/questions', authenticateToken, addQuestionHandler);
+router.get('/faq/questions', authenticateToken, getProFaqsHandler);
+router.put('/faq/answers', authenticateToken, addAnswerHandler);
+router.get('/faq/:professionalId/faqs', authenticateToken, getFaqsByProfessionalHandler);
+
 
 // Dropdown Data Routes
 router.get("/license-types", getLicenseTypesHandler);
