@@ -20,11 +20,6 @@ import zipcodeModel from "../models/zipcodeModel.js";
 import servicesModel from "../models/servicesModel.js";
 import ProMedia from "../models/proMediaModel.js";
 
-import fs from "fs";
-import path from "path";
-import Review from "../models/ReviewModel.js";
-import zipcodeModel from "../models/zipcodeModel.js";
-import servicesModel from "../models/servicesModel.js";
 import professionalLeadModel from "../models/professionalLeadModel.js";
 import CreditTransactionModel from "../models/CreditTransactionModel.js";
 
