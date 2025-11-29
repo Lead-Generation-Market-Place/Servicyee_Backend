@@ -1,5 +1,5 @@
 import Professional from "../models/ProfessionalModel.js";
-import File from "../models/fileModel.js";
+import File from "../models/proMediaModel.js";
 import {
   createProfessional,
   getProfessionalByUserId,
@@ -16,20 +16,10 @@ import {
   createProAccountStepNine,
   // createProfessionalAccountReview,
   getProfessionalProfileSummary,
-  createFeaturedProject,
-  createFeaturedProjectWithFiles,
-  getFeaturedProjectById,
-  getFeaturedProjects,
-  getFeaturedProjectsByService,
-  updateFeaturedProject,
-  updateFeaturedProjectWithFiles,
-  deleteFeaturedProject,
-  deleteFilesByIds,
-  addFilesToFeaturedProject,
-  removeFilesFromFeaturedProject,
+ 
   // Simple FAQ Service Imports
 
-  getAllQuestions,
+  FaqService,
   getFaqsByProfessional,
   getAllLicenseTypes,
   getAllCities,
@@ -38,8 +28,11 @@ import {
   getProfessionalLicenseById,
   updateProfessionalLicense,
   deleteProfessionalLicense,
-
+  uploadProMediaService,
   createProfessionalReview,
+  getProMediaService,
+  createFeaturedProjectService,
+  getProFeaturedProjectService
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -486,250 +479,95 @@ export async function getProfessionalProfile(req, res) {
   }
 }
 
-// FeaturedProject Controller Methods
-
-export async function createFeaturedProjectHandler(req, res) {
+// ========================================================
+//             Professional featured project
+// ========================================================
+export const createFeaturedProjectHandler = async (req, res) => {
+  console.log("Received the call from frontend*********************************************");
+  
   try {
-    const data = req.body;
+    const {
+      professional_id,
+      service_id,
+      cityname,
+      projectTitle,
+      approximate_total_price,
+      duration_type,
+      duration_value,
+      year,
+      description,
+    } = req.body;
+
+    console.log("Feature project data: ", req.body);
     const files = req.files;
-    const userId = req.user?.id;
-    const professionalId = req.body.professionalId;
+    console.log("The files: ", req.files);
 
-    let featuredProject;
-    if (files && files.length > 0) {
-      featuredProject = await createFeaturedProjectWithFiles(data, files, userId, professionalId);
-    } else {
-      featuredProject = await createFeaturedProject(data);
-    }
+    const projectData = {
+      professional_id,
+      service_id,
+      cityname,
+      projectTitle,
+      approximate_total_price,
+      duration: {
+        type: duration_type,
+        value: duration_value,
+      },
+      year,
+      description,
+    };
 
-    res.status(201).json({
-      success: true,
+    // Call the service (without res parameter)
+    const project = await createFeaturedProjectService(projectData, files);
+
+    // ✅ Controller handles the HTTP response
+    res.status(201).json({ 
+      success: true, 
       message: "Featured project created successfully",
-      featuredProject,
+      project 
     });
+
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error creating featured project",
-      error: error.message,
+    console.error("Controller error:", error);
+    
+    // ✅ Controller handles the error response
+    res.status(500).json({ 
+      status: 500, 
+      error: error.message || "Internal server error" 
     });
   }
-}
+};;
 
-export async function getFeaturedProjectByIdHandler(req, res) {
+export async function getProFeaturedProjectHandler(req, res) {
   try {
-    const { id } = req.params;
-    const featuredProject = await getFeaturedProjectById(id);
-    if (!featuredProject) {
-      return res.status(404).json({
-        success: false,
-        message: "Featured project not found",
-      });
-    }
-    res.status(200).json({
-      success: true,
-      featuredProject,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error fetching featured project",
-      error: error.message,
-    });
-  }
-}
-
-export async function getFeaturedProjectsHandler(req, res) {
-  try {
-    const filters = req.query;
-    const featuredProjects = await getFeaturedProjects(filters);
-    res.status(200).json({
-      success: true,
-      featuredProjects,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error fetching featured projects",
-      error: error.message,
-    });
-  }
-}
-
-export async function getFeaturedProjectsByServiceHandler(req, res) {
-  try {
-    const { serviceId } = req.params;
-    const featuredProjects = await getFeaturedProjectsByService(serviceId);
-    res.status(200).json({
-      success: true,
-      featuredProjects,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error fetching featured projects by service",
-      error: error.message,
-    });
-  }
-}
-
-export async function updateFeaturedProjectHandler(req, res) {
-  try {
-    const { id } = req.params;
-    const data = req.body;
-    const files = req.files;
-    const userId = req.user?.id;
-    const professionalId = req.body.professionalId;
-
-    let featuredProject;
-    if (files && files.length > 0) {
-      featuredProject = await updateFeaturedProjectWithFiles(id, data, files, userId, professionalId);
-    } else {
-      featuredProject = await updateFeaturedProject(id, data);
-    }
-
-    if (!featuredProject) {
-      return res.status(404).json({
-        success: false,
-        message: "Featured project not found",
-      });
-    }
-    res.status(200).json({
-      success: true,
-      message: "Featured project updated successfully",
-      featuredProject,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error updating featured project",
-      error: error.message,
-    });
-  }
-}
-
-export async function deleteFeaturedProjectHandler(req, res) {
-  try {
-    const { id } = req.params;
-    const featuredProject = await deleteFeaturedProject(id);
-    if (!featuredProject) {
-      return res.status(404).json({
-        success: false,
-        message: "Featured project not found",
-      });
-    }
-    res.status(200).json({
-      success: true,
-      message: "Featured project deleted successfully",
-      featuredProject,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error deleting featured project",
-      error: error.message,
-    });
-  }
-}
-
-export async function addFilesToFeaturedProjectHandler(req, res) {
-  try {
-    const { id } = req.params;
-    const { fileIds } = req.body;
-    if (!Array.isArray(fileIds) || fileIds.length === 0) {
+    const professional_id = req.params.id;
+    
+    if (!professional_id) {
       return res.status(400).json({
         success: false,
-        message: "fileIds must be a non-empty array",
+        message: "Professional not found",
+        data: []
       });
     }
-    const featuredProject = await addFilesToFeaturedProject(id, fileIds);
-    if (!featuredProject) {
-      return res.status(404).json({
-        success: false,
-        message: "Featured project not found",
-      });
-    }
-    res.status(200).json({
+
+    const response = await getProFeaturedProjectService(professional_id);
+    console.log("Data: ", response);
+    return res.status(200).json({
       success: true,
-      message: "Files added to featured project successfully",
-      featuredProject,
+      message: "Professional featured projects retrieved successfully",
+      data: response,
     });
+
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Error adding files to featured project",
-      error: error.message,
+      message: "Unable to get professional featured projects",
+      error: error?.message || "An unexpected error occurred",
+      data: []
     });
   }
 }
 
-export async function removeFilesFromFeaturedProjectHandler(req, res) {
-  try {
-    const { id } = req.params;
-    const { fileIds } = req.body;
-    if (!Array.isArray(fileIds) || fileIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "fileIds must be a non-empty array",
-      });
-    }
-    const featuredProject = await removeFilesFromFeaturedProject(id, fileIds);
-    if (!featuredProject) {
-      return res.status(404).json({
-        success: false,
-        message: "Featured project not found",
-      });
-    }
-    res.status(200).json({
-      success: true,
-      message: "Files removed from featured project successfully",
-      featuredProject,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error removing files from featured project",
-      error: error.message,
-    });
-  }
-}
 
-export async function addProfessionalFiles(req, res) {
-  try {
-    const { userId, professionalId, relatedModel, relatedModelId, fileType } = req.body;
-
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ success: false, message: "No files uploaded" });
-    }
-
-    const fileDocs = req.files.map((file) => ({
-      userId,
-      professionalId,
-      relatedModel,
-      relatedModelId,
-      fileName: file.originalname,
-      filePath: file.path,
-      fileType,
-      fileSize: file.size,
-      metaData: { mimetype: file.mimetype },
-    }));
-
-    const savedFiles = await File.insertMany(fileDocs);
-
-    res.status(201).json({
-      success: true,
-      message: "Files uploaded successfully",
-      files: savedFiles,
-    });
-  } catch (error) {
-    console.error("Upload error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error uploading files",
-      error: error.message,
-    });
-  }
-}
 
 // Simple FAQ Controller Methods
 
@@ -760,10 +598,13 @@ export async function createFaqQuestionHandler(req, res) {
   }
 }
 
-export async function getAllQuestionsHandler(req, res) {
+export async function getProFaqsHandler(req, res) {
   try {
-    const questions = await getAllQuestions();
-    
+    const { professionalId } = req.query;
+    console.log("Received Professional ID:", professionalId);
+
+    const questions = await FaqService.getProfessionalFaq(professionalId);
+
     res.status(200).json({
       success: true,
       questions,
@@ -1032,3 +873,90 @@ export async function deleteFaqHandler(req, res) {
     });
   }
 }
+
+// ===================================================
+//           Pro Media Controller section
+// ===================================================
+
+export const uploadProMediaHandler = async (req, res, next) => {
+  try {
+    const proId = req.params.proId;
+    const projectId = req.body.projectId || null;
+    const source = req.body.source || "gallery";
+
+    const mediaArray = [];
+
+    // Add images
+    if (req.files && req.files.length > 0) {
+      const allowedImageExts = ["jpg","jpeg","png","gif","webp"];
+      for (const file of req.files) {
+        const ext = file.originalname.split(".").pop().toLowerCase();
+        if (!allowedImageExts.includes(ext)) continue;
+
+        mediaArray.push({
+          professionalId: proId,
+          userId: req.body.userId,
+          fileName: file.originalname,
+          fileUrl: `/uploads/promedia/${file.filename}`,
+          fileSize: file.size,
+          source,
+          projectId
+        });
+      }
+    }
+
+    // Add YouTube links
+    let youtubeLinks = req.body.youtubeEmbed || [];
+    if (!Array.isArray(youtubeLinks)) youtubeLinks = [youtubeLinks];
+    for (const link of youtubeLinks) {
+      if (!link) continue;
+      mediaArray.push({
+        professionalId: proId,
+        userId: req.body.userId,
+        youtubeEmbed: link.trim(),
+        source,
+        projectId
+      });
+    }
+
+    if (mediaArray.length === 0) {
+      return res.status(400).json({ message: "No images or YouTube links provided." });
+    }
+
+    // Call the service **once** with all media
+    const savedMedia = await uploadProMediaService(mediaArray);
+
+    res.status(201).json({ success: true, media: savedMedia });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProMediaHandler = async (req, res, next) => {
+  try {
+    const proId = req.params.proId;
+
+    if (!proId) {
+      return res.status(400).json({
+        success: false,
+        message: "Professional ID is required",
+      });
+    }
+
+    const data = await getProMediaService(proId);
+
+    res.status(200).json({
+      success: true,
+      message: "Professional media retrieved successfully",
+      data,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch the professional media",
+      error: error?.message || "An unexpected error occurred",
+      data: [],
+    });
+  }
+};

@@ -17,15 +17,7 @@ import {
 	createProfessionalStepNine,
 	// createProfessionalReview,
 	getProfessionalProfile,
-	addProfessionalFiles,
 	createFeaturedProjectHandler,
-	getFeaturedProjectByIdHandler,
-	getFeaturedProjectsHandler,
-	getFeaturedProjectsByServiceHandler,
-	updateFeaturedProjectHandler,
-	deleteFeaturedProjectHandler,
-	addFilesToFeaturedProjectHandler,
-	removeFilesFromFeaturedProjectHandler,
 	getLicenseTypesHandler,
 	getCitiesHandler,
 	saveProfessionalLicenseHandler,
@@ -33,11 +25,14 @@ import {
 	getProfessionalLicenseByIdHandler,
 	updateProfessionalLicenseHandler,
 	deleteProfessionalLicenseHandler,
-	createProfessionalGetSteps
+	createProfessionalGetSteps,
+	uploadProMediaHandler,
+	getProMediaHandler,
+	getProFeaturedProjectHandler,
+	getProFaqsHandler
 } from '../controllers/ProfessionalController.js';
 import {
 	addQuestionHandler,
-	getAllQuestionsHandler,
 	addAnswerHandler,
 	getFaqsByProfessionalHandler
 } from '../controllers/FAQController.js';
@@ -48,7 +43,8 @@ import { searchProfessionalsController } from "../controllers/SearchLog.js";
 import {  SendReviewEmailCustomer } from '../controllers/SendReviewEmailController.js';
 const router = express.Router();
 const upload = createUploader('professionals');
-const featuredProjectUpload = createUploader('featuredProjects');
+const proMediaUpload = createUploader("promedia");
+const featuredProjectUploader = createUploader("promedia");
 
 
 
@@ -64,12 +60,9 @@ router.get('/professional_steps', authenticateToken, createProfessionalGetSteps)
 router.post('/profileReviewsCustomer', authenticateToken, SendReviewEmailCustomer);
 router.get('/progress', authenticateToken, getProfessionalByUserIdHandler);
 // End of Professional Registration Route with account cretion
-router.post(
-  "/files",
-  authenticateToken,
-  upload.array("files"),
-  addProfessionalFiles
-);
+router.post('/featured-projects', authenticateToken, featuredProjectUploader.array('files', 20), createFeaturedProjectHandler);
+router.get('/featured-project/:id', authenticateToken, getProFeaturedProjectHandler);
+
 // CRUD Routes for Professionals Account Management
 router.get('/',  authenticateToken, getAllProfessionalsHandler);
 router.post('/',  authenticateToken, celebrate({ [Segments.BODY]: professionalSchema }), createProfessionalHandler);
@@ -84,24 +77,27 @@ router.delete('/:id',authenticateToken, deleteProfessionalHandler);
 
 // End of CRUD Routes for Professionals Account Management
 
+// professional media routes
+// Create uploader for ProMedia images (allow multiple)
+
+
+// Form-data field for images = 'images', multiple: true
+router.post(
+  "/:proId",
+  proMediaUpload.array("images", 20), // up to 20 images per request
+  uploadProMediaHandler
+);
+router.get("/:proId/media", getProMediaHandler);
+
 
 // FeaturedProject Routes
-router.post('/featured-projects', authenticateToken, featuredProjectUpload.array('files'), createFeaturedProjectHandler);
-router.get('/featured-projects', authenticateToken, getFeaturedProjectsHandler);
-router.get('/featured-projects/:id', authenticateToken, getFeaturedProjectByIdHandler);
-router.get('/featured-projects/service/:serviceId', authenticateToken, getFeaturedProjectsByServiceHandler);
-router.put('/featured-projects/:id', authenticateToken, featuredProjectUpload.array('files'), updateFeaturedProjectHandler);
-router.delete('/featured-projects/:id', authenticateToken, deleteFeaturedProjectHandler);
-router.post('/featured-projects/:id/files', authenticateToken, addFilesToFeaturedProjectHandler);
-router.delete('/featured-projects/:id/files', authenticateToken, removeFilesFromFeaturedProjectHandler);
-
 // Search Log Routes
 router.get('/search', searchProfessionalsController);
 
 // Simple FAQ Routes (Just What You Need)
 router.post('/faq/questions', authenticateToken, addQuestionHandler);
-router.get('/faq/questions', authenticateToken, getAllQuestionsHandler);
-router.post('/faq/answers', authenticateToken, addAnswerHandler);
+router.get('/faq/questions', authenticateToken, getProFaqsHandler);
+router.put('/faq/answers', authenticateToken, addAnswerHandler);
 router.get('/faq/:professionalId/faqs', authenticateToken, getFaqsByProfessionalHandler);
 
 // Dropdown Data Routes

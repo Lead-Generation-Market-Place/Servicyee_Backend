@@ -1,7 +1,8 @@
 import {
   addQuestion,
-  getAllQuestions,
-  addAnswer,
+  // getAllQuestions,
+  addAnswers,
+  updateOrCreateAnswers,
   getFaqsByProfessional,
 } from "../services/ProfessionalServices.js";
 
@@ -34,45 +35,58 @@ export async function addQuestionHandler(req, res) {
   }
 }
 
-export async function getAllQuestionsHandler(req, res) {
-  try {
-    const questions = await getAllQuestions();
+// export async function getAllQuestionsHandler(req, res) {
+//   try {
+//     const questions = await getAllQuestions();
     
-    res.status(200).json({
-      success: true,
-      questions,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error fetching questions",
-      error: error.message,
-    });
-  }
-}
+//     res.status(200).json({
+//       success: true,
+//       questions,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Error fetching questions",
+//       error: error.message,
+//     });
+//   }
+// }
 
 export async function addAnswerHandler(req, res) {
   try {
-    const { question_id, professional_id, answer } = req.body;
+    const answersData = req.body;
 
-    if (!question_id || !professional_id || !answer || answer.trim().length === 0) {
+    if (!Array.isArray(answersData)) {
       return res.status(400).json({
         success: false,
-        message: "Question ID, Professional ID, and Answer are required"
+        message: "Expected an array of answers"
       });
     }
 
-    const faq = await addAnswer(question_id, professional_id, answer.trim());
+    // Validate each answer
+    // for (const answerData of answersData) {
+    //   const { question_id, professional_id, answer } = answerData;
+      
+    //   if (!question_id || !professional_id || !answer || answer.trim().length === 0) {
+    //     return res.status(400).json({
+    //       success: false,
+    //       message: "Question ID, Professional ID, and Answer are required for all answers"
+    //     });
+    //   }
+    // }
 
-    res.status(201).json({
+    // Use update function instead of create
+    const savedFaqs = await updateOrCreateAnswers(answersData);
+
+    res.status(200).json({ // Changed to 200 since we're updating
       success: true,
-      message: "Answer saved successfully",
-      faq,
+      message: "Answers updated successfully",
+      faqs: savedFaqs,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error saving answer",
+      message: "Error saving answers",
       error: error.message,
     });
   }
