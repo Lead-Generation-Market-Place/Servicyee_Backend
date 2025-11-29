@@ -36,6 +36,7 @@ import {
   createProfessionalGetSteps,
   updateBusinessAvailability,
   getProfessionaLeadsById,
+  professionalProfileView,
 } from "../controllers/ProfessionalController.js";
 import {
   addQuestionHandler,
@@ -88,6 +89,10 @@ router.post(
 );
 router.get("/progress", authenticateToken, getProfessionalByUserIdHandler);
 // End of Professional Registration Route with account cretion
+
+// Track Views of Professional Profile - DOn't need Token
+router.post("/trackView", professionalProfileView);
+
 
 
 // Professional Leads and Leads Details ....

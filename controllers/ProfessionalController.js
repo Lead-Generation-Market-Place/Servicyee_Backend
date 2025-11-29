@@ -40,6 +40,7 @@ import {
   createProfessionalReview,
   updateProfessionalAvailabilityService,
   getProfessionalLeadsByUserId,
+  updateProfessionalProfileView,
 } from "../services/ProfessionalServices.js";
 const backendUrl =
   process.env.BACKEND_PRODUCTION_URL || "https://frontend-servicyee.vercel.app";
@@ -1111,10 +1112,37 @@ export const updateBusinessAvailability = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Update availability error:", error);
     return res.status(500).json({
       success: false,
       message: error.message || "Internal server error",
     });
   }
 };
+
+
+
+export const professionalProfileView = async (req, res) => {
+  try {
+    const { professional_id } = req.body;
+    if (!professional_id) {
+      return res.status(400).json({
+        success: false,
+        message: "professional_id is required",
+      });
+    }
+    const updatedProfessional = await updateProfessionalProfileView(
+      professional_id
+    );
+    return res.status(200).json({
+      success: true,
+      data: updatedProfessional,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error?.message || "Internal server error",
+    });
+  }
+};
+
+

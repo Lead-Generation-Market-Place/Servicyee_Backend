@@ -13,6 +13,7 @@ export const authenticateToken = (req, res, next) => {
     return res.status(401).json({ message: "No access token" });
   }
 
+  
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, payload) => {
     if (err) {
       return res.status(401).json({ message: "Invalid or expired access token" });

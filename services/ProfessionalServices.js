@@ -452,12 +452,7 @@ export async function createProfessionalServicesAnswers(
   }
 }
 
-
 // End of Step 08
-
-
-
-
 
 export async function createProAccountStepNine(data) {
   const session = await mongoose.startSession();
@@ -1358,3 +1353,28 @@ export async function updateProfessionalAvailabilityService(
   }
   return professional;
 }
+
+export const updateProfessionalProfileView = async (professional_id) => {
+  if (!professional_id) throw new Error("Professional ID is required.");
+
+  try {
+    const professional = await Professional.findById(professional_id).lean();
+    if (!professional) throw new Error("Professional not found");
+    const updatedProfessional = await Professional.findByIdAndUpdate(
+      professional_id,
+      { $inc: { profile_views: 1 } },
+      { new: true }
+    ).lean();
+    return {
+      success: true,
+      message: "Professional profile view tracked successfully",
+      professional: updatedProfessional,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Error tracking professional profile view",
+      error: error.message,
+    };
+  }
+};
