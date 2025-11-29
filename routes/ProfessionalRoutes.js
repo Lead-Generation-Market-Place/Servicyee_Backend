@@ -29,7 +29,9 @@ import {
 	uploadProMediaHandler,
 	getProMediaHandler,
 	getProFeaturedProjectHandler,
-	getProFaqsHandler
+	getProFaqsHandler,
+  updateBusinessAvailability,
+  getProfessionaLeadsById
 } from '../controllers/ProfessionalController.js';
 import {
 	addQuestionHandler,
@@ -96,12 +98,12 @@ router.get('/featured-project/:id', authenticateToken, getProFeaturedProjectHand
 router.get("/professional_leads", authenticateToken, getProfessionaLeadsById);
 
 
-router.post(
-  "/files",
-  authenticateToken,
-  upload.array("files"),
-  addProfessionalFiles
-);
+// router.post(
+//   "/files",
+//   authenticateToken,
+//   upload.array("files"),
+//   addProfessionalFiles
+// );
 // CRUD Routes for Professionals Account Management
 router.get("/", authenticateToken, getAllProfessionalsHandler);
 router.post(
@@ -127,42 +129,9 @@ router.delete("/:id", authenticateToken, deleteProfessionalHandler);
 // End of CRUD Routes for Professionals Account Management
 
 // FeaturedProject Routes
-router.post("/featured-projects",  authenticateToken,featuredProjectUpload.array("files"),
+router.post("/featured-projects",  authenticateToken,featuredProjectUploader.array("files"),
   createFeaturedProjectHandler
 );
-router.get("/featured-projects", authenticateToken, getFeaturedProjectsHandler);
-router.get(
-  "/featured-projects/:id",
-  authenticateToken,
-  getFeaturedProjectByIdHandler
-);
-router.get(
-  "/featured-projects/service/:serviceId",
-  authenticateToken,
-  getFeaturedProjectsByServiceHandler
-);
-router.put(
-  "/featured-projects/:id",
-  authenticateToken,
-  featuredProjectUpload.array("files"),
-  updateFeaturedProjectHandler
-);
-router.delete(
-  "/featured-projects/:id",
-  authenticateToken,
-  deleteFeaturedProjectHandler
-);
-router.post(
-  "/featured-projects/:id/files",
-  authenticateToken,
-  addFilesToFeaturedProjectHandler
-);
-router.delete(
-  "/featured-projects/:id/files",
-  authenticateToken,
-  removeFilesFromFeaturedProjectHandler
-);
-
 
 // Form-data field for images = 'images', multiple: true
 router.post(

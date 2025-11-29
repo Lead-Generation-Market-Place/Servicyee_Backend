@@ -22,19 +22,7 @@ import {
 
   FaqService,
 
-  createFeaturedProject,
-  createFeaturedProjectWithFiles,
-  getFeaturedProjectById,
-  getFeaturedProjects,
-  getFeaturedProjectsByService,
-  updateFeaturedProject,
-  updateFeaturedProjectWithFiles,
-  deleteFeaturedProject,
-  //deleteFilesByIds,
-  addFilesToFeaturedProject,
-  removeFilesFromFeaturedProject,
-  // Simple FAQ Service Imports
-  getAllQuestions,
+ 
   getFaqsByProfessional,
   getAllLicenseTypes,
   getAllCities,
@@ -45,10 +33,9 @@ import {
   deleteProfessionalLicense,
 
   uploadProMediaService,
-  createProfessionalReview,
   getProMediaService,
   createFeaturedProjectService,
-  getProFeaturedProjectService
+  getProFeaturedProjectService,
 
   createProfessionalReview,
   updateProfessionalAvailabilityService,
@@ -610,28 +597,6 @@ export async function getProFeaturedProjectHandler(req, res) {
 }
 
 
-export async function addProfessionalFiles(req, res) {
-  try {
-    const { userId, professionalId, relatedModel, relatedModelId, fileType } =
-      req.body;
-
-    if (!req.files || req.files.length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No files uploaded" });
-    }
-
-    const fileDocs = req.files.map((file) => ({
-      userId,
-      professionalId,
-      relatedModel,
-      relatedModelId,
-      fileName: file.originalname,
-      filePath: file.path,
-      fileType,
-      fileSize: file.size,
-      metaData: { mimetype: file.mimetype },
-    }));
 
 
 
