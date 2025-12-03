@@ -19,23 +19,64 @@ export async function register(req, res) {
   }
 }
 
-// Login user
-export async function login(req, res) {
-  try {
-    const { user, accessToken, refreshToken } = await authService.loginUserService(
-      req.body,
-      req.ip,
-      req.get("User-Agent")
-    );
 
-    res.json({
-      user: { id: user._id, email: user.email, username: user.username },
-      tokens: { accessToken, refreshToken }
+
+
+
+
+
+
+
+
+
+// Login user
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const result = await authService.loginUserService({ email, password });
+
+    if (!result.success) {
+      console.log("the result is ",result.message)
+      return res.status(200).json({
+        success: false,
+        message: result.message,
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+      user: result.user,
+      tokens: result.tokens,
     });
-  } catch (err) {
-    res.status(401).json({ message: err.message });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error?.message || "Internal server error",
+      user: null,
+      tokens: null,
+    });
   }
-}
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function refresh(req, res) {
   try {
     const { accessToken, refreshToken } = await authService.refreshTokenService(
@@ -52,6 +93,9 @@ export async function refresh(req, res) {
     res.status(403).json({ message: err.message });
   }
 }
+
+
+
 
 export async function logout(req, res) {
   try {

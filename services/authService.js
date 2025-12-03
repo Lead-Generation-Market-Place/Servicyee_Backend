@@ -2,9 +2,11 @@ import { User } from "../models/user.js";
 import RefreshToken from "../models/refreshToken.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { signAccessToken, signRefreshToken, hashToken } from "../utils/token.js";
-
-
+import {
+  signAccessToken,
+  signRefreshToken,
+  hashToken,
+} from "../utils/token.js";
 
 export async function registerUserService({ email, username, password }) {
   if (!email || !username || !password) {
@@ -14,10 +16,8 @@ export async function registerUserService({ email, username, password }) {
   const normalizedEmail = email.toLowerCase();
   const normalizedUsername = username.trim();
 
-
   const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) throw new Error("Email already exists");
-
 
   const hashedPassword = await bcrypt.hash(password.trim(), 12);
 
@@ -33,29 +33,72 @@ export async function registerUserService({ email, username, password }) {
   return userData;
 }
 
-export async function loginUserService({ email, password }, ip, userAgent) {
-  const normalizedEmail = email.toLowerCase();
-  const user = await User.findOne({ email: normalizedEmail });
-  if (!user) {
-    throw new Error("Invalid credentials");
+export const loginUserService = async ({ email, password }) => {
+  if (!email || !password) {
+    return {
+      success: false,
+      message: "Email and password are required",
+      user: null,
+      tokens: null,
+    };
   }
-  const isMatch = await bcrypt.compare(password.trim(), user.password);
-  if (!isMatch) {
-    throw new Error("Invalid credentials");
+
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return {
+        success: false,
+        message: "Invalid email or password",
+        user: null,
+        tokens: null,
+      };
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      password.trim(),
+      user.password
+    );
+    if (!isPasswordValid) {
+      return {
+        success: false,
+        message: "Invalid email or password",
+        user: null,
+        tokens: null,
+      };
+    }
+
+    const accessToken = signAccessToken({ id: user._id });
+    const refreshToken = signRefreshToken({ id: user._id });
+
+    await RefreshToken.create({
+      userId: user._id,
+      tokenHash: hashToken(refreshToken),
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    return {
+      success: true,
+      message: "Login successful",
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+      },
+      tokens: {
+        accessToken,
+        refreshToken,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Internal server error",
+      user: null,
+      tokens: null,
+    };
   }
-  const accessToken = signAccessToken({ id: user._id });
-  const refreshToken = signRefreshToken({ id: user._id });
-  await RefreshToken.create({
-    userId: user._id,
-    tokenHash: hashToken(refreshToken),
-    ip,
-    userAgent,
-    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
-  });
-
-  return { user, accessToken, refreshToken };
-}
-
+};
 
 export async function refreshTokenService(oldToken, ip, userAgent) {
   if (!oldToken) throw new Error("No refresh token provided");
@@ -68,7 +111,8 @@ export async function refreshTokenService(oldToken, ip, userAgent) {
     revoked: false,
   });
 
-  if (!stored || stored.expiresAt < Date.now()) throw new Error("Invalid refresh token");
+  if (!stored || stored.expiresAt < Date.now())
+    throw new Error("Invalid refresh token");
 
   const newRefreshToken = signRefreshToken({ id: payload.id });
   stored.revoked = true;
@@ -88,7 +132,6 @@ export async function refreshTokenService(oldToken, ip, userAgent) {
   return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 }
 
-
 export async function logoutService(token) {
   if (!token) return;
 
@@ -97,7 +140,6 @@ export async function logoutService(token) {
     { revoked: true }
   );
 }
-
 
 export async function getCurrentUserServices(userId) {
   return User.findById(userId).select("-password").exec();

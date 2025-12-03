@@ -28,7 +28,7 @@ import {
   getprofessionalServiceById,
   updateServiceLocation,
   getServiceLocationsById,
-  getServicesBySubcategoryIdHandler
+  getServicesBySubcategoryIdHandler,
 } from "../controllers/serviceController.js";
 
 import fileupload from "../config/multer.js";
@@ -36,6 +36,8 @@ import { authenticateToken } from "../middleware/authMiddleware.js";
 import { getCategories } from "../controllers/categoryController.js";
 import { getSubCategories } from "../controllers/subCategoryController.js";
 import { get } from "http";
+import { celebrate, Segments } from "celebrate";
+import { pricingSchema } from "../validators/services/service.js";
 
 const router = express.Router();
 
@@ -49,13 +51,18 @@ router.post("/asp", assignServiceToProfessional);
 // services Management Routes
 router.get("/services-management", authenticateToken, GetProfessionalServices);
 router.put(
+  "/pricing",
+  authenticateToken,
+  celebrate({ [Segments.BODY]: pricingSchema }),
+  addServicePricing
+);
+router.put(
   "/service_status",
   authenticateToken,
   updateProfessionalServiceStatus
 );
 router.get("/list", authenticateToken, getServices);
 router.post("/create_service", authenticateToken, CreateService);
-router.put("/pricing", authenticateToken, addServicePricing);
 router.get("/get_service", authenticateToken, getprofessionalServiceById);
 router.get("/get_servicelocation", authenticateToken, getServiceLocationsById);
 router.get(
